@@ -1,5 +1,7 @@
 ## Overview for: `constant-vus-over-time`
 
+> Historical results — includes Rust-subgraph measurements from before the move to .NET-only subgraphs. Preserved as measured, not relabeled.
+
 Each benchmark runs a GraphQL gateway with 4 subgraphs and executes a heavy nested query that exercises federation/composition capabilities.
 
 Results are split by subgraph technology:

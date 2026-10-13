@@ -14,50 +14,131 @@ if [[ ${#CSPROJ_FILES[@]} -eq 0 ]]; then
   exit 1
 fi
 
-# --- Ensure .NET SDK is installed ---
-if command -v dotnet &>/dev/null; then
-  INSTALLED_MAJOR=$(dotnet --version | cut -d. -f1)
-  if [[ "$INSTALLED_MAJOR" -ge "$REQUIRED_DOTNET_MAJOR" ]]; then
-    echo ".NET SDK already installed: $(dotnet --version)"
-  else
-    echo ".NET SDK $INSTALLED_MAJOR found but need $REQUIRED_DOTNET_MAJOR+. Installing..."
-    curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel "$REQUIRED_DOTNET_MAJOR.0"
-    export PATH="$HOME/.dotnet:$PATH"
-  fi
-else
-  echo ".NET SDK not found. Installing .NET $REQUIRED_DOTNET_MAJOR..."
-  curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel "$REQUIRED_DOTNET_MAJOR.0"
-  export PATH="$HOME/.dotnet:$PATH"
-fi
+# --- Verify pinned HotChocolate version ---
+# Subgraph packages stay on a pinned HotChocolate release: build.sh never
+# resolves versions from NuGet and never rewrites tracked files. To move to a
+# newer release, bump PINNED_HOTCHOCOLATE_VERSION alongside the csproj
+# PackageReferences in the same commit.
+#
+# This check runs before any SDK cleanup or download so a version mismatch
+# fails fast without touching the bundled runtime or requiring network access.
+# References are parsed as XML (xml.etree.ElementTree), so attribute order,
+# line breaks, extra attributes, and single- or double-quoted attributes are
+# all handled, while commented-out PackageReferences are ignored.
+PINNED_HOTCHOCOLATE_VERSION="16.6.8"
+echo "Verifying HotChocolate package references are pinned to $PINNED_HOTCHOCOLATE_VERSION..."
+PINNED="$PINNED_HOTCHOCOLATE_VERSION" python3 - "${CSPROJ_FILES[@]}" <<'PYEOF'
+import os
+import sys
+import xml.etree.ElementTree as ET
 
-# --- Fetch latest stable HotChocolate version from NuGet ---
-echo "Fetching latest stable HotChocolate version from NuGet..."
-LATEST_STABLE=$(curl -s "https://api.nuget.org/v3-flatcontainer/hotchocolate.aspnetcore/index.json" \
-  | python3 -c "import json,sys; vs=json.load(sys.stdin)['versions']; stable=[v for v in vs if '-' not in v]; print(max(stable, key=lambda v: [int(p) for p in v.split('.')]) if stable else '')")
+pinned = os.environ["PINNED"]
+failures = []
+for csproj in sys.argv[1:]:
+    try:
+        tree = ET.parse(csproj)
+    except ET.ParseError as exc:
+        failures.append(f"{csproj}: invalid XML ({exc})")
+        continue
+    root = tree.getroot()
+    seen = False
+    for elem in root.iter():
+        tag = elem.tag
+        if not isinstance(tag, str):
+            continue
+        local = tag.rsplit("}", 1)[-1] if "}" in tag else tag
+        if local != "PackageReference":
+            continue
+        include = elem.get("Include", "")
+        if not include.startswith("HotChocolate"):
+            continue
+        seen = True
+        version = elem.get("Version")
+        if version is None:
+            for child in elem:
+                ctag = child.tag
+                if not isinstance(ctag, str):
+                    continue
+                clocal = ctag.rsplit("}", 1)[-1] if "}" in ctag else ctag
+                if clocal == "Version":
+                    version = (child.text or "").strip()
+                    break
+        else:
+            version = version.strip()
+        if version != pinned:
+            failures.append(
+                f"{csproj}: {include} version "
+                f"'{version if version is not None else 'none'}' is not pinned to {pinned}"
+            )
+    if seen and not any(f.startswith(csproj + ":") for f in failures):
+        print(f"  Pinned: {os.path.basename(os.path.dirname(csproj))}/{os.path.basename(csproj)}")
+if failures:
+    for failure in failures:
+        print(f"ERROR: {failure}")
+    sys.exit(1)
+PYEOF
 
-if [[ -z "$LATEST_STABLE" ]]; then
-  echo "ERROR: Could not determine latest stable HotChocolate version"
+# --- Install the .NET SDK, bundled into the subgraphs dir ---------------------
+# The benchmark machines have no .NET installed and never execute this script:
+# they run the *prebuilt* artifact. The artifact itself must therefore carry
+# the runtime the subgraphs are measured on — otherwise whatever SDK happens
+# to be on the machine would silently decide the result. This mirrors the
+# Fusion gateway's install.sh: the SDK lives inside the subgraphs directory,
+# where it travels with the artifact.
+#
+# Generated here (all gitignored):
+#   - $SCRIPT_DIR/.dotnet      bundled SDK (start.sh runs the apphosts on it)
+#   - $SCRIPT_DIR/global.json  pins the bundled SDK (a nearer global.json takes
+#                              precedence over the repo-root one)
+BUNDLED_DOTNET_DIR="$SCRIPT_DIR/.dotnet"
+SUBGRAPHS_GLOBAL_JSON="$SCRIPT_DIR/global.json"
+
+# Clear the previous generated inputs up front, before anything that can fail:
+# a download that dies half way then leaves a neutral tree instead of one
+# whose global.json pins an SDK that is no longer installed. Both are
+# (re)written below on success. CI uses fresh checkouts; local runs may reuse
+# the tree.
+echo "Installing the .NET $REQUIRED_DOTNET_MAJOR SDK into $BUNDLED_DOTNET_DIR ..."
+rm -rf "$BUNDLED_DOTNET_DIR"
+rm -f "$SUBGRAPHS_GLOBAL_JSON"
+# No --quality: dotnet-install.sh then resolves the latest GA patch of the band.
+curl -sSL https://dot.net/v1/dotnet-install.sh \
+  | bash -s -- --channel "$REQUIRED_DOTNET_MAJOR.0" --install-dir "$BUNDLED_DOTNET_DIR"
+
+export DOTNET_ROOT="$BUNDLED_DOTNET_DIR"
+export PATH="$BUNDLED_DOTNET_DIR:$PATH"
+DOTNET="$BUNDLED_DOTNET_DIR/dotnet"
+
+# --list-sdks ignores global.json and (with multi-level lookup off) only lists
+# SDKs in the bundled dir, so this is the version we actually installed.
+SDK_VERSION="$("$DOTNET" --list-sdks | awk '{print $1}' | sort -V | tail -n1)"
+SDK_MAJOR="${SDK_VERSION%%.*}"
+if [[ "$SDK_MAJOR" != "$REQUIRED_DOTNET_MAJOR" ]]; then
+  echo "ERROR: subgraphs require a .NET $REQUIRED_DOTNET_MAJOR SDK but installed '${SDK_VERSION:-none}'"
   exit 1
 fi
+echo "Bundled .NET SDK: $SDK_VERSION"
 
-echo "Latest stable HotChocolate version: $LATEST_STABLE"
+# Pin the bundled SDK so the selected runtime is used at build *and* run time.
+cat > "$SUBGRAPHS_GLOBAL_JSON" <<EOF
+{
+  "sdk": {
+    "version": "$SDK_VERSION",
+    "rollForward": "latestMinor",
+    "allowPrerelease": false
+  }
+}
+EOF
 
-# --- Update HotChocolate package versions in subgraph .csproj files ---
-echo "Updating HotChocolate* package references to $LATEST_STABLE..."
-for csproj in "${CSPROJ_FILES[@]}"; do
-  if grep -q 'Include="HotChocolate' "$csproj"; then
-    sed -i.bak -E 's/(Include="HotChocolate[^"]*" Version=")[^"]+(")/\1'"$LATEST_STABLE"'\2/g' "$csproj"
-    rm -f "$csproj.bak"
-    echo "  Updated: $(basename "$(dirname "$csproj")")/$(basename "$csproj")"
-  fi
-done
-
-# --- Build all subgraph projects ---
+# --- Build all subgraph projects with the bundled SDK ---
+# `dotnet build` emits a framework-dependent apphost next to each dll
+# (bin/Release/net10.0/<ProjectName>); start.sh launches those apphosts on the
+# bundled runtime, so the benchmark machine needs no .NET of its own.
 echo "Building subgraphs..."
 for csproj in "${CSPROJ_FILES[@]}"; do
   project_name="$(basename "$(dirname "$csproj")")"
   echo "  Building $project_name..."
-  dotnet build "$csproj" -c Release --nologo -v quiet
+  "$DOTNET" build "$csproj" -c Release --nologo -v quiet
 done
 
-echo "Subgraphs build complete (version: $LATEST_STABLE)."
+echo "Subgraphs build complete (HotChocolate $PINNED_HOTCHOCOLATE_VERSION)."

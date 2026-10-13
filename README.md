@@ -16,13 +16,16 @@ Each benchmark runs a gateway against 4 subgraphs (`Accounts`, `Inventory`, `Pro
 
 ## Benchmark setup
 
-Subgraph variants:
-- `subgraphs-rust` = Rust (`async-graphql` + `axum`)
-- `subgraphs-net` = .NET (`HotChocolate`)
+All benchmarks run against 4 [HotChocolate](https://github.com/ChilliCream/graphql-platform) subgraphs in both
+benchmark families (`apollo-federation/*` and `composite-schema/*`). The
+subgraphs are pinned to HotChocolate `16.6.8` (each `subgraphs-net/build.sh`
+verifies the pin and never rewrites package versions).
 
-Both benchmark families support both subgraph variants:
-- `apollo-federation/*` gateways can run with Rust or .NET subgraphs
-- `composite-schema/*` gateways can run with Rust or .NET subgraphs
+The committed result tables under `benchmark-runs/` and the root
+`RESULTS_*.md` files are historical measurements: the constant and burst
+tables still contain Rust-subgraph (`async-graphql` + `axum`) rows from before
+the move to HotChocolate subgraphs. Those rows are preserved as measured and are
+not relabeled.
 
 ## Gateways
 
@@ -35,7 +38,7 @@ Both benchmark families support both subgraph variants:
 - [Hive Gateway Router Runtime](./apollo-federation/gateways/hive-gateway-router-runtime) (Node.js)
 - [Hive Router](./apollo-federation/gateways/hive-router) (Rust)
 
-### [GraphQL Federation](https://graphql.github.io/composite-schemas-spec/)
+### [GraphQL Federation](https://graphql.github.io/graphql-federation-spec/)
 - [Fusion](./composite-schema/gateways/fusion) (.NET) — benchmarked as latest stable (`fusion`, built and run on the .NET 10 SDK), plus, when a HotChocolate preview newer than the latest stable exists, the latest preview on two runtimes: `fusion-nightly` (built and run on the .NET 10 SDK) and `fusion-nightly-net11` (built and run on the latest .NET 11 preview SDK bundled into its prebuilt artifact, with runtime-async). Running the same preview packages on both runtimes isolates framework effects from library changes.
 - [feddi](./composite-schema/gateways/feddi) (JVM) — built from source and bundled with a JDK 25 ([feddi-dev/feddi-gateway](https://github.com/feddi-dev/feddi-gateway)). See its [README](./composite-schema/gateways/feddi/README.md) for setup and a known heavy-query planner limitation.
 
@@ -59,26 +62,23 @@ Both benchmark families support both subgraph variants:
 Examples:
 
 ```bash
-# composite-schema + .NET subgraphs (default)
+# composite-schema + HotChocolate subgraphs (default)
 ./k6/benchmark.sh composite-schema/gateways/fusion
 
-# composite-schema + Rust subgraphs
-./k6/benchmark.sh composite-schema/gateways/fusion subgraphs-rust
-
-# apollo-federation + .NET subgraphs
-./k6/benchmark.sh apollo-federation/gateways/apollo-router subgraphs-net
+# apollo-federation + HotChocolate subgraphs (default)
+./k6/benchmark.sh apollo-federation/gateways/apollo-router
 
 # burst mode
 ./k6/benchmark.sh apollo-federation/gateways/cosmo burst
 
-# constant-latency mode (.NET subgraphs with simulated 4ms IO delay)
-./k6/benchmark.sh apollo-federation/gateways/grafbase subgraphs-net constant-latency
+# constant-latency mode (HotChocolate subgraphs with simulated 4ms IO delay)
+./k6/benchmark.sh apollo-federation/gateways/grafbase constant-latency
 ```
 
 ### What happens
 
-1. Resolves subgraph directory (`subgraphs-rust` / `subgraphs-net`)
-2. Builds subgraphs (`subgraphs/build.sh`) unless `USE_PREBUILT_SUBGRAPHS=1`
+1. Resolves subgraph directory (`subgraphs-net`)
+2. Builds subgraphs (`subgraphs-net/build.sh`, which bundles the .NET SDK into the subgraphs directory so the prebuilt artifact carries its own runtime) unless `USE_PREBUILT_SUBGRAPHS=1`
 3. Installs/builds gateway (`gateway/install.sh`) unless `USE_PREBUILT_GATEWAY=1`
 4. Starts subgraphs and gateway (optionally CPU-pinned)
 5. Executes one full-duration warmup run (discarded)
@@ -98,9 +98,9 @@ Environment variables:
 | `BENCH_DISPLAY_NAME` | _(auto)_ | Override report display name |
 | `BENCH_GATEWAY_NAME` | _(auto)_ | Override gateway identity in result metadata (used to split stable vs preview rows) |
 | `BENCH_GATEWAY_CHANNEL` | `stable` | HotChocolate package channel for `fusion`'s `install.sh` (`stable` = latest stable packages; `preview` = latest preview/nightly packages) |
-| `BENCH_GATEWAY_DOTNET` | `10` | .NET runtime/target for `fusion`'s `install.sh` (`10` = system .NET 10 SDK, targets net10.0; `11` = bundled .NET 11 preview SDK, targets net11.0 with runtime-async) |
-| `BENCH_SUBGRAPH_TECH` | _(auto)_ | Explicit subgraph tech label (`rust` / `.net`) |
-| `USE_PREBUILT_SUBGRAPHS` | `0` | Skip `build.sh` and expect prebuilt subgraph artifact |
+| `BENCH_GATEWAY_DOTNET` | `10` | .NET runtime/target for `fusion`'s `install.sh` (`10` = bundled .NET 10 SDK, targets net10.0; `11` = bundled .NET 11 preview SDK, targets net11.0 with runtime-async) |
+| `BENCH_SUBGRAPH_TECH` | _(auto)_ | Subgraph tech label recorded in result metadata (`.net`) |
+| `USE_PREBUILT_SUBGRAPHS` | `0` | Skip `build.sh` and expect prebuilt subgraph artifact (with bundled .NET runtime and apphosts; fails on benchmark machines without it — no local rebuild fallback) |
 | `USE_PREBUILT_GATEWAY` | `0` | Skip `install.sh` and expect prebuilt gateway artifact |
 
 ### CPU pinning
@@ -133,14 +133,14 @@ Workflow: [benchmark.yml](./.github/workflows/benchmark.yml)
 - Triggers:
   - `workflow_dispatch`
   - scheduled daily at `21:00 UTC`
-- Dynamic matrix:
+- Dynamic matrix (`k6/build-matrix.py`):
   - Builds gateway matrix from selected input
-  - Expands each gateway into `rust` + `.net` subgraph variants
+  - Each gateway runs against the HotChocolate subgraphs (`subgraphs-net`)
 - Build stages on `ubuntu-latest`:
-  - `build-subgraphs` (prebuilt artifacts)
+  - `build-subgraphs` (prebuilt artifacts, each bundling its own .NET runtime)
   - `build-gateways` (prebuilt artifacts)
-- Benchmark stages on dedicated benchmark runner:
-  - `benchmark-constant-latency` (.NET subgraphs only, 4ms simulated IO delay)
+- Benchmark stages on the dedicated `benchmark-runners` runner group:
+  - `benchmark-constant-latency` (4ms simulated IO delay)
   - `benchmark-constant` (runs after constant-latency completes)
   - `benchmark-burst` (runs after constant completes)
 - Result generation:

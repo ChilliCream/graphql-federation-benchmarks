@@ -83,6 +83,17 @@ def normalize_subgraph_tech(value):
     return tech or "unknown"
 
 
+def tech_display_label(subgraph_tech):
+    """User-facing label for a subgraph technology key.
+
+    Functional keys (".net", "rust") are unchanged; only the rendered label
+    leads with HotChocolate instead of .NET.
+    """
+    if subgraph_tech == ".net":
+        return "HotChocolate"
+    return subgraph_tech
+
+
 def get_gateway_name(metadata):
     """Get gateway identifier."""
     return metadata.get("gateway", metadata.get("display_name", "unknown"))
@@ -101,6 +112,8 @@ def get_subgraph_tech(metadata):
         return ".net"
 
     display_name = str(metadata.get("display_name", "")).lower()
+    if "(hotchocolate subgraphs)" in display_name:
+        return ".net"
     if "(.net subgraphs)" in display_name or "(net subgraphs)" in display_name:
         return ".net"
     if "(rust subgraphs)" in display_name:
@@ -154,20 +167,10 @@ def to_expected_gateway_entry(item):
     gateway = base_name or name
 
     subgraph_tech = normalize_subgraph_tech(item.get("subgraph_tech", ""))
-    if subgraph_tech == "unknown":
-        if name.endswith("-rust"):
-            subgraph_tech = "rust"
-        elif name.endswith("-net"):
-            subgraph_tech = ".net"
-
-    if not gateway and name.endswith("-rust"):
-        gateway = name[:-5]
-    elif not gateway and name.endswith("-net"):
-        gateway = name[:-4]
 
     display_name = str(item.get("display_name", "")).strip()
     if not display_name and gateway:
-        display_name = f"{gateway} ({subgraph_tech} subgraphs)"
+        display_name = f"{gateway} ({tech_display_label(subgraph_tech)} subgraphs)"
 
     if not gateway:
         return None
@@ -195,25 +198,22 @@ def dedupe_expected_gateways(entries):
 
 
 def load_expected_gateways_by_mode():
-    """Load expected gateways for each benchmark mode from env."""
-    expected_all_raw = parse_expected_gateways_env("EXPECTED_GATEWAYS_JSON")
-    expected_net_raw = parse_expected_gateways_env("EXPECTED_GATEWAYS_NET_JSON")
+    """Load expected gateways for each benchmark mode from env.
 
-    expected_all = dedupe_expected_gateways(
-        [to_expected_gateway_entry(item) for item in expected_all_raw]
-    )
-    expected_net = dedupe_expected_gateways(
-        [to_expected_gateway_entry(item) for item in expected_net_raw]
-    )
+    All modes run against the HotChocolate subgraphs; a single expected list (from
+    EXPECTED_GATEWAYS_JSON) applies to every mode.
+    """
+    expected_raw = parse_expected_gateways_env("EXPECTED_GATEWAYS_JSON")
 
-    if not expected_net and expected_all:
-        expected_net = [e for e in expected_all if e["subgraph_tech"] == ".net"]
+    expected = dedupe_expected_gateways(
+        [to_expected_gateway_entry(item) for item in expected_raw]
+    )
 
     return {
-        "constant": expected_all,
-        "burst": expected_all,
-        "ramping": expected_all,
-        "constant-latency": expected_net,
+        "constant": expected,
+        "burst": expected,
+        "ramping": expected,
+        "constant-latency": expected,
     }
 
 
@@ -323,7 +323,7 @@ def select_median_runs(results):
             "rps": rps,
             "version": version,
             "metrics": metrics,
-            "display_name": metadata.get("display_name", f"{name} ({subgraph_tech} subgraphs)"),
+            "display_name": metadata.get("display_name", f"{name} ({tech_display_label(subgraph_tech)} subgraphs)"),
         })
 
     selected = []
@@ -450,19 +450,39 @@ def generate_markdown(mode, results, expected_by_mode, not_run_by_mode=None):
 
     lines = []
 
+    # The setup sentence describes the current HotChocolate-only configuration. When
+    # the input still contains historical non-HotChocolate measurements (preserved,
+    # never relabeled), qualify the claim and call out the historical rows
+    # instead of describing every benchmark as a HotChocolate run.
+    techs_present = {e.get("subgraph_tech") for e in entries}
+    historical_kinds = sorted(t for t in techs_present if t and t != ".net")
+    setup_subject = (
+        "Current benchmarks run" if historical_kinds else "Each benchmark runs"
+    )
+
     SCENARIO_DESCRIPTION = (
-        "Each benchmark runs a GraphQL gateway with 4 subgraphs and executes a heavy nested "
-        "query that exercises federation/composition capabilities.\n"
-        "\n"
-        "Results are split by subgraph technology:\n"
-        "- **Rust Subgraphs** = [async-graphql](https://github.com/async-graphql/async-graphql) + axum\n"
-        "- **.NET Subgraphs** = [HotChocolate](https://github.com/ChilliCream/graphql-platform)\n"
+        f"{setup_subject} a GraphQL gateway with 4 HotChocolate subgraphs "
+        "([HotChocolate](https://github.com/ChilliCream/graphql-platform)) and executes "
+        "a heavy nested query that exercises federation/composition capabilities.\n"
         "\n"
         "**Methodology:** Each gateway executes {total_runs} runs of {duration} each. The first run is a "
         "full-duration warmup (discarded). The remaining {measured_runs} runs are measured. Results are ranked "
         "by **median RPS** across the {measured_runs} measured runs, with best/worst/CV% reported for "
         "transparency."
     ).format(duration=duration, total_runs=total_runs, measured_runs=measured_runs)
+
+    if historical_kinds:
+        historical_labels = []
+        if "rust" in historical_kinds:
+            historical_labels.append("Rust")
+        historical_labels.extend(
+            t for t in historical_kinds if t != "rust"
+        )
+        SCENARIO_DESCRIPTION += (
+            "\n\n> Historical note: this table also preserves earlier measurements taken "
+            f"with {' and '.join(historical_labels)} subgraphs; only the HotChocolate rows "
+            "reflect the current setup."
+        )
 
     if mode == "constant":
         lines.append("## Overview for: `constant-vus-over-time`")
@@ -479,8 +499,7 @@ def generate_markdown(mode, results, expected_by_mode, not_run_by_mode=None):
         lines.append("")
         lines.append(
             f"This scenario executes a constant load of **{vus} VUs** over **{duration}** "
-            f"with a simulated **4ms IO delay** on each subgraph request. "
-            f"Only .NET subgraphs are used."
+            f"with a simulated **4ms IO delay** on each subgraph request."
         )
     else:
         lines.append("## Overview for: `burst-vus`")
@@ -500,7 +519,7 @@ def generate_markdown(mode, results, expected_by_mode, not_run_by_mode=None):
     if rust_entries:
         subgraph_groups.append(("Rust Subgraphs", rust_entries))
     if net_entries:
-        subgraph_groups.append((".NET Subgraphs", net_entries))
+        subgraph_groups.append(("HotChocolate Subgraphs", net_entries))
     if other_entries:
         subgraph_groups.append(("Other Subgraphs", other_entries))
 
