@@ -8,12 +8,15 @@ own bundled runtime (see each subgraphs-net/build.sh).
 
 Reads the gateway selection from the SELECTED_GATEWAY environment variable
 ("all" or a gateway base name such as "fusion" or "fusion-nightly-net11") and
-writes the matrices to the file named by GITHUB_OUTPUT (or stdout when
+an optional exact HotChocolate pin from FUSION_VERSION (empty means resolve
+the latest per channel; applies to fusion-family gateways only) and writes
+the matrices to the file named by GITHUB_OUTPUT (or stdout when
 GITHUB_OUTPUT is unset, for local inspection).
 """
 
 import json
 import os
+import re
 import sys
 import urllib.request
 
@@ -101,6 +104,32 @@ SUBGRAPH_ARTIFACT_BY_CATEGORY = {
 # Gateway variants running preview HotChocolate packages.
 NIGHTLY_BASE_NAMES = ("fusion-nightly", "fusion-nightly-net11", "fusion-nightly-fed")
 
+# Gateways whose HotChocolate packages install.sh resolves: an explicit
+# FUSION_VERSION pins all of these; every other gateway ignores it.
+FUSION_BASE_NAMES = ("fusion",) + NIGHTLY_BASE_NAMES
+
+# Numeric X.Y.Z with an optional prerelease suffix of nonempty dot-separated
+# identifiers (e.g. "16.6.8", "16.7.0-p.27"). Mirrored by the
+# BENCH_GATEWAY_VERSION check in both fusion install.sh scripts — keep the
+# two in sync.
+FUSION_VERSION_PATTERN = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$")
+
+
+def validate_fusion_version(raw):
+    """Normalize the FUSION_VERSION env value, failing fast on garbage."""
+    version = (raw or "").strip()
+    if not version:
+        return ""
+    if not FUSION_VERSION_PATTERN.match(version):
+        print(
+            f"Error: invalid FUSION_VERSION={raw!r} "
+            "(expected numeric X.Y.Z with optional prerelease suffix, "
+            "e.g. '16.6.8' or '16.7.0-p.27')",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    return version
+
 
 def _parse_core(core):
     nums = []
@@ -166,12 +195,18 @@ def hotchocolate_preview_is_ahead():
         return False, None, None
 
 
-def build_gateway_entries():
-    """Expand each base gateway into its single HotChocolate-subgraphs matrix entry."""
+def build_gateway_entries(fusion_version=""):
+    """Expand each base gateway into its single HotChocolate-subgraphs matrix entry.
+
+    An explicit fusion_version pins the fusion-family entries: they carry a
+    "version" field and the version in their display name. Non-fusion entries
+    ignore it, and an empty version leaves every entry exactly as before.
+    """
     entries = []
     for gateway in BASE_GATEWAYS:
         category = gateway["path"].split("/", 1)[0]
-        entries.append({
+        display_name = f"{gateway['name']} (HotChocolate subgraphs)"
+        entry = {
             "path": gateway["path"],
             "name": gateway["name"],
             "base_name": gateway["name"],
@@ -179,10 +214,16 @@ def build_gateway_entries():
             "dotnet": gateway.get("dotnet", "10"),
             "subgraphs": SUBGRAPHS_DIR,
             "subgraph_tech": SUBGRAPH_TECH,
-            "display_name": f"{gateway['name']} (HotChocolate subgraphs)",
+            "display_name": display_name,
             "subgraphs_artifact": SUBGRAPH_ARTIFACT_BY_CATEGORY[category],
             "gateway_artifact": gateway["gateway_artifact"],
-        })
+        }
+        if fusion_version and gateway["name"] in FUSION_BASE_NAMES:
+            entry["version"] = fusion_version
+            entry["display_name"] = (
+                f"{gateway['name']} {fusion_version} (HotChocolate subgraphs)"
+            )
+        entries.append(entry)
     return entries
 
 
@@ -206,9 +247,10 @@ def split_for_mode(entries, mode):
     return run, not_run
 
 
-def select_gateways(selected, preview_check=hotchocolate_preview_is_ahead):
+def select_gateways(selected, preview_check=hotchocolate_preview_is_ahead,
+                   fusion_version=""):
     """Select matrix entries for a gateway selection string."""
-    gateways = build_gateway_entries()
+    gateways = build_gateway_entries(fusion_version)
 
     if selected == "all":
         chosen = gateways
@@ -218,11 +260,11 @@ def select_gateways(selected, preview_check=hotchocolate_preview_is_ahead):
     # Skip the fusion-nightly (preview) variants — both the .NET 10 and the
     # .NET 11 build — unless a HotChocolate prerelease newer than the latest
     # stable exists; otherwise "nightly" would benchmark a build older than (or
-    # equal to) the stable run. An explicit fusion-nightly* selection is always
-    # honored.
+    # equal to) the stable run. An explicit fusion-nightly* selection — or an
+    # explicit FUSION_VERSION pin — is always honored.
     nightly_in_chosen = any(e["base_name"] in NIGHTLY_BASE_NAMES for e in chosen)
     nightly_explicit = selected in NIGHTLY_BASE_NAMES
-    if nightly_in_chosen and not nightly_explicit:
+    if nightly_in_chosen and not nightly_explicit and not fusion_version:
         preview_ahead, latest_stable_str, latest_preview_str = preview_check()
         if preview_ahead:
             print(
@@ -236,6 +278,11 @@ def select_gateways(selected, preview_check=hotchocolate_preview_is_ahead):
                 f"({latest_preview_str or 'none'}) is not ahead of latest stable "
                 f"({latest_stable_str or 'none'})."
             )
+    elif nightly_in_chosen and fusion_version:
+        print(
+            f"Including fusion-nightly variants: explicit FUSION_VERSION "
+            f"{fusion_version} pins the HotChocolate packages."
+        )
 
     if not chosen:
         print(f"Error: no gateway entries match selection {selected!r}", file=sys.stderr)
@@ -244,9 +291,11 @@ def select_gateways(selected, preview_check=hotchocolate_preview_is_ahead):
     return chosen
 
 
-def build_matrices(selected, preview_check=hotchocolate_preview_is_ahead):
+def build_matrices(selected, preview_check=hotchocolate_preview_is_ahead,
+                   fusion_version=""):
     """Compute all workflow matrices for a gateway selection string."""
-    chosen = select_gateways(selected, preview_check)
+    fusion_version = validate_fusion_version(fusion_version)
+    chosen = select_gateways(selected, preview_check, fusion_version)
 
     chosen_constant, not_run_constant = split_for_mode(chosen, "constant")
     chosen_burst, not_run_burst = split_for_mode(chosen, "burst")
@@ -256,12 +305,15 @@ def build_matrices(selected, preview_check=hotchocolate_preview_is_ahead):
         artifact = entry["gateway_artifact"]
         if artifact in builds_by_artifact:
             continue
-        builds_by_artifact[artifact] = {
+        build = {
             "path": entry["path"],
             "artifact": artifact,
             "channel": entry["channel"],
             "dotnet": entry["dotnet"],
         }
+        if entry.get("version"):
+            build["version"] = entry["version"]
+        builds_by_artifact[artifact] = build
 
     subgraphs_by_artifact = {}
     for entry in chosen:
@@ -287,7 +339,8 @@ def build_matrices(selected, preview_check=hotchocolate_preview_is_ahead):
 
 def main():
     selected = os.environ.get("SELECTED_GATEWAY", "all")
-    matrices = build_matrices(selected)
+    fusion_version = validate_fusion_version(os.environ.get("FUSION_VERSION", ""))
+    matrices = build_matrices(selected, fusion_version=fusion_version)
 
     output_path = os.environ.get("GITHUB_OUTPUT", "")
     output_lines = [
@@ -310,6 +363,10 @@ def main():
     print("Selected gateway entries:")
     for entry in matrices["gateways"]:
         print(f" - {entry['base_name']} [{entry['subgraph_tech']}]")
+    if fusion_version:
+        print(
+            f"Pinned HotChocolate version for fusion-family gateways: {fusion_version}"
+        )
 
     print("Subgraph builds:")
     for sub in matrices["subgraph_builds"]:

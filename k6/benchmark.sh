@@ -20,6 +20,7 @@ set -Eeuo pipefail
 #   BENCH_GATEWAY_NAME     Override the gateway identity used in result metadata (default: gateway dir name)
 #   BENCH_GATEWAY_CHANNEL  Gateway package channel passed to install.sh (stable | preview; gateway-specific)
 #   BENCH_GATEWAY_DOTNET   .NET runtime/target passed to install.sh (10 | 11; fusion-specific)
+#   BENCH_GATEWAY_VERSION  Exact HotChocolate version passed to install.sh (empty = resolve latest per channel; fusion-specific)
 #
 # Methodology:
 #   10 runs total: 1 full-duration warmup (discarded) + 9 measured runs.
@@ -494,6 +495,7 @@ run_as_perfrunner() {
           BENCHMARK_SIMULATE_LATENCY="${BENCHMARK_SIMULATE_LATENCY:-}" \
           BENCH_GATEWAY_CHANNEL="${BENCH_GATEWAY_CHANNEL:-}" \
           BENCH_GATEWAY_DOTNET="${BENCH_GATEWAY_DOTNET:-}" \
+          BENCH_GATEWAY_VERSION="${BENCH_GATEWAY_VERSION:-}" \
       "$@"
   else
     "$@"

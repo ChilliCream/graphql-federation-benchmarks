@@ -100,6 +100,22 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("Summary generated (UTC): **$(date -u", self.workflow)
         self.assertNotIn("Started (UTC): **$(date -u", self.workflow)
 
+    def test_fusion_version_input_exists(self):
+        self.assertIn("fusion_version:", self.workflow)
+        # The input documents its Fusion-only scope and that other
+        # gateways ignore it (so pinned full-matrix runs keep working).
+        self.assertIn("Fusion-family", self.workflow)
+        self.assertIn("Non-fusion gateways ignore this input", self.workflow)
+
+    def test_fusion_version_plumbing(self):
+        # workflow input -> prepare-matrix env -> build-matrix.py.
+        self.assertIn(
+            "FUSION_VERSION: ${{ inputs.fusion_version", self.workflow
+        )
+        # Per-entry version field -> build-gateways env.
+        self.assertIn("matrix.gateway.version", self.workflow)
+        self.assertIn("BENCH_GATEWAY_VERSION", self.workflow)
+
 
 class BenchmarkScriptTests(unittest.TestCase):
     def setUp(self):
@@ -118,6 +134,12 @@ class BenchmarkScriptTests(unittest.TestCase):
 
     def test_prebuilt_checks_apphosts(self):
         self.assertIn("bin/Release/net*/", self.script)
+
+    def test_forwards_gateway_version(self):
+        # Local installs get the same pin install.sh honors in CI.
+        self.assertIn(
+            'BENCH_GATEWAY_VERSION="${BENCH_GATEWAY_VERSION:-}"', self.script
+        )
 
 
 class SubgraphScriptTests(unittest.TestCase):
@@ -302,6 +324,23 @@ class FusionGatewayTests(unittest.TestCase):
                 content = read(os.path.join(REPO_ROOT, rel))
                 self.assertIn('Import Project="bench.props"', content)
                 self.assertIn("Condition=\"Exists('bench.props')\"", content)
+
+    def test_install_scripts_support_pinned_version(self):
+        # Both fusion install.sh scripts honor BENCH_GATEWAY_VERSION: an
+        # explicit pin installs exactly that version instead of resolving the
+        # latest for the channel, and garbage fails fast.
+        for rel in self.INSTALL_SCRIPTS:
+            with self.subTest(script=rel):
+                content = read(os.path.join(REPO_ROOT, rel))
+                self.assertIn("BENCH_GATEWAY_VERSION", content)
+                self.assertIn("PINNED_VERSION", content)
+                self.assertIn("invalid BENCH_GATEWAY_VERSION", content)
+                # Same numeric X.Y.Z-with-optional-prerelease shape as
+                # FUSION_VERSION_PATTERN in k6/build-matrix.py.
+                self.assertIn(
+                    "^[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$", content
+                )
+                self.assertIn('SELECTED_VERSION="$PINNED_VERSION"', content)
 
 
 class ResultGenerationTests(unittest.TestCase):

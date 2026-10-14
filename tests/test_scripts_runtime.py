@@ -579,5 +579,173 @@ class SubgraphBuildPinTests(unittest.TestCase):
                 self.assertIn("not pinned to", proc.stdout + proc.stderr)
 
 
+class FusionVersionOverrideTests(unittest.TestCase):
+    """Both fusion install.sh scripts validate BENCH_GATEWAY_VERSION before any
+    download and install exactly that HotChocolate version instead of resolving
+    the latest for the channel."""
+
+    INSTALL_SCRIPTS = (
+        os.path.join(
+            REPO_ROOT, "composite-schema", "gateways", "fusion", "install.sh"
+        ),
+        os.path.join(
+            REPO_ROOT,
+            "apollo-federation",
+            "gateways",
+            "fusion-nightly-fed",
+            "install.sh",
+        ),
+    )
+    BLOCK_START = (
+        "# --- Validate explicit HotChocolate version override: begin ---"
+    )
+    BLOCK_END = "# --- Validate explicit HotChocolate version override: end ---"
+
+    GOOD_VERSIONS = ("16.6.8", "16.7.0-p.27", "16.10.0-preview.1")
+    BAD_VERSIONS = (
+        "abc",
+        "16.6",
+        "16",
+        "v16.6.8",
+        "16.6.8;",
+        "16.6.8..1",
+        "16.6.8-",
+        "16.6.8-.",
+        "16.6.8-p.",
+        "16.6.8-p..27",
+        "16.6.8-.27",
+        "latest",
+        "16.6.x",
+        "16.6.8 foo",
+    )
+
+    def extract_validation_block(self, path):
+        with open(path, encoding="utf-8") as fh:
+            content = fh.read()
+        start = content.index(self.BLOCK_START)
+        end = content.index(self.BLOCK_END)
+        return content[start:end]
+
+    def run_validation_block(self, path, version):
+        block = self.extract_validation_block(path)
+        workdir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, workdir, True)
+        wrapper = os.path.join(workdir, "version-check.sh")
+        with open(wrapper, "w", encoding="utf-8") as fh:
+            fh.write("set -u\n")
+            fh.write('CHANNEL="preview"\n')
+            fh.write(block + "\n")
+        env = dict(os.environ)
+        if version is not None:
+            env["BENCH_GATEWAY_VERSION"] = version
+        else:
+            env.pop("BENCH_GATEWAY_VERSION", None)
+        return subprocess.run(
+            ["bash", wrapper],
+            capture_output=True,
+            text=True,
+            timeout=60,
+            env=env,
+        )
+
+    def test_validation_block_accepts_versions(self):
+        for script in self.INSTALL_SCRIPTS:
+            for version in self.GOOD_VERSIONS:
+                with self.subTest(script=script, version=version):
+                    proc = self.run_validation_block(script, version)
+                    self.assertEqual(
+                        proc.returncode, 0, proc.stderr + proc.stdout
+                    )
+                    self.assertIn("pinned", proc.stdout + proc.stderr)
+
+    def test_validation_block_accepts_empty(self):
+        for script in self.INSTALL_SCRIPTS:
+            for version in ("", None):
+                with self.subTest(script=script, version=version):
+                    proc = self.run_validation_block(script, version)
+                    self.assertEqual(
+                        proc.returncode, 0, proc.stderr + proc.stdout
+                    )
+
+    def test_validation_block_rejects_garbage(self):
+        for script in self.INSTALL_SCRIPTS:
+            for version in self.BAD_VERSIONS:
+                with self.subTest(script=script, version=version):
+                    proc = self.run_validation_block(script, version)
+                    self.assertNotEqual(proc.returncode, 0)
+                    self.assertIn(
+                        "invalid BENCH_GATEWAY_VERSION",
+                        proc.stdout + proc.stderr,
+                    )
+
+    def run_whole_install_script(self, script, version):
+        """Run the real install.sh with a stubbed curl.
+
+        The stub records any invocation and exits 23 (offline curl), so an
+        invalid pin must surface as a pin error before any download, while a
+        valid pin must sail through validation and reach the SDK download.
+        """
+        workdir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, workdir, True)
+        shutil.copy(script, os.path.join(workdir, "install.sh"))
+        bindir = os.path.join(workdir, "bin")
+        os.makedirs(bindir)
+        marker = os.path.join(workdir, "curl-invoked")
+        with open(os.path.join(bindir, "curl"), "w", encoding="utf-8") as fh:
+            fh.write(f'#!/usr/bin/env bash\ntouch "{marker}"\nexit 23\n')
+        os.chmod(os.path.join(bindir, "curl"), 0o755)
+        env = dict(os.environ)
+        env["PATH"] = bindir + os.pathsep + env.get("PATH", "")
+        env["BENCH_GATEWAY_VERSION"] = version
+        env["BENCH_GATEWAY_CHANNEL"] = "preview"
+        env["BENCH_GATEWAY_DOTNET"] = "10"
+        proc = subprocess.run(
+            ["bash", os.path.join(workdir, "install.sh")],
+            capture_output=True,
+            text=True,
+            timeout=60,
+            cwd=workdir,
+            env=env,
+        )
+        return proc, os.path.exists(marker)
+
+    def test_whole_script_fails_fast_on_invalid_version(self):
+        for script in self.INSTALL_SCRIPTS:
+            with self.subTest(script=script):
+                proc, curl_invoked = self.run_whole_install_script(
+                    script, "not-a-version"
+                )
+                self.assertNotEqual(proc.returncode, 0)
+                self.assertIn(
+                    "invalid BENCH_GATEWAY_VERSION",
+                    proc.stdout + proc.stderr,
+                )
+                self.assertFalse(
+                    curl_invoked,
+                    f"{script} attempted a download before reporting the "
+                    "invalid version",
+                )
+
+    def test_whole_script_passes_validation_before_sdk_download(self):
+        # A valid pin must get past validation (it then proceeds to the
+        # stubbed SDK download and fails there, proving validation ran first
+        # and accepted the pin).
+        for script in self.INSTALL_SCRIPTS:
+            with self.subTest(script=script):
+                proc, curl_invoked = self.run_whole_install_script(
+                    script, "16.6.8"
+                )
+                self.assertNotEqual(proc.returncode, 0)
+                self.assertNotIn(
+                    "invalid BENCH_GATEWAY_VERSION",
+                    proc.stdout + proc.stderr,
+                )
+                self.assertTrue(
+                    curl_invoked,
+                    f"{script} should reach the SDK download once the pin "
+                    "check passes",
+                )
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -161,6 +161,156 @@ class BuildMatrixTests(unittest.TestCase):
                         legacy, preview_check=lambda: (False, "16.6.0", None)
                     )
 
+    def test_empty_version_keeps_entries_unchanged(self):
+        # Empty FUSION_VERSION must keep the matrix byte-identical: no
+        # "version" key anywhere and today's display names.
+        for version in ("", None):
+            with self.subTest(version=version):
+                matrices = MATRIX.build_matrices(
+                    "all",
+                    preview_check=lambda: (True, "16.6.0", "16.7.0-p.1"),
+                    fusion_version=version,
+                )
+                for entry in matrices["gateways"]:
+                    self.assertNotIn("version", entry)
+                    self.assertEqual(
+                        entry["display_name"],
+                        f"{entry['name']} (HotChocolate subgraphs)",
+                    )
+                for build in matrices["gateway_builds"]:
+                    self.assertNotIn("version", build)
+
+    def test_explicit_version_flows_into_fusion_entries_only(self):
+        matrices = MATRIX.build_matrices(
+            "all",
+            preview_check=lambda: (False, "16.6.0", None),
+            fusion_version="16.6.8",
+        )
+        by_name = {e["name"]: e for e in matrices["gateways"]}
+        for nightly in (
+            "fusion",
+            "fusion-nightly",
+            "fusion-nightly-net11",
+            "fusion-nightly-fed",
+        ):
+            with self.subTest(gateway=nightly):
+                self.assertEqual(by_name[nightly]["version"], "16.6.8")
+                self.assertEqual(
+                    by_name[nightly]["display_name"],
+                    f"{nightly} 16.6.8 (HotChocolate subgraphs)",
+                )
+        # Non-fusion gateways ignore the pin.
+        self.assertNotIn("version", by_name["cosmo"])
+        self.assertEqual(
+            by_name["cosmo"]["display_name"], "cosmo (HotChocolate subgraphs)"
+        )
+        # Gateway builds carry the pin for fusion artifacts only.
+        builds = {b["artifact"]: b for b in matrices["gateway_builds"]}
+        self.assertEqual(
+            builds["prebuilt-gateway-fusion-nightly"]["version"], "16.6.8"
+        )
+        self.assertNotIn("version", builds["prebuilt-gateway-cosmo"])
+
+    def test_explicit_version_bypasses_nightly_skip(self):
+        # Preview not ahead, yet the nightly variants are kept when pinned.
+        matrices = MATRIX.build_matrices(
+            "all",
+            preview_check=lambda: (False, "16.6.0", "16.6.0"),
+            fusion_version="16.7.0-p.27",
+        )
+        names = {e["name"] for e in matrices["gateways"]}
+        self.assertTrue(
+            {"fusion-nightly", "fusion-nightly-net11", "fusion-nightly-fed"}
+            <= names
+        )
+
+    def test_explicit_version_ignored_for_single_nonfusion_selection(self):
+        matrices = MATRIX.build_matrices(
+            "cosmo",
+            preview_check=lambda: (False, "16.6.0", None),
+            fusion_version="16.6.8",
+        )
+        self.assertEqual([e["name"] for e in matrices["gateways"]], ["cosmo"])
+        self.assertNotIn("version", matrices["gateways"][0])
+
+    def test_invalid_version_rejected(self):
+        for bad in (
+            "abc",
+            "16.6",
+            "16",
+            "v16.6.8",
+            "16.6.8;",
+            "16.6.8..1",
+            "16.6.8-",
+            "16.6.8-.",
+            "16.6.8-p.",
+            "16.6.8-p..27",
+            "16.6.8-.27",
+            "latest",
+            "16.6.x",
+            "16.6.8 foo",
+        ):
+            with self.subTest(version=bad):
+                with self.assertRaises(SystemExit):
+                    MATRIX.build_matrices(
+                        "all",
+                        preview_check=lambda: (False, "16.6.0", None),
+                        fusion_version=bad,
+                    )
+
+    def test_prerelease_version_accepted(self):
+        matrices = MATRIX.build_matrices(
+            "fusion-nightly",
+            preview_check=lambda: (False, "16.6.0", None),
+            fusion_version="16.7.0-p.27",
+        )
+        self.assertEqual(matrices["gateways"][0]["version"], "16.7.0-p.27")
+
+    def test_main_reads_fusion_version_env(self):
+        env = dict(os.environ)
+        env["SELECTED_GATEWAY"] = "all"
+        env["FUSION_VERSION"] = "16.6.8"
+        with tempfile.TemporaryDirectory() as tmp:
+            output_path = os.path.join(tmp, "github_output")
+            env["GITHUB_OUTPUT"] = output_path
+            proc = subprocess.run(
+                [sys.executable, MATRIX_SCRIPT],
+                env=env,
+                capture_output=True,
+                text=True,
+                timeout=120,
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            outputs = {}
+            with open(output_path) as fh:
+                for line in fh:
+                    key, _, value = line.strip().partition("=")
+                    outputs[key] = value
+            gateways = json.loads(outputs["gateways"])
+            by_name = {g["name"]: g for g in gateways}
+            self.assertEqual(by_name["fusion"]["version"], "16.6.8")
+            self.assertNotIn("version", by_name["cosmo"])
+            builds = {
+                b["artifact"]: b for b in json.loads(outputs["gateway_builds"])
+            }
+            self.assertEqual(
+                builds["prebuilt-gateway-fusion"]["version"], "16.6.8"
+            )
+
+    def test_main_rejects_invalid_fusion_version_env(self):
+        env = dict(os.environ)
+        env["SELECTED_GATEWAY"] = "all"
+        env["FUSION_VERSION"] = "not-a-version"
+        proc = subprocess.run(
+            [sys.executable, MATRIX_SCRIPT],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("invalid FUSION_VERSION", proc.stderr)
+
     def test_main_writes_workflow_outputs(self):
         env = dict(os.environ)
         env["SELECTED_GATEWAY"] = "cosmo"

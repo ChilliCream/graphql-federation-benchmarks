@@ -9,6 +9,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 #                          stable  = latest non-prerelease (default)
 #                          preview = newest prerelease (the latest nightly)
 #
+#   BENCH_GATEWAY_VERSION  exact HotChocolate version to build against instead
+#                          of resolving the latest for the channel above
+#                          (empty = resolve latest per channel; when set, the
+#                          channel is ignored)
+#
 #   BENCH_GATEWAY_DOTNET   which .NET runtime / target framework to build and run on
 #                          10 = bundled latest GA .NET 10 SDK, targets net10.0 (default)
 #                          11 = bundled latest .NET 11 preview SDK, targets net11.0
@@ -32,6 +37,23 @@ case "$CHANNEL" in
     exit 1
     ;;
 esac
+
+# --- Validate explicit HotChocolate version override ---------------------------
+# BENCH_GATEWAY_VERSION pins the exact HotChocolate version instead of
+# resolving the latest for BENCH_GATEWAY_CHANNEL. Validated here — before the
+# SDK download — so garbage fails fast without touching the network.
+# tests/test_scripts_runtime.py executes this block standalone against
+# good/bad BENCH_GATEWAY_VERSION values; keep it self-contained.
+# --- Validate explicit HotChocolate version override: begin ---
+PINNED_VERSION="${BENCH_GATEWAY_VERSION:-}"
+if [[ -n "$PINNED_VERSION" ]]; then
+  if [[ ! "$PINNED_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$ ]]; then
+    echo "ERROR: invalid BENCH_GATEWAY_VERSION='$PINNED_VERSION' (expected numeric X.Y.Z with optional prerelease suffix, e.g. '16.6.8' or '16.7.0-p.27')"
+    exit 1
+  fi
+  echo "Using pinned HotChocolate version $PINNED_VERSION (channel '$CHANNEL' ignored)."
+fi
+# --- Validate explicit HotChocolate version override: end ---
 
 # --- Resolve the .NET runtime / target framework -----------------------------
 DOTNET_TARGET="${BENCH_GATEWAY_DOTNET:-10}"
@@ -120,9 +142,12 @@ EOF
 # version is resolved — its contents depend on both the .NET target and the
 # resolved package version.
 
-echo "Fetching latest $CHANNEL HotChocolate version from NuGet..."
-SELECTED_VERSION=$(curl -s "https://api.nuget.org/v3-flatcontainer/hotchocolate.aspnetcore/index.json" \
-  | CHANNEL="$CHANNEL" python3 -c '
+if [[ -n "$PINNED_VERSION" ]]; then
+  SELECTED_VERSION="$PINNED_VERSION"
+else
+  echo "Fetching latest $CHANNEL HotChocolate version from NuGet..."
+  SELECTED_VERSION=$(curl -s "https://api.nuget.org/v3-flatcontainer/hotchocolate.aspnetcore/index.json" \
+    | CHANNEL="$CHANNEL" python3 -c '
 import json, os, sys
 
 channel = os.environ["CHANNEL"]
@@ -171,13 +196,14 @@ if not candidates:
 candidates.sort(key=lambda item: item[0])
 print(candidates[-1][1])
 ')
+fi
 
 if [[ -z "$SELECTED_VERSION" ]]; then
   echo "ERROR: Could not determine latest $CHANNEL HotChocolate version"
   exit 1
 fi
 
-echo "Latest $CHANNEL HotChocolate version: $SELECTED_VERSION"
+echo "Selected HotChocolate version: $SELECTED_VERSION (channel: $CHANNEL)"
 
 # --- Update HotChocolate package versions in gateway .csproj ---
 echo "Updating HotChocolate* package references to $SELECTED_VERSION..."

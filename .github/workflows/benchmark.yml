@@ -26,6 +26,9 @@ on:
           - fusion-nightly-net11
           - fusion-nightly-fed
           - feddi
+      fusion_version:
+        required: false
+        default: ''
       benchmark:
         description: 'Benchmark mode'
         required: false
@@ -121,6 +124,7 @@ jobs:
         id: build
         env:
           SELECTED_GATEWAY: ${{ inputs.gateway || 'all' }}
+          FUSION_VERSION: ${{ inputs.fusion_version || '' }}
         run: python3 k6/build-matrix.py
 
   build-subgraphs:
@@ -174,6 +178,7 @@ jobs:
         env:
           BENCH_GATEWAY_CHANNEL: ${{ matrix.gateway.channel || 'stable' }}
           BENCH_GATEWAY_DOTNET: ${{ matrix.gateway.dotnet || '10' }}
+          BENCH_GATEWAY_VERSION: ${{ matrix.gateway.version || '' }}
         run: |
           chmod +x "${{ matrix.gateway.path }}/install.sh"
           (cd "${{ matrix.gateway.path }}" && bash install.sh)
