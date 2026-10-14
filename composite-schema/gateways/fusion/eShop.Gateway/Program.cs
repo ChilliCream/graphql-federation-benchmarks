@@ -1,3 +1,4 @@
+using HotChocolate.Fusion.Configuration;
 using eShop.Gateway.BenchmarkDiagnostics;
 
 ThreadPool.SetMinThreads(256, 256);
@@ -27,7 +28,12 @@ builder.Services
 
 builder
     .AddGraphQLGateway()
+#if FUSION_16_7_OR_GREATER
+    .AddFileSystemConfiguration("./gateway.far")
+    .ModifyCostOptions(options => options.EnforceCostLimits = false);
+#else
     .AddFileSystemConfiguration("./gateway.far");
+#endif
 
 var app = builder.Build();
 

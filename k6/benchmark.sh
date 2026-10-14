@@ -9,8 +9,8 @@ set -Eeuo pipefail
 #
 # Examples:
 #   ./k6/benchmark.sh composite-schema/gateways/fusion
-#   ./k6/benchmark.sh composite-schema/gateways/fusion subgraphs-rust
-#   ./k6/benchmark.sh composite-schema/gateways/fusion subgraphs-rust burst
+#   ./k6/benchmark.sh composite-schema/gateways/fusion subgraphs-net
+#   ./k6/benchmark.sh composite-schema/gateways/fusion subgraphs-net burst
 #   ./k6/benchmark.sh apollo-federation/gateways/cosmo burst
 #
 # Environment variables:
@@ -20,6 +20,7 @@ set -Eeuo pipefail
 #   BENCH_GATEWAY_NAME     Override the gateway identity used in result metadata (default: gateway dir name)
 #   BENCH_GATEWAY_CHANNEL  Gateway package channel passed to install.sh (stable | preview; gateway-specific)
 #   BENCH_GATEWAY_DOTNET   .NET runtime/target passed to install.sh (10 | 11; fusion-specific)
+#   BENCH_GATEWAY_VERSION  Exact HotChocolate version passed to install.sh (empty = resolve latest per channel; fusion-specific)
 #
 # Methodology:
 #   10 runs total: 1 full-duration warmup (discarded) + 9 measured runs.
@@ -31,7 +32,7 @@ set -Eeuo pipefail
 if [[ $# -lt 1 ]]; then
   echo "Usage: $0 <gateway-path> [subgraphs-dir] [constant|constant-latency|burst|ramping]"
   echo "  e.g. $0 composite-schema/gateways/fusion"
-  echo "  e.g. $0 composite-schema/gateways/fusion subgraphs-rust"
+  echo "  e.g. $0 composite-schema/gateways/fusion subgraphs-net"
   exit 1
 fi
 
@@ -103,20 +104,15 @@ echo "  RAM:      $MACHINE_RAM"
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 GATEWAY_DIR="$REPO_ROOT/$GATEWAY_REL"
-# Subgraphs dir: same top-level category, under the default runtime variant
-# (or override).
-# - apollo-federation defaults to Rust subgraphs in subgraphs-rust
-# - composite-schema defaults to .NET subgraphs in subgraphs-net
+# Subgraphs dir: same top-level category, under the HotChocolate subgraph variant
+# (subgraphs-net; or explicit override, which must also be that variant —
+# benchmarks run against the HotChocolate subgraphs only).
 CATEGORY="$(echo "$GATEWAY_REL" | cut -d/ -f1)"
-if [[ -n "$SUBGRAPHS_OVERRIDE" ]]; then
-  SUBGRAPHS_DIR="$REPO_ROOT/$CATEGORY/$SUBGRAPHS_OVERRIDE"
-elif [[ "$CATEGORY" == "apollo-federation" ]]; then
-  SUBGRAPHS_DIR="$REPO_ROOT/$CATEGORY/subgraphs-rust"
-elif [[ "$CATEGORY" == "composite-schema" ]]; then
-  SUBGRAPHS_DIR="$REPO_ROOT/$CATEGORY/subgraphs-net"
-else
-  SUBGRAPHS_DIR="$REPO_ROOT/$CATEGORY/subgraphs"
+if [[ -n "$SUBGRAPHS_OVERRIDE" && "$SUBGRAPHS_OVERRIDE" != "subgraphs-net" ]]; then
+  echo "Error: unsupported subgraphs override '$SUBGRAPHS_OVERRIDE' (only 'subgraphs-net' is supported)"
+  exit 1
 fi
+SUBGRAPHS_DIR="$REPO_ROOT/$CATEGORY/subgraphs-net"
 
 for dir in "$GATEWAY_DIR" "$SUBGRAPHS_DIR"; do
   if [[ ! -d "$dir" ]]; then
@@ -499,6 +495,7 @@ run_as_perfrunner() {
           BENCHMARK_SIMULATE_LATENCY="${BENCHMARK_SIMULATE_LATENCY:-}" \
           BENCH_GATEWAY_CHANNEL="${BENCH_GATEWAY_CHANNEL:-}" \
           BENCH_GATEWAY_DOTNET="${BENCH_GATEWAY_DOTNET:-}" \
+          BENCH_GATEWAY_VERSION="${BENCH_GATEWAY_VERSION:-}" \
       "$@"
   else
     "$@"
@@ -642,13 +639,29 @@ resolve_listener_pid_by_port() {
 echo ""
 echo "=== Preparing subgraphs ==="
 if [[ "${USE_PREBUILT_SUBGRAPHS:-0}" == "1" ]]; then
-  if [[ "$SUBGRAPHS_DIR" == *"subgraphs-rust"* ]] && [[ ! -x "$SUBGRAPHS_DIR/target/release/subgraphs" ]]; then
-    echo "Error: expected prebuilt Rust subgraph binary at $SUBGRAPHS_DIR/target/release/subgraphs"
+  # The prebuilt subgraphs-net artifact carries its own bundled runtime (see
+  # subgraphs-net/build.sh), so the benchmark machine needs no .NET SDK. A
+  # missing bundle or missing apphosts means a broken artifact: fail instead
+  # of falling back to a system dotnet, which could silently benchmark a
+  # different runtime.
+  if [[ ! -d "$SUBGRAPHS_DIR/.dotnet/shared/Microsoft.NETCore.App" ]]; then
+    echo "Error: expected bundled .NET runtime at $SUBGRAPHS_DIR/.dotnet/shared/Microsoft.NETCore.App"
     exit 1
   fi
 
-  if [[ "$SUBGRAPHS_DIR" == *"subgraphs-net"* ]] && ! run_as_perfrunner bash -lc 'command -v dotnet >/dev/null'; then
-    echo "Error: expected dotnet runtime in prebuilt mode, but it is not available to perfrunner"
+  MISSING_APPHOSTS=()
+  while IFS= read -r csproj; do
+    [[ -n "$csproj" ]] || continue
+    project_dir="$(dirname "$csproj")"
+    project_name="$(basename "$project_dir")"
+    if ! compgen -G "$project_dir/bin/Release/net*/$project_name" > /dev/null; then
+      MISSING_APPHOSTS+=("$project_dir/bin/Release/net*/$project_name")
+    fi
+  done < <(find "$SUBGRAPHS_DIR" -mindepth 2 -maxdepth 2 -type f -name '*.csproj' | sort)
+
+  if [[ ${#MISSING_APPHOSTS[@]} -gt 0 ]]; then
+    echo "Error: expected prebuilt subgraph apphosts, but missing:"
+    printf '  %s\n' "${MISSING_APPHOSTS[@]}"
     exit 1
   fi
 
@@ -884,8 +897,6 @@ fi
 SUBGRAPH_VARIANT="$(basename "$SUBGRAPHS_DIR")"
 if [[ -n "${BENCH_SUBGRAPH_TECH:-}" ]]; then
   SUBGRAPH_TECH="$BENCH_SUBGRAPH_TECH"
-elif [[ "$SUBGRAPH_VARIANT" == "subgraphs-rust" ]]; then
-  SUBGRAPH_TECH="rust"
 elif [[ "$SUBGRAPH_VARIANT" == "subgraphs-net" ]]; then
   SUBGRAPH_TECH=".net"
 else
@@ -895,6 +906,8 @@ export BENCH_SUBGRAPH_TECH="$SUBGRAPH_TECH"
 export BENCH_SUBGRAPH_VARIANT="$SUBGRAPH_VARIANT"
 if [[ -n "${BENCH_DISPLAY_NAME:-}" ]]; then
   DISPLAY_NAME="$BENCH_DISPLAY_NAME"
+elif [[ "$SUBGRAPH_TECH" == ".net" ]]; then
+  DISPLAY_NAME="$GATEWAY_NAME (HotChocolate subgraphs)"
 else
   DISPLAY_NAME="$GATEWAY_NAME ($SUBGRAPH_TECH subgraphs)"
 fi
