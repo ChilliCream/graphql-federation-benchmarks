@@ -56,9 +56,11 @@ esac
 #   - $SCRIPT_DIR/.dotnet            bundled SDK (start.sh requires it at launch)
 #   - $SCRIPT_DIR/global.json        pins the bundled SDK (overrides the repo-root
 #                                    global.json, which pins .NET 10 / latestMinor)
-#   - eShop.Gateway/bench.props      net11 only: retargets the gateway to net11.0
-#                                    and opts into runtime-async (imported by the
-#                                    csproj only when present)
+#   - eShop.Gateway/bench.props      generated only when needed (imported by the
+#                                    csproj only when present): net11 retarget +
+#                                    runtime-async for the .NET 11 target, and
+#                                    FUSION_16_7_OR_GREATER when the resolved
+#                                    HotChocolate version is 16.7 or greater
 BUNDLED_DOTNET_DIR="$SCRIPT_DIR/.dotnet"
 GATEWAY_GLOBAL_JSON="$SCRIPT_DIR/global.json"
 BENCH_PROPS="$SCRIPT_DIR/eShop.Gateway/bench.props"
@@ -77,7 +79,8 @@ fi
 # Clear the previous target's generated inputs up front, before anything that can
 # fail: a download that dies half way then leaves a neutral tree instead of one
 # whose global.json pins an SDK that is no longer installed and whose bench.props
-# still retargets to the other framework. Both are (re)written below on success.
+# still carries the other target's settings. global.json is rewritten below on
+# success; bench.props is regenerated after the HotChocolate version resolves.
 # CI uses fresh checkouts; local runs may reuse the tree.
 echo "Installing the .NET $DOTNET_TARGET SDK into $BUNDLED_DOTNET_DIR ..."
 rm -rf "$BUNDLED_DOTNET_DIR"
@@ -113,32 +116,9 @@ cat > "$GATEWAY_GLOBAL_JSON" <<EOF
 }
 EOF
 
-if [[ "$DOTNET_TARGET" == "11" ]]; then
-  # Retarget the gateway to net11.0 and opt into .NET 11 runtime-async (imported
-  # by eShop.Gateway.csproj when present).
-  #
-  # runtime-async replaces compiler-generated async state machines with the
-  # runtime-provided async feature. Since .NET 11 Preview 3 the feature switch
-  # alone is enough — the [RequiresPreviewFeatures] gate was removed, so
-  # <EnablePreviewFeatures> is intentionally NOT set (we always install the
-  # latest preview SDK, so the modern opt-in always applies).
-  #
-  # Scope: this flag only affects async methods compiled in THIS project
-  # (eShop.Gateway). The .NET 11 BCL is already built with runtime-async
-  # (Preview 4+), but the prebuilt HotChocolate packages are not — to exercise
-  # runtime-async through HotChocolate's execution pipeline, the HotChocolate
-  # packages themselves must be compiled with runtime-async=on upstream; this
-  # benchmark then picks them up automatically via the preview channel.
-  cat > "$BENCH_PROPS" <<'EOF'
-<Project>
-  <PropertyGroup>
-    <TargetFramework>net11.0</TargetFramework>
-    <TargetFrameworks>net11.0</TargetFrameworks>
-    <Features>$(Features);runtime-async=on</Features>
-  </PropertyGroup>
-</Project>
-EOF
-fi
+# NOTE: eShop.Gateway/bench.props is (re)generated below, after the HotChocolate
+# version is resolved — its contents depend on both the .NET target and the
+# resolved package version.
 
 echo "Fetching latest $CHANNEL HotChocolate version from NuGet..."
 SELECTED_VERSION=$(curl -s "https://api.nuget.org/v3-flatcontainer/hotchocolate.aspnetcore/index.json" \
@@ -208,6 +188,55 @@ for csproj in "$SCRIPT_DIR"/*/*.csproj; do
     echo "  Updated: $(basename "$(dirname "$csproj")")/$(basename "$csproj")"
   fi
 done
+
+# --- Generate eShop.Gateway/bench.props (gitignored) ---------------------------
+# Imported by eShop.Gateway.csproj only when present, so a plain `dotnet build`
+# without install.sh (stable pins below 16.7) compiles with no extra settings
+# and the ModifyCostOptions call in Program.cs compiled out. Contents depend on
+# both benchmark axes:
+#   - .NET 11 target: retarget the gateway to net11.0 and opt into .NET 11
+#     runtime-async. runtime-async replaces compiler-generated async state
+#     machines with the runtime-provided async feature. Since .NET 11 Preview 3
+#     the feature switch alone is enough — the [RequiresPreviewFeatures] gate
+#     was removed, so <EnablePreviewFeatures> is intentionally NOT set (we
+#     always install the latest preview SDK, so the modern opt-in always
+#     applies). Scope: this flag only affects async methods compiled in THIS
+#     project (eShop.Gateway); the prebuilt HotChocolate packages must be
+#     compiled with runtime-async=on upstream to exercise it through
+#     HotChocolate's execution pipeline.
+#   - HotChocolate 16.7 or greater: define FUSION_16_7_OR_GREATER so Program.cs
+#     compiles in the ModifyCostOptions call that disables gateway-side cost
+#     enforcement. The major.minor comparison is numeric, so 16.7 previews
+#     count and so does 16.10+.
+# A .NET 10 build against HotChocolate below 16.7 needs neither, so no file is
+# written and the csproj import stays dormant.
+VERSION_CORE="${SELECTED_VERSION%%-*}"
+VERSION_MAJOR="${VERSION_CORE%%.*}"
+VERSION_TAIL="${VERSION_CORE#*.}"
+VERSION_MINOR="${VERSION_TAIL%%.*}"
+FUSION_COST_DEFINE=""
+if [[ "$VERSION_MAJOR" =~ ^[0-9]+$ && "$VERSION_MINOR" =~ ^[0-9]+$ ]] \
+  && (( VERSION_MAJOR > 16 || (VERSION_MAJOR == 16 && VERSION_MINOR >= 7) )); then
+  FUSION_COST_DEFINE="FUSION_16_7_OR_GREATER"
+fi
+
+if [[ "$DOTNET_TARGET" == "11" || -n "$FUSION_COST_DEFINE" ]]; then
+  {
+    echo '<Project>'
+    echo '  <PropertyGroup>'
+    if [[ "$DOTNET_TARGET" == "11" ]]; then
+      echo '    <TargetFramework>net11.0</TargetFramework>'
+      echo '    <TargetFrameworks>net11.0</TargetFrameworks>'
+      echo '    <Features>$(Features);runtime-async=on</Features>'
+    fi
+    if [[ -n "$FUSION_COST_DEFINE" ]]; then
+      echo "    <DefineConstants>\$(DefineConstants);${FUSION_COST_DEFINE}</DefineConstants>"
+    fi
+    echo '  </PropertyGroup>'
+    echo '</Project>'
+  } > "$BENCH_PROPS"
+  echo "Generated bench.props (dotnet: $DOTNET_TARGET, cost define: ${FUSION_COST_DEFINE:-none})."
+fi
 
 # --- Build ---
 # `dotnet build` never removes another target framework's output, so a reused

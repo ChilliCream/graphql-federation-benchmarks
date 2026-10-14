@@ -197,6 +197,113 @@ class SubgraphScriptTests(unittest.TestCase):
                 self.assertIn(f"{family}/subgraphs-net/global.json", gitignore)
 
 
+class FusionGatewayTests(unittest.TestCase):
+    # Both Fusion gateways must disable only gateway-side cost enforcement:
+    # HotChocolate 16.7+ enforces FusionCostOptions limits by default
+    # and rejects the deeply nested benchmark query with HC0047, while the
+    # default security policy (introspection etc.) must stay enabled. The
+    # ModifyCostOptions API only exists on versions with cost enforcement, so
+    # Program.cs compiles the call in only when install.sh resolved HotChocolate
+    # 16.7 or greater and defined FUSION_16_7_OR_GREATER in the gitignored
+    # bench.props; a plain `dotnet build` on older pins compiles it out.
+    # Mirrors the composite-schema subgraphs only in keeping header
+    # propagation and file composition, not their disableDefaultSecurity.
+    GATEWAYS = (
+        os.path.join(
+            "composite-schema", "gateways", "fusion",
+            "eShop.Gateway", "Program.cs",
+        ),
+        os.path.join(
+            "apollo-federation", "gateways", "fusion-nightly-fed",
+            "eShop.Gateway", "Program.cs",
+        ),
+    )
+    INSTALL_SCRIPTS = (
+        os.path.join("composite-schema", "gateways", "fusion", "install.sh"),
+        os.path.join(
+            "apollo-federation", "gateways", "fusion-nightly-fed", "install.sh"
+        ),
+    )
+    GATEWAY_CSPROJS = (
+        os.path.join(
+            "composite-schema", "gateways", "fusion",
+            "eShop.Gateway", "eShop.Gateway.csproj",
+        ),
+        os.path.join(
+            "apollo-federation", "gateways", "fusion-nightly-fed",
+            "eShop.Gateway", "eShop.Gateway.csproj",
+        ),
+    )
+
+    def test_fusion_gateways_disable_only_cost_enforcement(self):
+        for rel in self.GATEWAYS:
+            with self.subTest(gateway=rel):
+                content = read(os.path.join(REPO_ROOT, rel))
+                self.assertIn("#if FUSION_16_7_OR_GREATER", content)
+                self.assertIn("ModifyCostOptions", content)
+                self.assertIn("EnforceCostLimits = false", content)
+
+    def test_fusion_gateways_have_no_reflection_cost_helper(self):
+        # The late-bound FusionCostPolicy helper is gone: no reflection
+        # traces may remain in either Program.cs.
+        for rel in self.GATEWAYS:
+            with self.subTest(gateway=rel):
+                content = read(os.path.join(REPO_ROOT, rel))
+                self.assertNotIn("System.Reflection", content)
+                self.assertNotIn("System.Linq.Expressions", content)
+                self.assertNotIn('GetMethod("ModifyCostOptions")', content)
+                self.assertNotIn("Expression.Lambda", content)
+                self.assertNotIn("FusionCostPolicy", content)
+                self.assertNotIn("IL2026", content)
+                self.assertNotIn("IL2075", content)
+                self.assertNotIn("IL3050", content)
+
+    def test_fusion_gateways_keep_default_security(self):
+        # Cost-only disable: the broad disableDefaultSecurity switch must
+        # not be used, so the default security policy (including the
+        # introspection restriction) stays in effect.
+        for rel in self.GATEWAYS:
+            with self.subTest(gateway=rel):
+                content = read(os.path.join(REPO_ROOT, rel))
+                self.assertNotIn("disableDefaultSecurity", content)
+                self.assertIn("AddGraphQLGateway()", content)
+
+    def test_fusion_gateways_keep_auth_and_composition(self):
+        # The cost-only change must not take header propagation
+        # (benchmark Authorization header) or file composition with it.
+        for rel in self.GATEWAYS:
+            with self.subTest(gateway=rel):
+                content = read(os.path.join(REPO_ROOT, rel))
+                self.assertIn('options.Headers.Add("Authorization")', content)
+                self.assertIn("app.UseHeaderPropagation()", content)
+                self.assertIn('AddFileSystemConfiguration("./gateway.far")', content)
+
+    def test_install_scripts_define_cost_constant_from_resolved_version(self):
+        # Each install.sh resolves the HotChocolate version per channel at build
+        # time and must define FUSION_16_7_OR_GREATER (via DefineConstants in
+        # the generated bench.props) exactly when that version is 16.7 or
+        # greater, so Program.cs compiles the ModifyCostOptions call in.
+        for rel in self.INSTALL_SCRIPTS:
+            with self.subTest(script=rel):
+                content = read(os.path.join(REPO_ROOT, rel))
+                self.assertIn("FUSION_16_7_OR_GREATER", content)
+                self.assertIn("DefineConstants", content)
+                self.assertIn("SELECTED_VERSION", content)
+                # Prerelease suffixes (e.g. 16.7.0-p.26) must not break the
+                # numeric major.minor comparison.
+                self.assertIn("${SELECTED_VERSION%%-*}", content)
+
+    def test_gateway_csprojs_import_bench_props(self):
+        # Both gateway csprojs must import the install.sh-generated bench.props
+        # when present; without the import the cost define would be inert and a
+        # plain `dotnet build` must still compile with the call compiled out.
+        for rel in self.GATEWAY_CSPROJS:
+            with self.subTest(csproj=rel):
+                content = read(os.path.join(REPO_ROOT, rel))
+                self.assertIn('Import Project="bench.props"', content)
+                self.assertIn("Condition=\"Exists('bench.props')\"", content)
+
+
 class ResultGenerationTests(unittest.TestCase):
     def setUp(self):
         self.script = read(GENERATE_RESULTS)
