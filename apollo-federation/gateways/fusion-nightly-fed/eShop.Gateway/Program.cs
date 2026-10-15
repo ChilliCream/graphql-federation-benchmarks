@@ -19,6 +19,9 @@ builder.Services
 
 builder.Services
     .AddHttpClient("fusion")
+    // Drop the default LoggingHttpMessageHandler and LoggingScopeHttpMessageHandler. Even with
+    // logging disabled they add two async state machines and a scope per subgraph call.
+    .RemoveAllLoggers()
     .ConfigurePrimaryHttpMessageHandler(
         () => new SocketsHttpHandler
         {
