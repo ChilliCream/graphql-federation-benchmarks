@@ -8,7 +8,7 @@ set -u
 BINARY_DOWNLOAD_PREFIX="https://github.com/wundergraph/cosmo/releases/download"
 
 # https://github.com/wundergraph/cosmo/releases
-DOWNLOAD_VERSION="0.334.0"
+DOWNLOAD_VERSION="0.359.0"
 
 download_binary() {
     downloader --check
@@ -68,11 +68,8 @@ get_architecture() {
     'Darwin arm64')
         target=darwin-arm64
         ;;
-    'Linux arm64')
+    'Linux arm64' | 'Linux aarch64')
         target=linux-arm64
-        ;;
-    'Linux aarch64')
-        target=linux-amd64
         ;;
     'Linux x86_64' | *)
         target=linux-amd64
