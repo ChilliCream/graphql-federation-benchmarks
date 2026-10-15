@@ -146,6 +146,29 @@ class BuildMatrixTests(unittest.TestCase):
             ],
         )
 
+    def test_caliban_selection(self):
+        matrices = MATRIX.build_matrices(
+            "caliban", preview_check=lambda: (False, "16.6.0", None)
+        )
+        self.assertEqual([e["name"] for e in matrices["gateways"]], ["caliban"])
+        entry = matrices["gateways"][0]
+        self.assertEqual(entry["path"], "apollo-federation/gateways/caliban")
+        self.assertEqual(entry["gateway_artifact"], "prebuilt-gateway-caliban")
+        self.assertEqual(entry["subgraphs"], "subgraphs-net")
+        self.assertEqual(entry["subgraph_tech"], ".net")
+        self.assertEqual(
+            entry["display_name"], "caliban (HotChocolate subgraphs)"
+        )
+        self.assertEqual(
+            matrices["subgraph_builds"],
+            [
+                {
+                    "path": "apollo-federation/subgraphs-net",
+                    "artifact": "prebuilt-apollo-federation-subgraphs",
+                }
+            ],
+        )
+
     def test_unknown_gateway_fails(self):
         with self.assertRaises(SystemExit):
             MATRIX.build_matrices(

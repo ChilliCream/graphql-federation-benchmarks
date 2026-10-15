@@ -16,6 +16,7 @@ on:
           - all
           - apollo-gateway
           - apollo-router
+          - caliban
           - cosmo
           - grafbase
           - hive-gateway
@@ -27,6 +28,7 @@ on:
           - fusion-nightly-fed
           - feddi
       fusion_version:
+        description: 'Fusion-family gateway version pin (e.g. 16.6.8). Non-fusion gateways ignore this input.'
         required: false
         default: ''
       benchmark:
