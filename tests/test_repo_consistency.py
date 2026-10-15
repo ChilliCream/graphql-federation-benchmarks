@@ -370,6 +370,12 @@ class DocsTests(unittest.TestCase):
     def setUp(self):
         self.readme = read(README)
 
+    def test_apollo_router_generations_documented(self):
+        self.assertIn("./apollo-federation/gateways/apollo-router)", self.readme)
+        self.assertIn("./apollo-federation/gateways/apollo-router-v3)", self.readme)
+        self.assertIn("`apollo-router-v3`", self.readme)
+        self.assertIn("./GATEWAY_UPDATES.md", self.readme)
+
     def test_no_rust_subgraph_setup(self):
         self.assertNotIn("subgraphs-rust", self.readme)
         # The old variant list is gone; the historical-results note may still

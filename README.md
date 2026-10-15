@@ -31,7 +31,8 @@ not relabeled.
 
 ### Apollo Federation
 - [Apollo Gateway](./apollo-federation/gateways/apollo-gateway) (Node.js)
-- [Apollo Router](./apollo-federation/gateways/apollo-router) (Rust)
+- [Apollo Router 2](./apollo-federation/gateways/apollo-router) (Rust, latest 2.x stable; benchmark identity `apollo-router`)
+- [Apollo Router 3 preview](./apollo-federation/gateways/apollo-router-v3) (Rust, latest 3.x preview; separate benchmark identity `apollo-router-v3`)
 - [Caliban](./apollo-federation/gateways/caliban) (Scala)
 - [Cosmo](./apollo-federation/gateways/cosmo) (Go)
 - [Grafbase](./apollo-federation/gateways/grafbase) (Rust)
@@ -42,6 +43,8 @@ not relabeled.
 ### [GraphQL Federation](https://graphql.github.io/graphql-federation-spec/)
 - [Fusion](./composite-schema/gateways/fusion) (.NET) — benchmarked as latest stable (`fusion`, built and run on the .NET 10 SDK), plus, when a HotChocolate preview newer than the latest stable exists, the latest preview on two runtimes: `fusion-nightly` (built and run on the .NET 10 SDK) and `fusion-nightly-net11` (built and run on the latest .NET 11 preview SDK bundled into its prebuilt artifact, with runtime-async). Running the same preview packages on both runtimes isolates framework effects from library changes.
 - [feddi](./composite-schema/gateways/feddi) (JVM) — built from source and bundled with a JDK 25 ([feddi-dev/feddi-gateway](https://github.com/feddi-dev/feddi-gateway)). See its [README](./composite-schema/gateways/feddi/README.md) for setup and a known heavy-query planner limitation.
+
+Version pins and upstream changes for the latest refresh are listed in [Gateway version updates](./GATEWAY_UPDATES.md). Apollo Router 2 and Router 3 preview have independent installs, artifacts, and result rows; both run when `all` is selected, or select `apollo-router` / `apollo-router-v3` individually.
 
 ## Running benchmarks locally
 

@@ -27,7 +27,7 @@ SUMMARY = {
 }
 
 
-def make_run(artifacts_dir, gateway, display_name, run_index=1):
+def make_run(artifacts_dir, gateway, display_name, run_index=1, mode="constant"):
     make_tech_run(
         artifacts_dir,
         gateway,
@@ -35,14 +35,15 @@ def make_run(artifacts_dir, gateway, display_name, run_index=1):
         subgraph_tech=".net",
         subgraphs="subgraphs-net",
         run_index=run_index,
+        mode=mode,
     )
 
 
 def make_tech_run(
-    artifacts_dir, gateway, display_name, subgraph_tech, subgraphs, run_index=1
+    artifacts_dir, gateway, display_name, subgraph_tech, subgraphs, run_index=1, mode="constant"
 ):
     run_dir = os.path.join(
-        artifacts_dir, f"results-{gateway}-constant", f"2024010{run_index}_000000"
+        artifacts_dir, f"results-{gateway}-{mode}", f"2024010{run_index}_000000"
     )
     os.makedirs(run_dir, exist_ok=True)
     with open(os.path.join(run_dir, "metadata.json"), "w") as fh:
@@ -51,7 +52,7 @@ def make_tech_run(
                 "gateway": gateway,
                 "gateway_path": "composite-schema/gateways/fusion",
                 "category": "composite-schema",
-                "mode": "constant",
+                "mode": mode,
                 "timestamp": f"2024010{run_index}_000000",
                 "run": run_index,
                 "total_runs": 1,
@@ -166,18 +167,18 @@ class BenchmarkValidationTests(unittest.TestCase):
 
 
 class GenerateResultsTests(unittest.TestCase):
-    def run_generator(self, expected, with_runs=None, not_run=()):
+    def run_generator(self, expected, with_runs=None, not_run=(), mode="constant"):
         workdir = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, workdir, True)
         artifacts = os.path.join(workdir, "artifacts")
         os.makedirs(artifacts)
         for gateway in with_runs if with_runs is not None else expected:
-            make_run(artifacts, gateway, f"{gateway} (HotChocolate subgraphs)")
+            make_run(artifacts, gateway, f"{gateway} (HotChocolate subgraphs)", mode=mode)
         outdir = os.path.join(workdir, "out")
         env = dict(os.environ)
         env["EXPECTED_GATEWAYS_JSON"] = json.dumps([expected_entry(g) for g in expected])
         env["NOT_RUN_GATEWAYS_JSON"] = json.dumps([expected_entry(g) for g in not_run])
-        env["RESULT_MODES"] = "constant"
+        env["RESULT_MODES"] = mode
         proc = subprocess.run(
             ["python3", os.path.join(REPO_ROOT, "k6", "generate-results.py"), artifacts, outdir],
             env=env,
@@ -187,7 +188,8 @@ class GenerateResultsTests(unittest.TestCase):
             cwd=REPO_ROOT,
         )
         self.assertEqual(proc.returncode, 0, proc.stderr)
-        with open(os.path.join(outdir, "RESULTS_CONSTANT.md")) as fh:
+        filename = f"RESULTS_{mode.upper().replace('-', '_')}.md"
+        with open(os.path.join(outdir, filename)) as fh:
             return fh.read()
 
     def test_dotnet_only_table(self):
@@ -197,6 +199,27 @@ class GenerateResultsTests(unittest.TestCase):
         self.assertIn("4 HotChocolate subgraphs", md)
         self.assertIn("| fusion |", md)
         self.assertIn("| cosmo |", md)
+
+    def test_apollo_router_generations_have_separate_rows(self):
+        gateways = ["apollo-router", "apollo-router-v3"]
+        for mode in ("constant", "constant-latency", "burst"):
+            with self.subTest(mode=mode):
+                md = self.run_generator(gateways, mode=mode)
+                for gateway in gateways:
+                    rows = [line for line in md.splitlines() if line.startswith(f"| {gateway} |")]
+                    self.assertEqual(len(rows), 1)
+                    self.assertNotIn("benchmark run failed", rows[0])
+                self.assertIn("apollo-router (HotChocolate subgraphs)", md)
+                self.assertIn("apollo-router-v3 (HotChocolate subgraphs)", md)
+
+    def test_missing_apollo_preview_does_not_reuse_stable_result(self):
+        md = self.run_generator(
+            ["apollo-router", "apollo-router-v3"], with_runs=["apollo-router"]
+        )
+        stable = next(line for line in md.splitlines() if line.startswith("| apollo-router |"))
+        preview = next(line for line in md.splitlines() if line.startswith("| apollo-router-v3 |"))
+        self.assertNotIn("benchmark run failed", stable)
+        self.assertIn("benchmark run failed", preview)
 
     def test_missing_gateway_marked_failed(self):
         md = self.run_generator(["fusion", "grafbase"], with_runs=["fusion"])
