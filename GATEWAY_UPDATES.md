@@ -1,0 +1,75 @@
+# Gateway upstream updates
+
+**Snapshot: 2026-10-15.** This report records upstream versions and changes for the gateway refresh. It does not alter or reinterpret historical benchmark results and makes no performance claims. “Published” below is the registry/GitHub publication timestamp from the vendor notes; links are official primary sources.
+
+## Answer: exact benchmark identities and pins
+
+| Benchmark identity | Existing pin | New pin | Publication date (UTC) | Official version evidence |
+|---|---:|---:|---|---|
+| Apollo Gateway (`@apollo/gateway`) | 2.14.3 | **2.14.4** | 2026-08-18 | [npm latest](https://registry.npmjs.org/@apollo%2fgateway/latest) |
+| Apollo Router 2 | v2.16.1 | **v2.18.0** | 2026-09-30 | [GitHub latest stable](https://api.github.com/repos/apollographql/router/releases/latest) |
+| Apollo Router 3 (new, separate preview identity) | none | **v3.0.0-preview.0** | 2026-10-03 | [preview release](https://github.com/apollographql/router/releases/tag/v3.0.0-preview.0) |
+| Cosmo Router | 0.334.0 | **0.359.0** | 2026-10-15 | [release](https://github.com/wundergraph/cosmo/releases/tag/router%400.359.0) |
+| Grafbase Gateway | 0.53.5 | **0.53.5 (unchanged)** | 2026-05-11 | [release](https://github.com/grafbase/grafbase/releases/tag/gateway-0.53.5) |
+| Hive Gateway, Node variant | 2.10.8 | **2.15.2** | 2026-10-08 | [npm latest](https://registry.npmjs.org/@graphql-hive/gateway/latest) |
+| Hive Gateway, Router Runtime variant | 2.10.8 | **2.15.2**; embedded `@graphql-hive/router-runtime` **1.4.19 → 1.6.5** | 2026-10-08 (Gateway), 2026-10-08 (runtime) | [Gateway npm](https://registry.npmjs.org/@graphql-hive/gateway/latest), [runtime npm](https://registry.npmjs.org/@graphql-hive/router-runtime/latest) |
+| Hive Router (standalone) | v0.0.84 | **v0.3.5** | 2026-10-14 (release heading date 2026-10-13) | [release](https://github.com/graphql-hive/router/releases/tag/hive-router/v0.3.5) |
+
+The three Apollo identities are independent benchmark artifacts across all modes; Router 2 remains stable and Router 3 is explicitly a preview. The two Hive Gateway variants share the Gateway version, but the Router Runtime variant also has its own changed runtime component version. Grafbase has no intervening Gateway release. The full release metadata and interval review are in the cited vendor changelogs below.
+
+## Changes by gateway
+
+### Apollo Gateway 2.14.3 → 2.14.4
+
+- The only upstream Gateway change is a fleet-awareness telemetry fix: programmatic OTLP endpoints now export metrics to `/v1/metrics` instead of the bare usage-reporting endpoint. This fixes telemetry routing; it is not a query-execution or benchmark-performance change. [2.14.4 changelog](https://raw.githubusercontent.com/apollographql/federation/main/gateway-js/CHANGELOG.md) · [PR 3465](https://github.com/apollographql/federation/pull/3465)
+- Composition, internals, planner and query-graphs updates in this interval are dependency updates, not additional documented gateway features. Existing GraphQL 16 dependency remains compatible. [Composition](https://raw.githubusercontent.com/apollographql/federation/main/composition-js/CHANGELOG.md) · [Internals](https://raw.githubusercontent.com/apollographql/federation/main/internals-js/CHANGELOG.md) · [Planner](https://raw.githubusercontent.com/apollographql/federation/main/query-planner-js/CHANGELOG.md) · [Query graphs](https://raw.githubusercontent.com/apollographql/federation/main/query-graphs-js/CHANGELOG.md)
+
+### Apollo Router 2.16.1 → 2.18.0
+
+- The intervening interval includes maintenance releases 2.16.2–2.16.4 as well as 2.17.0 and 2.18.0. Planning changes include recursive condition-planning cache reuse and lower planner allocations; 2.16.3 fixes preservation of `@requires` dependencies, nested-key planning and Flatten fetch errors. These affect plan correctness and planning work, but no benchmark speedup is inferred. [2.16.2](https://github.com/apollographql/router/releases/tag/v2.16.2) · [2.16.3](https://github.com/apollographql/router/releases/tag/v2.16.3) · [2.18.0 changelog](https://raw.githubusercontent.com/apollographql/router/v2.18.0/CHANGELOG.md)
+- 2.18.0 also fixes deterministic fetch merging, subscription termination/metrics, HTTP 431/414 telemetry, W3C trace-context preservation, JSONPath slice bounds and Redis idle-connection churn. Multipart uploads gain a `max_overhead_size` limit (default 2 MB), including unreferenced parts in size limits, addressing unbounded memory growth from framing. File upload is not enabled in this benchmark. [2.18.0 release](https://github.com/apollographql/router/releases/tag/v2.18.0)
+- Configuration compatibility required migrating `headers.all.request` from a bare list to `headers.all.request.operations`; the unchanged old form failed Router 2.18 validation. The propagated Authorization header semantics remain the same. [Header configuration source](https://raw.githubusercontent.com/apollographql/router/v2.18.0/apollo-router/src/plugins/headers/mod.rs)
+- Other additions are opt-in or unused here: CDN cache-tag invalidation is off by default; subscription reconnect defaults to zero attempts; Connect v0.5 remains preview-gated; demand control, connectors, Redis and Rhai changes do not affect this query workload. [2.17.0 release](https://github.com/apollographql/router/releases/tag/v2.17.0) · [2.18.0 release](https://github.com/apollographql/router/releases/tag/v2.18.0)
+
+### Apollo Router 3.0.0-preview.0 (new independent identity)
+
+- **Evidence limitation:** the preview release body is empty and its tagged changelog contains no v3 section. The 120 retained tagged changesets overlap prior releases and sometimes conflict across deprecation/removal notes, so they are not a complete or deduplicated v3 delta. The narrative here is deliberately qualified and prioritizes the official [v2-to-v3 upgrade guide](https://raw.githubusercontent.com/apollographql/router/v3.0.0-preview.0/docs/source/routing/upgrade/from-router-v2.mdx).
+- The upgrade guide warns of breaking changes including removal of deprecated features and consolidation on OpenTelemetry-native tracing. The preview adds stricter plugin/config validation and changes telemetry defaults; it removes legacy Jaeger/Zipkin and protobuf trace paths, old config aliases, deprecated entity cache and other obsolete options. No removed setting was found in this benchmark configuration. [Upgrade guide](https://raw.githubusercontent.com/apollographql/router/v3.0.0-preview.0/docs/source/routing/upgrade/from-router-v2.mdx) · [tagged changesets](https://github.com/apollographql/router/tree/v3.0.0-preview.0/.changesets)
+- To preserve comparable cancellation behavior, preview config explicitly retains `supergraph.early_cancel: false`; its new default is `true`. The incremental planner remains opt-in (`enabled: false`). Deduplicated-fetch timeout behavior and request backpressure/acceptance may differ; Router 3 therefore remains a distinct preview identity, not a replacement for Router 2. No speed claim is made. [early-cancel note](https://raw.githubusercontent.com/apollographql/router/v3.0.0-preview.0/.changesets/breaking_early_cancel_default_true.md) · [incremental planner note](https://raw.githubusercontent.com/apollographql/router/v3.0.0-preview.0/.changesets/feat_incremental_planner_entry_point.md) · [pipeline note](https://raw.githubusercontent.com/apollographql/router/v3.0.0-preview.0/.changesets/breaking_rohan_b99_box_clone_service_pipeline_improvements.md)
+- The existing `join/v0.3` supergraph remains accepted; no Federation 3 schema migration was needed. [Federation note](https://raw.githubusercontent.com/apollographql/router/v3.0.0-preview.0/.changesets/feat_federation_v3.md)
+
+### Cosmo Router 0.334.0 → 0.359.0
+
+- Across all 33 intervening release sections, meaningful planning changes include entity-fetch merging and optimized scheduling, then enabling multi-fetch and scheduling **by default**. This can alter plans and downstream request counts; no throughput claim is inferred. [Version-pinned changelog](https://github.com/wundergraph/cosmo/blob/router%400.359.0/router/CHANGELOG.md) · [default change](https://github.com/wundergraph/cosmo/commit/ce3eec17ab6ac993cb281989dfe8b6f9a35be391) · [current config defaults](https://github.com/wundergraph/cosmo/blob/router%400.359.0/router/pkg/config/config.go#L509-L516)
+- Correctness fixes cover abstract-type required fields, races in batched validation errors, cache-invalidation races, query-cache APQ renewal and shutdown draining. Further changes include field-limit counting and defer response media-type behavior. No formal breaking-change heading appears in the interval, but these behavioral changes can be visible to configured limits and incremental-delivery clients. [Changelog](https://github.com/wundergraph/cosmo/blob/router%400.359.0/router/CHANGELOG.md)
+- Response caching, private/Vary caching and cache invalidation were added, but response caching remains **disabled by default** and this refresh does not enable it. [Cache config default](https://github.com/wundergraph/cosmo/blob/router%400.359.0/router/pkg/config/config.go#L1144-L1146)
+- Cosmo install asset selection now maps Linux aarch64 to its published `linux-arm64` asset. Existing config loads without migration. [0.359.0 release assets](https://github.com/wundergraph/cosmo/releases/tag/router%400.359.0)
+
+### Grafbase Gateway 0.53.5 (unchanged)
+
+- The pinned version is already the latest published stable Gateway; there is no intervening upgrade interval and no new behavior to attribute. The release's Docker base-image CVE updates are already in this pin; no newer binary-level change is available. Do not substitute the separately versioned Grafbase CLI. [Gateway release](https://github.com/grafbase/grafbase/releases/tag/gateway-0.53.5) · [official releases](https://github.com/grafbase/grafbase/releases)
+
+### Hive Gateway 2.10.8 → 2.15.2 (both Node variants)
+
+- Gateway releases add optional Redis IAM authentication, shared cache key prefixes, a local `dev` supergraph source, and improve shutdown ordering for WebSocket clients. These optional capabilities are not enabled by this benchmark. `HOST` support now affects CLI host selection, so deployments should check whether an inherited environment value is intentional. [Gateway changelog](https://github.com/graphql-hive/gateway/blob/main/packages/gateway/CHANGELOG.md)
+- Gateway Runtime 2.10.4–2.12.2 upgrades GraphQL Tools/executor while retaining GraphQL 16 compatibility and improves cancellation, variable-result handling and shutdown. `graphql` remains pinned at 16.13.2. The Router Runtime variant additionally changes its component from 1.4.19 to 1.6.5. [Runtime changelog](https://github.com/graphql-hive/gateway/blob/main/packages/runtime/CHANGELOG.md)
+
+### Hive Gateway Router Runtime 1.4.19 → 1.6.5
+
+- Runtime fixes preserve full GraphQL error paths and correct a security issue: a client alias named `__proto__` could cause prototype pollution during result projection; projected objects now use a null prototype. [Router Runtime changelog](https://github.com/graphql-hive/gateway/blob/main/packages/router-runtime/CHANGELOG.md)
+- Native query planner advances from 0.0.38 to 0.0.49, including cycle/stack-overflow and false `@requires` detection fixes, reduced planning allocations, correctness fixes for nested conditions, batching and mutation sequencing, and a robust operation cache-key encoding. These are upstream changes, not measured performance results. [Native addon changelog](https://github.com/graphql-hive/router/blob/main/lib/node-addon/CHANGELOG.md)
+
+### Hive Router v0.0.84 → v0.3.5
+
+- Planning/projection changes include condition, mutation ordering, alias and `@requires` correctness fixes, reduced response-projection work, and compact cache/planning structures. The vendor reports selected upstream microbenchmarks, but none are claims about this benchmark. Full interval: [official Router changelog](https://github.com/graphql-hive/router/blob/main/bin/router/CHANGELOG.md).
+- Correctness and security behavior changes include default subgraph error masking, spec-correct input validation, safer Cache-Control merging, and default 10-second request-header/body read deadlines to mitigate slow-client resource exhaustion. The request deadlines may require deliberate adjustment for legitimately slow uploads; do not disable protection casually. [0.3.5 release](https://github.com/graphql-hive/router/releases/tag/hive-router/v0.3.5) · [config source](https://github.com/graphql-hive/router/blob/main/bin/router/src/config/env_overrides.rs)
+- Standalone config now uses named environment overrides `LOG_LEVEL` and `SUPERGRAPH_FILE_PATH`; the latter selects file source and path. The launcher was migrated from legacy `RUST_LOG` and generic `HIVE__SUPERGRAPH__*` settings. HTTP compression/decompression is enabled by default; upstream request compression remains opt-in. Default info logging now emits an access summary. These defaults can affect request overhead or observable output, so they are reported rather than tuned away. [Environment overrides](https://github.com/graphql-hive/router/blob/main/bin/router/src/config/env_overrides.rs) · [changelog](https://github.com/graphql-hive/router/blob/main/bin/router/CHANGELOG.md)
+- Breaking changes include renamed demand-control telemetry, async HTTP plugin-hook signature, read-only plans for plugins and validation/coercion tightening. The benchmark's valid operation needs no input/config migration; it does not use custom plugins. [Router changelog](https://github.com/graphql-hive/router/blob/main/bin/router/CHANGELOG.md)
+
+## Validation, limits, and unknowns
+
+- All eight gateway variants were installed, started and passed a full benchmark-query compatibility smoke on macOS arm64 against the repository's existing compiled HotChocolate 16.6.8 / .NET 10 subgraphs on isolated ports. Subgraph runtime was system dotnet. Gateway configs/schemas used temporary copies with only endpoint ports adjusted; no gateway-specific workaround was added.
+- Four pre-existing Fusion failures remain unchanged. Historical results are untouched. No Linux execution or load run was performed; no latency, throughput or speedup claim is made.
+- Remaining npm advisories: Apollo dependency tree **32** (1 critical, 8 high, 22 moderate, 1 low); each Hive Node variant **29** (18 high, 10 moderate, 1 low). No audit fix was applied.
+- Grafbase has no intervening upgrade; Router 3 lacks a complete vendor-authored v3 release narrative; Linux/load behavior remains unverified. The initial smoke against unrelated local listeners lacking federation fields was superseded by the successful isolated federation smoke; no gateway workaround resulted.
+- Scope excludes feddi, every Fusion variant and Caliban. No subgraphs or historical benchmark data were changed.
