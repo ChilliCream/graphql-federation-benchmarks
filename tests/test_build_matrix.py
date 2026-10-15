@@ -169,6 +169,63 @@ class BuildMatrixTests(unittest.TestCase):
             ],
         )
 
+    def test_apollo_routers_have_independent_builds_and_identities_in_all_modes(self):
+        for preview_ahead in (False, True):
+            with self.subTest(fusion_preview_ahead=preview_ahead):
+                matrices = MATRIX.build_matrices(
+                    "all", preview_check=lambda: (preview_ahead, "16.6.0", "16.7.0-p.1")
+                )
+                for key in ("gateways", "gateways_constant", "gateways_burst"):
+                    by_name = {entry["name"]: entry for entry in matrices[key]}
+                    for name, channel in (("apollo-router", "stable"), ("apollo-router-v3", "preview")):
+                        entry = by_name[name]
+                        self.assertEqual(entry["base_name"], name)
+                        self.assertEqual(entry["path"], f"apollo-federation/gateways/{name}")
+                        self.assertEqual(entry["gateway_artifact"], f"prebuilt-gateway-{name}")
+                        self.assertEqual(entry["channel"], channel)
+                        self.assertEqual(entry["display_name"], f"{name} (HotChocolate subgraphs)")
+                builds = {entry["artifact"]: entry for entry in matrices["gateway_builds"]}
+                for name in ("apollo-router", "apollo-router-v3"):
+                    self.assertEqual(
+                        builds[f"prebuilt-gateway-{name}"]["path"],
+                        f"apollo-federation/gateways/{name}",
+                    )
+                for key in ("not_run_constant", "not_run_burst"):
+                    self.assertFalse({e["name"] for e in matrices[key]} & {"apollo-router", "apollo-router-v3"})
+
+    def test_select_apollo_router_v3_without_querying_fusion_channel(self):
+        def unexpected_preview_check():
+            self.fail("Apollo Router preview must not depend on the Fusion channel")
+
+        matrices = MATRIX.build_matrices(
+            "apollo-router-v3", preview_check=unexpected_preview_check, fusion_version="16.6.8"
+        )
+        for key in ("gateways", "gateways_constant", "gateways_burst"):
+            self.assertEqual([entry["name"] for entry in matrices[key]], ["apollo-router-v3"])
+            self.assertNotIn("version", matrices[key][0])
+        self.assertEqual(
+            matrices["gateway_builds"],
+            [{
+                "path": "apollo-federation/gateways/apollo-router-v3",
+                "artifact": "prebuilt-gateway-apollo-router-v3",
+                "channel": "preview",
+                "dotnet": "10",
+            }],
+        )
+        self.assertEqual(
+            matrices["subgraph_builds"],
+            [{
+                "path": "apollo-federation/subgraphs-net",
+                "artifact": "prebuilt-apollo-federation-subgraphs",
+            }],
+        )
+
+    def test_select_apollo_router_keeps_stable_identity(self):
+        matrices = MATRIX.build_matrices("apollo-router")
+        self.assertEqual([entry["name"] for entry in matrices["gateways"]], ["apollo-router"])
+        self.assertEqual(matrices["gateways"][0]["channel"], "stable")
+        self.assertEqual(matrices["gateway_builds"][0]["artifact"], "prebuilt-gateway-apollo-router")
+
     def test_unknown_gateway_fails(self):
         with self.assertRaises(SystemExit):
             MATRIX.build_matrices(

@@ -4,8 +4,9 @@ supergraph:
 headers:
     all:
         request:
-            - propagate:
-                named: Authorization
+            operations:
+                - propagate:
+                    named: Authorization
 traffic_shaping:
     all:
         deduplicate_query: true

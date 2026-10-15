@@ -35,6 +35,12 @@ BASE_GATEWAYS = [
         "gateway_artifact": "prebuilt-gateway-apollo-router",
     },
     {
+        "path": "apollo-federation/gateways/apollo-router-v3",
+        "name": "apollo-router-v3",
+        "gateway_artifact": "prebuilt-gateway-apollo-router-v3",
+        "channel": "preview",
+    },
+    {
         "path": "apollo-federation/gateways/caliban",
         "name": "caliban",
         "gateway_artifact": "prebuilt-gateway-caliban",
