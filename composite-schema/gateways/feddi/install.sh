@@ -22,7 +22,7 @@ set -Eeuo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 FEDDI_REPO="https://github.com/feddi-dev/feddi-gateway.git"
-FEDDI_REF="6a7c5916e2d96327e31ae31129ff01bd6746b482"  # pinned for reproducibility
+FEDDI_REF="e91d605ed2220d810cc5911265a290fe811bb987"  # pinned for reproducibility (tag bench-2026-10-15)
 
 JDK_DIR="$SCRIPT_DIR/.jdk"
 SOURCE_DIR="$SCRIPT_DIR/source"
