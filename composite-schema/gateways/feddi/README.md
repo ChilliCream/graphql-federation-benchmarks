@@ -39,9 +39,7 @@ with an error in the gateway log.
 
 ### Subgraph connection pool
 
-`start.sh` raises the reactor-netty subgraph connection pool
-(`-Dreactor.netty.pool.maxConnections`) above feddi's default of 500/host. The
-benchmark's nested query fans out into many concurrent per-entity subgraph
-requests, which otherwise exhausts the default pool. This is the equivalent of
-the connection settings the other gateways ship with (e.g. fusion's
-`MaxConnectionsPerServer=256`). Override with `FEDDI_SUBGRAPH_MAX_CONNECTIONS`.
+feddi's default subgraph connection pool (500 connections per subgraph host) is
+used as is: with variable batching the benchmark query makes 8 subgraph calls,
+and 50 VUs keep about 70 connections per subgraph open. Set
+`FEDDI_SUBGRAPH_MAX_CONNECTIONS` to override the limit.

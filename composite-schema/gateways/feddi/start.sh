@@ -43,19 +43,13 @@ elif [[ -x "$SCRIPT_DIR/.jdk/Contents/Home/bin/java" ]]; then
   export FEDDI_GATEWAY_JAVA_HOME="$SCRIPT_DIR/.jdk/Contents/Home"
 fi
 
-# Subgraph HTTP connection pool sizing.
-#
-# feddi's default subgraph client uses Spring WebClient over the shared
-# reactor-netty connection pool (default: 500 connections/host, 1000 pending-
-# acquire queue). The benchmark's deeply nested query fans out into many
-# concurrent per-entity subgraph requests, which exhausts that default pool
-# ("Pending acquire queue has reached its maximum size of 1000") and turns into
-# request errors rather than a throughput measurement. Raising the pool ceiling
-# removes that artificial bottleneck so the benchmark measures feddi's execution
-# engine — comparable to the connection settings the other gateways ship with
-# (e.g. fusion's MaxConnectionsPerServer=256). reactor-netty derives the pending-
-# acquire queue as 2x maxConnections, so this also lifts the queue ceiling.
-export JAVA_OPTS="${JAVA_OPTS:-} -Dreactor.netty.pool.maxConnections=${FEDDI_SUBGRAPH_MAX_CONNECTIONS:-4096} -Dreactor.netty.pool.acquireTimeout=60000"
+# Subgraph HTTP connection pool: feddi's default (500 connections per subgraph
+# host) is plenty. With variable batching the benchmark query makes 8 subgraph
+# calls, and 50 VUs keep about 70 connections per subgraph open.
+# FEDDI_SUBGRAPH_MAX_CONNECTIONS overrides the limit.
+if [[ -n "${FEDDI_SUBGRAPH_MAX_CONNECTIONS:-}" ]]; then
+  export JAVA_OPTS="${JAVA_OPTS:-} -Dreactor.netty.pool.maxConnections=$FEDDI_SUBGRAPH_MAX_CONNECTIONS"
+fi
 
 # Launch the gateway. CWD is the gateway dir, so feddi reads feddi-gateway.yml
 # from here and writes its rolling log under ./logs. The launcher exec()s java,
