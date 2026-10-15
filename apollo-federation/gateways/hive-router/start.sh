@@ -2,8 +2,7 @@
 set -Eeuo pipefail
 
 exec env -i \
-  RUST_LOG=info \
+  LOG_LEVEL=info \
   PORT=5220 \
-  HIVE__SUPERGRAPH__SOURCE=file \
-  HIVE__SUPERGRAPH__PATH="./supergraph.graphql" \
+  SUPERGRAPH_FILE_PATH="./supergraph.graphql" \
   ./hive_router > ./gateway_log.txt 2>&1
