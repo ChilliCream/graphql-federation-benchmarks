@@ -26,12 +26,13 @@ builder.Services
         })
     .AddHeaderPropagation();
 
+#if FUSION_16_7_OR_GREATER
+builder
+    .AddGraphQLGateway(disableDefaultSecurity: true)
+    .AddFileSystemConfiguration("./gateway.far");
+#else
 builder
     .AddGraphQLGateway()
-#if FUSION_16_7_OR_GREATER
-    .AddFileSystemConfiguration("./gateway.far")
-    .ModifyCostOptions(options => options.EnforceCostLimits = false);
-#else
     .AddFileSystemConfiguration("./gateway.far");
 #endif
 
