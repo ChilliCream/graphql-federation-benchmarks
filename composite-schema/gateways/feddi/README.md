@@ -36,10 +36,3 @@ the `application/jsonl` response (HotChocolate's variable batching). At startup
 feddi checks that each subgraph supports it; a subgraph that does not get alias
 batching instead (one request with an aliased copy of the lookup per entity),
 with an error in the gateway log.
-
-### Subgraph connection pool
-
-feddi's default subgraph connection pool (500 connections per subgraph host) is
-used as is: with variable batching the benchmark query makes 8 subgraph calls,
-and 50 VUs keep about 70 connections per subgraph open. Set
-`FEDDI_SUBGRAPH_MAX_CONNECTIONS` to override the limit.

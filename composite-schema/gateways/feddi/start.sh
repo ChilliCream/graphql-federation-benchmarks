@@ -43,14 +43,6 @@ elif [[ -x "$SCRIPT_DIR/.jdk/Contents/Home/bin/java" ]]; then
   export FEDDI_GATEWAY_JAVA_HOME="$SCRIPT_DIR/.jdk/Contents/Home"
 fi
 
-# Subgraph HTTP connection pool: feddi's default (500 connections per subgraph
-# host) is plenty. With variable batching the benchmark query makes 8 subgraph
-# calls, and 50 VUs keep about 70 connections per subgraph open.
-# FEDDI_SUBGRAPH_MAX_CONNECTIONS overrides the limit.
-if [[ -n "${FEDDI_SUBGRAPH_MAX_CONNECTIONS:-}" ]]; then
-  export JAVA_OPTS="${JAVA_OPTS:-} -Dreactor.netty.pool.maxConnections=$FEDDI_SUBGRAPH_MAX_CONNECTIONS"
-fi
-
 # Launch the gateway. CWD is the gateway dir, so feddi reads feddi-gateway.yml
 # from here and writes its rolling log under ./logs. The launcher exec()s java,
 # so $GATEWAY_PID is the JVM itself (correct for the harness's metrics/cleanup).
