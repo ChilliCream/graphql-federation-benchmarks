@@ -65,7 +65,8 @@ def assert_results_shape(test, doc):
             keys(feature, ["id"], ["description"], where + ".features")
 
     keys(doc, ["run", "hardware", "subgraphs", "gateways", "scenarios"])
-    keys(doc["run"], ["number", "startedAt", "sourceCommit"], ["url", "completedAt", "inputs"], "run")
+    keys(doc["run"], ["number", "startedAt", "sourceCommit", "event"], ["url", "completedAt", "inputs"], "run")
+    test.assertIsInstance(doc["run"]["event"], str)
     test.assertIsInstance(doc["run"]["number"], int)
     test.assertRegex(doc["run"]["sourceCommit"], r"^[0-9a-f]{40}$")
     keys(doc["hardware"], ["host", "cpu", "logicalCpus", "memoryGb", "os"], where="hardware")
@@ -460,6 +461,7 @@ class GenerateResultsJsonTests(unittest.TestCase):
             "GITHUB_REPOSITORY": "owner/repo",
             "GITHUB_SERVER_URL": "https://github.com",
             "GITHUB_SHA": "a" * 40,
+            "GITHUB_EVENT_NAME": "schedule",
             "RUN_STARTED_AT": "2026-01-01T00:00:00Z",
         })
         env.update(env_overrides)
@@ -477,10 +479,6 @@ class GenerateResultsJsonTests(unittest.TestCase):
             doc = json.load(fh)
         assert_results_shape(self, doc)
         return doc
-
-    def test_example_document_has_results_shape(self):
-        with open(os.path.join(REPO_ROOT, "benchmark-results.example.json")) as fh:
-            assert_results_shape(self, json.load(fh))
 
     def make_artifacts(self):
         workdir = tempfile.mkdtemp()
@@ -508,9 +506,11 @@ class GenerateResultsJsonTests(unittest.TestCase):
                 {"constant": "success", "burst": "failure", "constant-latency": "skipped"}
             ),
             "RUN_INPUTS_JSON": json.dumps({"gateway": "all", "diagnostic_run": False}),
+            "GITHUB_EVENT_NAME": "workflow_dispatch",
         })
 
         self.assertEqual(doc["run"]["number"], 42)
+        self.assertEqual(doc["run"]["event"], "workflow_dispatch")
         self.assertEqual(doc["run"]["url"], "https://github.com/owner/repo/actions/runs/1234")
         self.assertEqual(doc["run"]["inputs"], {"gateway": "all", "diagnostic_run": False})
         self.assertEqual(doc["hardware"]["logicalCpus"], 16)

@@ -6,6 +6,7 @@ local runner scripts, result generation and documentation.
 
 import glob
 import os
+import re
 import subprocess
 import unittest
 
@@ -86,6 +87,19 @@ class WorkflowTests(unittest.TestCase):
         needs_end = section.index("if:", needs_start)
         needs_block = section[needs_start:needs_end]
         self.assertIn("prepare-matrix", needs_block)
+
+    def test_publish_history_requires_every_result_job(self):
+        jobs = re.findall(r"^  ((?:benchmark|generate-results)-[a-z-]+):$", self.workflow, re.M)
+        self.assertIn("generate-results-json", jobs)
+        self.assertIn("benchmark-summary", jobs)
+        section = self.workflow[self.workflow.index("\n  publish-history:\n"):]
+        section = re.split(r"\n  [a-z-]+:\n", section[1:])[0]
+        needs = re.findall(r"^      - ([a-z-]+)$", section, re.M)
+        condition = re.search(r"^    if: (.*)$", section, re.M).group(1)
+        self.assertIn("github.event_name == 'schedule'", condition)
+        for job in jobs:
+            self.assertIn(job, needs)
+            self.assertIn(f"needs.{job}.result == 'success'", condition)
 
     def test_no_undefined_run_started_at_context(self):
         # github.run_started_at is not a defined GitHub context property

@@ -4,13 +4,15 @@
 
 - `k6/benchmark-config.json`: gateways (product → variants) and subgraph metadata. No versions. `k6/build-matrix.py` derives the workflow matrix and the results.json gateway catalog from it.
 - Versions are pinned where they are installed (`install.sh`, `package.json`, Caliban's `Main.scala`, `subgraphs-net/build.sh`). Each run records what it actually used in `metadata.json`; `k6/generate-results.py` turns the run artifacts into `RESULTS_*.md` and `results.json`.
+- `benchmark-runs/history.json` is rebuilt by `k6/build-history.py` from all scheduled runs' `results.json`.
 - Never edit `benchmark-runs/` or the root `RESULTS_*.md` by hand.
 
 ## Tests
 
 ```sh
 python3 -m unittest tests.test_build_matrix tests.test_apollo_gateways tests.test_hive_gateways \
-  tests.test_cosmo_grafbase_install tests.test_scripts_runtime tests.test_repo_consistency
+  tests.test_cosmo_grafbase_install tests.test_scripts_runtime tests.test_repo_consistency \
+  tests.test_build_history
 python3 -m unittest -k ConfigTests tests.test_build_matrix   # -k goes before the module names
 ```
 
@@ -54,6 +56,6 @@ To remove a gateway or variant, undo the same steps and delete tests that name i
 1. `k6/k6.js`: mode handling, VUs, stages / duration.
 2. `k6/benchmark.sh`: mode parsing, defaults, and `BENCHMARK_SUBGRAPH_DELAY_MS` if it needs a subgraph delay.
 3. `profiles.json`: CPU pinning per k6 mode.
-4. `.github/workflows/benchmark.yml`: the `benchmark` input and `run_<mode>` flag, a `benchmark-<mode>` and `generate-results-<mode>` job, and add both to the `needs` (and `SCENARIO_RESULTS_JSON`) of `generate-results-json` and the `needs` of `benchmark-summary`.
+4. `.github/workflows/benchmark.yml`: the `benchmark` input and `run_<mode>` flag, a `benchmark-<mode>` and `generate-results-<mode>` job, and add both to the `needs` (and `SCENARIO_RESULTS_JSON`) of `generate-results-json` and the `needs` of `benchmark-summary` and the `needs` and `if` of `publish-history`.
 5. `k6/build-matrix.py`: per-mode exclusions in `is_excluded`.
 6. `k6/generate-results.py`: the `RESULTS_<MODE>.md` filename in `main()`, `SCENARIOS`, `JSON_MODES`, and `SUBGRAPH_DELAY_MS` (must match `k6/benchmark.sh`).
