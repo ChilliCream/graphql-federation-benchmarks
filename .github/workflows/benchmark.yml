@@ -389,8 +389,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # gateways_burst excludes feddi — it is not run in the burst benchmark and is
-        # instead marked "not run" in the burst results table (see prepare-matrix).
+        # gateways_burst leaves out gateways excluded from burst (see is_excluded in
+        # k6/build-matrix.py); they are marked "not run" in the burst results table.
         gateway: ${{ fromJson(needs.prepare-matrix.outputs.gateways_burst) }}
     runs-on:
       group: benchmark-runners
@@ -516,9 +516,9 @@ jobs:
           sudo chmod -R u+rwX,g+rwX "${{ matrix.gateway.path }}/diagnostics"
 
       - name: Run benchmark
-        # Feddi is excluded from the burst matrix entirely (gateways_burst), so no
-        # per-gateway failure tolerance is needed here — it is reported as "not run"
-        # in the burst results table instead.
+        # Gateways excluded from burst are not in the burst matrix (gateways_burst),
+        # so no per-gateway failure tolerance is needed here — they are reported as
+        # "not run" in the burst results table instead.
         run: ./k6/benchmark.sh ${{ matrix.gateway.path }} ${{ matrix.gateway.subgraphs }} burst
         env:
           BENCH_DISPLAY_NAME: ${{ matrix.gateway.display_name || '' }}
@@ -816,7 +816,7 @@ jobs:
       - name: Generate burst result document
         env:
           EXPECTED_GATEWAYS_JSON: ${{ needs.prepare-matrix.outputs.gateways }}
-          # Gateways deliberately not run in burst (feddi) — rendered as "not run".
+          # Gateways deliberately not run in burst — rendered as "not run".
           NOT_RUN_GATEWAYS_JSON: ${{ needs.prepare-matrix.outputs.not_run_burst }}
           RESULT_MODES: burst
         run: python3 k6/generate-results.py artifacts/ benchmark-runs/${{ github.run_number }}

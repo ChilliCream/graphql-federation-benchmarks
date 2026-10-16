@@ -120,14 +120,14 @@ class BuildMatrixTests(unittest.TestCase):
                     [e["name"] for e in matrices["gateways"]], [nightly]
                 )
 
-    def test_feddi_burst_exclusion_preserved(self):
+    def test_feddi_runs_in_every_mode(self):
         matrices = MATRIX.build_matrices(
             "all", preview_check=lambda: (False, "16.6.0", None)
         )
         burst_names = {e["base_name"] for e in matrices["gateways_burst"]}
-        self.assertNotIn("feddi", burst_names)
+        self.assertIn("feddi", burst_names)
         not_run_names = {e["base_name"] for e in matrices["not_run_burst"]}
-        self.assertIn("feddi", not_run_names)
+        self.assertNotIn("feddi", not_run_names)
         constant_names = {e["base_name"] for e in matrices["gateways_constant"]}
         self.assertIn("feddi", constant_names)
 
