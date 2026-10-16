@@ -245,10 +245,7 @@ def is_excluded(entry, mode):
     # (via NOT_RUN_GATEWAYS_JSON -> generate-results.py), so nothing is silently
     # dropped.
     #
-    #   feddi — crashes under the burst stress scenario (upstream
-    #           heavy-query planner defect); excluded from burst.
-    if entry["base_name"] == "feddi" and mode == "burst":
-        return True
+    # No combination is excluded at the moment.
     return False
 
 
