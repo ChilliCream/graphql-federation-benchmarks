@@ -5,6 +5,7 @@ output without requiring k6, .NET or network access.
 """
 
 import glob
+import importlib.util
 import json
 import os
 import re
@@ -15,19 +16,116 @@ import unittest
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+
+def load_generator():
+    spec = importlib.util.spec_from_file_location(
+        "generate_results", os.path.join(REPO_ROOT, "k6", "generate-results.py")
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def load_config():
+    spec = importlib.util.spec_from_file_location(
+        "build_matrix", os.path.join(REPO_ROOT, "k6", "build-matrix.py")
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+CONFIG = load_config()
+
 SUMMARY = {
     "vus": 50,
     "duration": "120s",
     "metrics": {
         "http_reqs": {"values": {"rate": 1000, "count": 120000}},
+        "vus_max": {"values": {"max": 50}},
         "http_req_duration": {"values": {"avg": 5.0, "p(95)": 10.0}},
         "http_req_failed": {"values": {"passes": 0}},
-        "success_rate": {"values": {"fails": 0}},
+        "success_rate": {"values": {"passes": 120000, "fails": 0}},
     },
 }
 
 
-def make_run(artifacts_dir, gateway, display_name, run_index=1, mode="constant"):
+def assert_results_shape(test, doc):
+    def keys(obj, required, optional=(), where=""):
+        test.assertIsInstance(obj, dict, where)
+        test.assertLessEqual(set(required), set(obj), f"{where}: missing keys")
+        test.assertLessEqual(set(obj), set(required) | set(optional), f"{where}: unknown keys")
+
+    def platform(obj, where):
+        keys(obj, ["language"], ["runtime", "features"], where)
+        keys(obj["language"], ["name"], where=where + ".language")
+        if "runtime" in obj:
+            keys(obj["runtime"], ["name"], ["version"], where + ".runtime")
+        for feature in obj.get("features", []):
+            keys(feature, ["id"], ["description"], where + ".features")
+
+    keys(doc, ["run", "hardware", "subgraphs", "gateways", "scenarios"])
+    keys(doc["run"], ["number", "startedAt", "sourceCommit"], ["url", "completedAt", "inputs"], "run")
+    test.assertIsInstance(doc["run"]["number"], int)
+    test.assertRegex(doc["run"]["sourceCommit"], r"^[0-9a-f]{40}$")
+    keys(doc["hardware"], ["host", "cpu", "logicalCpus", "memoryGb", "os"], where="hardware")
+    keys(doc["subgraphs"], ["framework", "platform"], where="subgraphs")
+    keys(doc["subgraphs"]["framework"], ["name"], ["version"], where="subgraphs.framework")
+    platform(doc["subgraphs"]["platform"], "subgraphs.platform")
+
+    variants = {}
+    for gateway in doc["gateways"]:
+        keys(gateway, ["id", "name", "variants"], ["vendor", "repositoryUrl"], "gateway")
+        test.assertTrue(gateway["variants"])
+        for variant in gateway["variants"]:
+            where = f"variant {variant.get('id')}"
+            keys(variant, ["id", "version", "composition", "platform"], ["label", "features", "notes"], where)
+            if "label" in variant:
+                test.assertTrue(variant["label"], where)
+            test.assertIn(variant["composition"], ("composite-schema", "apollo-federation"))
+            if variant["version"] is not None:
+                test.assertNotRegex(variant["version"], r"^[vV]", where)
+            platform(variant["platform"], where)
+            test.assertNotIn(variant["id"], variants, "variant ids are unique across the run")
+            variants[variant["id"]] = gateway["id"]
+
+    for scenario in doc["scenarios"]:
+        where = f"scenario {scenario.get('id')}"
+        keys(scenario, ["id", "name", "status", "config", "results"], ["description"], where)
+        test.assertIn(scenario["id"], ("constant", "constant-latency", "burst"))
+        test.assertIn(scenario["status"], ("pending", "in-progress", "complete", "skipped", "failed"))
+        measured = ["virtualUsers", "measuredRuns"]
+        keys(scenario["config"], ["subgraphDelayMs", "warmupRuns"] + (measured if scenario["results"] else []),
+             measured + ["durationSeconds", "cpuAllocation"], where=where + ".config")
+        for role, alloc in scenario["config"].get("cpuAllocation", {}).items():
+            test.assertIn(role, ("gateway", "subgraphs", "k6"), where)
+            keys(alloc, ["cpuset", "cores"], where=f"{where}.cpuAllocation.{role}")
+            test.assertGreater(alloc["cores"], 0)
+        for result in scenario["results"]:
+            keys(result, ["gateway", "variants"], where=where)
+            test.assertTrue(result["variants"])
+            for variant in result["variants"]:
+                vwhere = f"{where} / {variant.get('variant')}"
+                keys(variant, ["variant", "throughput", "requests"],
+                     ["latencyMs", "memory", "cpu"], vwhere)
+                test.assertEqual(variants[variant["variant"]], result["gateway"], vwhere)
+                keys(variant["throughput"], ["medianRps", "bestRps", "worstRps", "cvPercent"],
+                     ["runsRps"], vwhere + ".throughput")
+                if "latencyMs" in variant:
+                    keys(variant["latencyMs"], ["avg", "med", "p90", "p95", "p99_9", "max"],
+                         ["min", "p99"], vwhere + ".latencyMs")
+                keys(variant["requests"], ["total", "successful", "failed"], where=vwhere + ".requests")
+                test.assertEqual(variant["requests"]["total"],
+                                 variant["requests"]["successful"] + variant["requests"]["failed"], vwhere)
+                if "memory" in variant:
+                    keys(variant["memory"], ["peakRssKiB"], where=vwhere)
+                if "cpu" in variant:
+                    keys(variant["cpu"], ["avgCores", "maxCores"], where=vwhere + ".cpu")
+                    test.assertLessEqual(variant["cpu"]["avgCores"], variant["cpu"]["maxCores"], vwhere)
+
+
+def make_run(artifacts_dir, gateway, display_name, run_index=1, mode="constant", summary=None,
+             extra_metadata=None, data_csv=None):
     make_tech_run(
         artifacts_dir,
         gateway,
@@ -36,11 +134,15 @@ def make_run(artifacts_dir, gateway, display_name, run_index=1, mode="constant")
         subgraphs="subgraphs-net",
         run_index=run_index,
         mode=mode,
+        summary=summary,
+        extra_metadata=extra_metadata,
+        data_csv=data_csv,
     )
 
 
 def make_tech_run(
-    artifacts_dir, gateway, display_name, subgraph_tech, subgraphs, run_index=1, mode="constant"
+    artifacts_dir, gateway, display_name, subgraph_tech, subgraphs, run_index=1, mode="constant",
+    summary=None, extra_metadata=None, data_csv=None,
 ):
     run_dir = os.path.join(
         artifacts_dir, f"results-{gateway}-{mode}", f"2024010{run_index}_000000"
@@ -65,11 +167,15 @@ def make_tech_run(
                 "machine_cpu": "Test CPU",
                 "machine_cores": "16 logical",
                 "machine_ram": "32 GB",
+                **(extra_metadata or {}),
             },
             fh,
         )
+    if data_csv is not None:
+        with open(os.path.join(run_dir, "data.csv"), "w") as fh:
+            fh.write(data_csv)
     with open(os.path.join(run_dir, "k6_summary.json"), "w") as fh:
-        json.dump(SUMMARY, fh)
+        json.dump(summary or SUMMARY, fh)
     with open(os.path.join(run_dir, "k6_summary.txt"), "w") as fh:
         fh.write("k6 summary\n")
 
@@ -341,6 +447,343 @@ class GenerateResultsTests(unittest.TestCase):
             md = fh.read()
         self.assertIn("### HotChocolate Subgraphs", md)
         self.assertIn("| cosmo |", md)
+
+
+class GenerateResultsJsonTests(unittest.TestCase):
+
+    def run_json_generator(self, artifacts, env_overrides):
+        outdir = os.path.join(os.path.dirname(artifacts), "out")
+        env = dict(os.environ)
+        env.update({
+            "GITHUB_RUN_NUMBER": "42",
+            "GITHUB_RUN_ID": "1234",
+            "GITHUB_REPOSITORY": "owner/repo",
+            "GITHUB_SERVER_URL": "https://github.com",
+            "GITHUB_SHA": "a" * 40,
+            "RUN_STARTED_AT": "2026-01-01T00:00:00Z",
+        })
+        env.update(env_overrides)
+        proc = subprocess.run(
+            ["python3", os.path.join(REPO_ROOT, "k6", "generate-results.py"), "--json", artifacts, outdir],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=120,
+            cwd=REPO_ROOT,
+        )
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertFalse(glob.glob(os.path.join(outdir, "*.md")))
+        with open(os.path.join(outdir, "results.json")) as fh:
+            doc = json.load(fh)
+        assert_results_shape(self, doc)
+        return doc
+
+    def test_example_document_has_results_shape(self):
+        with open(os.path.join(REPO_ROOT, "benchmark-results.example.json")) as fh:
+            assert_results_shape(self, json.load(fh))
+
+    def make_artifacts(self):
+        workdir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, workdir, True)
+        artifacts = os.path.join(workdir, "artifacts")
+        os.makedirs(artifacts)
+        return artifacts
+
+    @staticmethod
+    def results_by_variant(doc, mode):
+        scenario = next(s for s in doc["scenarios"] if s["id"] == mode)
+        return scenario, {
+            v["variant"]: v for r in scenario["results"] for v in r["variants"]
+        }
+
+    def test_statuses_follow_job_results_and_matrix(self):
+        artifacts = self.make_artifacts()
+        make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)", mode="constant")
+        make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)", mode="burst")
+        doc = self.run_json_generator(artifacts, {
+            "EXPECTED_GATEWAYS_JSON": json.dumps(
+                [expected_entry(g) for g in ("fusion", "grafbase", "feddi")]
+            ),
+            "SCENARIO_RESULTS_JSON": json.dumps(
+                {"constant": "success", "burst": "failure", "constant-latency": "skipped"}
+            ),
+            "RUN_INPUTS_JSON": json.dumps({"gateway": "all", "diagnostic_run": False}),
+        })
+
+        self.assertEqual(doc["run"]["number"], 42)
+        self.assertEqual(doc["run"]["url"], "https://github.com/owner/repo/actions/runs/1234")
+        self.assertEqual(doc["run"]["inputs"], {"gateway": "all", "diagnostic_run": False})
+        self.assertEqual(doc["hardware"]["logicalCpus"], 16)
+        self.assertEqual(doc["hardware"]["memoryGb"], 32)
+
+        versions = {v["id"]: v["version"] for g in doc["gateways"] for v in g["variants"]}
+        self.assertEqual(versions, {"fusion": "16.6.0", "grafbase": None, "feddi": None})
+
+        constant, results = self.results_by_variant(doc, "constant")
+        self.assertEqual(constant["status"], "complete")
+        self.assertEqual(results["fusion"]["throughput"]["medianRps"], 1000)
+        self.assertEqual(results["fusion"]["throughput"]["runsRps"], [1000])
+        self.assertEqual(results["fusion"]["requests"], {"total": 120000, "successful": 120000, "failed": 0})
+        self.assertNotIn("status", results["fusion"])
+        self.assertEqual(set(results), {"fusion"})
+
+        burst, results = self.results_by_variant(doc, "burst")
+        self.assertEqual(burst["status"], "failed")
+        self.assertEqual(set(results), {"fusion"})
+
+        latency, results = self.results_by_variant(doc, "constant-latency")
+        self.assertEqual(latency["status"], "skipped")
+        self.assertEqual(latency["results"], [])
+        self.assertEqual(latency["config"]["subgraphDelayMs"], 4)
+
+    def test_incompatible_response_gets_full_entry_over_all_runs(self):
+        artifacts = self.make_artifacts()
+        for run_index, (rate, passes, fails) in enumerate([(900, 90, 10), (1000, 100, 0), (1100, 80, 20)], 1):
+            summary = json.loads(json.dumps(SUMMARY))
+            summary["metrics"]["http_reqs"]["values"]["rate"] = rate
+            summary["metrics"]["success_rate"]["values"] = {"passes": passes, "fails": fails}
+            make_run(artifacts, "grafbase", "grafbase (HotChocolate subgraphs)",
+                     run_index=run_index, summary=summary)
+        doc = self.run_json_generator(artifacts, {
+            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("grafbase")]),
+        })
+        _, results = self.results_by_variant(doc, "constant")
+        grafbase = results["grafbase"]
+        self.assertEqual(grafbase["throughput"]["medianRps"], 1000)
+        self.assertEqual(grafbase["throughput"]["bestRps"], 1100)
+        self.assertEqual(grafbase["throughput"]["worstRps"], 900)
+        self.assertEqual(grafbase["throughput"]["runsRps"], [900, 1000, 1100])
+        self.assertEqual(grafbase["requests"], {"total": 300, "successful": 270, "failed": 30})
+        self.assertNotIn("failure", grafbase)
+
+    def test_cpuset_parsing_and_core_conversion(self):
+        gen = load_generator()
+        self.assertEqual(gen.cpuset_size("2-3,10-11"), 4)
+        self.assertEqual(gen.cpuset_size("0"), 1)
+        self.assertEqual(gen.cpuset_size("2-4"), 3)
+        self.assertEqual(gen.cpuset_size(""), 0)
+        self.assertEqual(gen.run_cpuset({"gateway_cpuset": "5"}, "gateway"), "5")
+        self.assertEqual(gen.run_cpuset({"gateway_cpuset": ""}, "gateway"), "")
+        with open(os.path.join(REPO_ROOT, "profiles.json")) as fh:
+            profiles = json.load(fh)
+        self.assertEqual(
+            gen.run_cpuset({"machine_cores": "16 logical (16 CPUs)", "mode": "constant-latency"}, "gateway"),
+            profiles["16"]["constant"]["gateway"],
+        )
+        self.assertEqual(
+            gen.run_cpuset({"machine_cores": "8 logical", "mode": "burst"}, "gateway"),
+            profiles["8"]["ramping"]["gateway"],
+        )
+        run = {
+            "gateway_core_pct": [50.0, 100.0, 60.0],
+            "metadata": {"gateway_cpuset": "2-3,10-11"},
+        }
+        self.assertEqual(gen.json_cpu(run), {"avgCores": 2.8, "maxCores": 4.0})
+        self.assertIsNone(gen.json_cpu({"gateway_core_pct": [], "metadata": {"gateway_cpuset": "2"}}))
+
+    def test_cpu_and_run_settings_from_median_run(self):
+        artifacts = self.make_artifacts()
+        header = "Seconds,VUs,RPS,P95_ms,Req_success_rate,Total_CPU,K6_Core_CPU,Subgraph_Core_CPU,Gateway_Core_CPU,Total_RSS_KB\n"
+        make_run(
+            artifacts, "fusion", "fusion (HotChocolate subgraphs)", mode="constant-latency",
+            extra_metadata={"gateway_cpuset": "2-3", "subgraph_delay_ms": 7},
+            data_csv=header + "1,50,1,1,1,400,10,10,25.00,1\n2,50,1,1,1,400,10,10,75.00,1\n",
+        )
+        doc = self.run_json_generator(artifacts, {
+            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion")]),
+        })
+        scenario, results = self.results_by_variant(doc, "constant-latency")
+        self.assertEqual(results["fusion"]["cpu"], {"avgCores": 1.0, "maxCores": 1.5})
+        self.assertEqual(scenario["config"].pop("cpuAllocation")["gateway"], {"cpuset": "2-3", "cores": 2})
+        self.assertEqual(scenario["config"], {
+            "durationSeconds": 120, "virtualUsers": 50, "subgraphDelayMs": 7,
+            "warmupRuns": 1, "measuredRuns": 1,
+        })
+        self.assertEqual(
+            scenario["description"],
+            "This scenario executes a constant load of 50 VUs over 120s "
+            "with a simulated 7ms IO delay on each subgraph request.",
+        )
+
+    def test_cpu_allocation_from_run_metadata(self):
+        artifacts = self.make_artifacts()
+        pins = {"gateway_cpuset": "2", "subgraphs_cpuset": "3-5", "k6_cpuset": "1,9"}
+        make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)", run_index=1, extra_metadata=pins)
+        make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)", run_index=2, extra_metadata=pins)
+        make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)", run_index=3,
+                 extra_metadata={"gateway_cpuset": "7", "subgraphs_cpuset": "8", "k6_cpuset": "9"})
+        doc = self.run_json_generator(artifacts, {
+            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion")]),
+        })
+        constant, _ = self.results_by_variant(doc, "constant")
+        self.assertEqual(constant["config"]["cpuAllocation"], {
+            "gateway": {"cpuset": "2", "cores": 1},
+            "subgraphs": {"cpuset": "3-5", "cores": 3},
+            "k6": {"cpuset": "1,9", "cores": 2},
+        })
+        artifacts = self.make_artifacts()
+        make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)",
+                 extra_metadata={"gateway_cpuset": "", "subgraphs_cpuset": "", "k6_cpuset": ""})
+        doc = self.run_json_generator(artifacts, {
+            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion")]),
+        })
+        constant, _ = self.results_by_variant(doc, "constant")
+        self.assertNotIn("cpuAllocation", constant["config"])
+
+    def test_cpu_allocation_falls_back_to_profiles(self):
+        artifacts = self.make_artifacts()
+        make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)", mode="burst")
+        doc = self.run_json_generator(artifacts, {
+            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion")]),
+        })
+        burst, _ = self.results_by_variant(doc, "burst")
+        with open(os.path.join(REPO_ROOT, "profiles.json")) as fh:
+            profile = json.load(fh)["16"]["ramping"]  # fixture: "16 logical"
+        gen = load_generator()
+        self.assertEqual(burst["config"]["cpuAllocation"], {
+            role: {"cpuset": profile[role], "cores": gen.cpuset_size(profile[role])}
+            for role in ("gateway", "subgraphs", "k6")
+        })
+
+    def test_scenario_config_for_older_artifacts(self):
+        artifacts = self.make_artifacts()
+        for mode in ("burst", "constant-latency"):
+            make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)", mode=mode)
+        doc = self.run_json_generator(artifacts, {
+            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion")]),
+        })
+        configs = {s["id"]: s["config"] for s in doc["scenarios"]}
+        self.assertEqual(configs["constant-latency"]["subgraphDelayMs"], 4)
+        self.assertEqual(configs["burst"]["subgraphDelayMs"], 0)
+        # The old burst summary's "120s" is BENCH_OVER_TIME, not the stage sum.
+        self.assertNotIn("durationSeconds", configs["burst"])
+        self.assertNotIn("description", next(s for s in doc["scenarios"] if s["id"] == "burst"))
+        self.assertEqual(configs["constant-latency"]["durationSeconds"], 120)
+        self.assertEqual(configs["burst"]["warmupRuns"], 1)
+
+    def test_started_at_null_when_unknown(self):
+        artifacts = self.make_artifacts()
+        make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)")
+        doc = self.run_json_generator(artifacts, {
+            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion")]),
+            "RUN_STARTED_AT": "",
+        })
+        self.assertIsNone(doc["run"]["startedAt"])
+
+    def test_planned_duration_from_k6_summary(self):
+        artifacts = self.make_artifacts()
+        summary = json.loads(json.dumps(SUMMARY))
+        summary.update({"duration": "60s", "plannedDurationSeconds": 60})
+        make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)", mode="burst", summary=summary)
+        doc = self.run_json_generator(artifacts, {
+            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion")]),
+        })
+        burst = next(s for s in doc["scenarios"] if s["id"] == "burst")
+        self.assertEqual(burst["config"]["durationSeconds"], 60)
+        self.assertIn("over 60s", burst["description"])
+
+    def test_captured_versions_reported_without_fallbacks(self):
+        artifacts = self.make_artifacts()
+        make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)", extra_metadata={
+            "runtime_version": "10.0.13", "subgraphs_runtime_version": "10.0.13",
+            "subgraphs_hotchocolate_version": "16.6.8",
+        })
+        make_run(artifacts, "cosmo", "cosmo (HotChocolate subgraphs)")
+        doc = self.run_json_generator(artifacts, {
+            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion"), expected_entry("cosmo")]),
+        })
+        variants = {v["id"]: v for g in doc["gateways"] for v in g["variants"]}
+        self.assertEqual(variants["fusion"]["platform"]["runtime"], {"name": ".NET", "version": "10.0.13"})
+        self.assertEqual(variants["cosmo"]["platform"]["runtime"], {"name": "Go"})
+        self.assertEqual(doc["subgraphs"]["framework"], {"name": "Hot Chocolate", "version": "16.6.8"})
+        self.assertEqual(doc["subgraphs"]["platform"]["runtime"], {"name": ".NET", "version": "10.0.13"})
+
+    def test_variant_label_passed_through(self):
+        artifacts = self.make_artifacts()
+        make_run(artifacts, "fusion-nightly-fed", "fusion-nightly-fed (HotChocolate subgraphs)")
+        doc = self.run_json_generator(artifacts, {
+            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion-nightly-fed"), expected_entry("fusion")]),
+        })
+        variants = {v["id"]: v for g in doc["gateways"] for v in g["variants"]}
+        self.assertEqual(variants["fusion-nightly-fed"]["label"],
+                         CONFIG.VARIANTS_BY_ID["fusion-nightly-fed"]["label"])
+        self.assertNotIn("label", variants["fusion"])
+
+    def test_median_run_tie_broken_by_execution_order(self):
+        artifacts = self.make_artifacts()
+        for run_index in (3, 1, 2):
+            summary = json.loads(json.dumps(SUMMARY))
+            summary["metrics"]["http_req_duration"]["values"] = {
+                stat: float(run_index) for stat in ("avg", "min", "med", "max", "p(90)", "p(95)", "p(99.9)")
+            }
+            make_run(
+                artifacts, "fusion", "fusion (HotChocolate subgraphs)",
+                run_index=run_index, summary=summary,
+            )
+        doc = self.run_json_generator(artifacts, {
+            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion")]),
+        })
+        _, results = self.results_by_variant(doc, "constant")
+        self.assertEqual(results["fusion"]["latencyMs"]["avg"], 2.0)
+
+
+class RuntimeVersionTests(unittest.TestCase):
+
+    SCRIPT = os.path.join(REPO_ROOT, "k6", "runtime-version.py")
+
+    def run_script(self, *args, path=None):
+        env = dict(os.environ)
+        if path:
+            env["PATH"] = path + os.pathsep + env["PATH"]
+        proc = subprocess.run(["python3", self.SCRIPT, *args], capture_output=True, text=True,
+                              timeout=30, env=env)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        return proc.stdout.strip()
+
+    def component(self):
+        directory = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, directory, True)
+        return directory
+
+    def test_dotnet_shared_runtime_not_sdk(self):
+        directory = self.component()
+        for version in ("10.0.12", "10.0.13", "11.0.0-rc.2.26504.105"):
+            os.makedirs(os.path.join(directory, ".dotnet", "shared", "Microsoft.NETCore.App", version))
+        os.makedirs(os.path.join(directory, ".dotnet", "sdk", "10.0.402"))
+        self.assertEqual(self.run_script(directory), "11.0.0-rc.2.26504.105")
+
+    def test_jvm_release_file_normalized_to_semver(self):
+        directory = self.component()
+        os.makedirs(os.path.join(directory, ".jdk"))
+        with open(os.path.join(directory, ".jdk", "release"), "w") as fh:
+            fh.write('IMPLEMENTOR="Eclipse Adoptium"\nJAVA_VERSION="25.0.4.1"\n')
+        self.assertEqual(self.run_script(directory), "25.0.4")
+
+    def test_node_version_from_path(self):
+        directory = self.component()
+        with open(os.path.join(directory, "package.json"), "w") as fh:
+            fh.write("{}")
+        bindir = self.component()
+        with open(os.path.join(bindir, "node"), "w") as fh:
+            fh.write("#!/bin/sh\necho v22.23.3\n")
+        os.chmod(os.path.join(bindir, "node"), 0o755)
+        self.assertEqual(self.run_script(directory, path=bindir), "22.23.3")
+
+    def test_native_binary_has_no_runtime_version(self):
+        directory = self.component()
+        with open(os.path.join(directory, "router"), "wb") as fh:
+            fh.write(b"\x7fELF" + b"\0" * 64)
+        os.chmod(os.path.join(directory, "router"), 0o755)
+        self.assertEqual(self.run_script(directory), "")
+
+    def test_package_version_from_deps_json(self):
+        directory = self.component()
+        build = os.path.join(directory, "eShop.Accounts", "bin", "Release", "net10.0")
+        os.makedirs(build)
+        with open(os.path.join(build, "eShop.Accounts.deps.json"), "w") as fh:
+            json.dump({"libraries": {"HotChocolate.AspNetCore/16.6.8": {}, "eShop.Accounts/1.0.0": {}}}, fh)
+        self.assertEqual(self.run_script("--package", "HotChocolate.AspNetCore", directory), "16.6.8")
+        self.assertEqual(self.run_script("--package", "Missing.Package", directory), "")
 
 
 class SubgraphBuildPinTests(unittest.TestCase):

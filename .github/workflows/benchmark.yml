@@ -905,6 +905,68 @@ jobs:
           name: all-results-constant-latency
           path: artifacts/
 
+  generate-results-json:
+    needs:
+      - prepare-matrix
+      - benchmark-constant
+      - benchmark-burst
+      - benchmark-constant-latency
+      - generate-results-constant
+      - generate-results-burst
+      - generate-results-constant-latency
+    if: ${{ !cancelled() && needs.prepare-matrix.outputs.should_publish == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref_name }}
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: results-*
+          path: artifacts/
+
+      - name: Generate results.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_GATEWAYS_JSON: ${{ needs.prepare-matrix.outputs.gateways }}
+          SCENARIO_RESULTS_JSON: >-
+            {"constant": "${{ needs.benchmark-constant.result }}",
+            "constant-latency": "${{ needs.benchmark-constant-latency.result }}",
+            "burst": "${{ needs.benchmark-burst.result }}"}
+          RUN_INPUTS_JSON: ${{ toJSON(inputs) }}
+        run: |
+          RUN_STARTED_AT=""
+          for attempt in 1 2 3; do
+            if RUN_STARTED_AT="$(gh run view "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --json startedAt --jq .startedAt)" \
+              && [[ -n "$RUN_STARTED_AT" ]]; then
+              break
+            fi
+            RUN_STARTED_AT=""
+            if [[ "$attempt" -lt 3 ]]; then
+              sleep $((attempt * 10))
+            fi
+          done
+          if [[ -z "$RUN_STARTED_AT" ]]; then
+            echo "::warning::could not read the run start time (gh run view); run.startedAt will be null"
+          fi
+          export RUN_STARTED_AT
+          # Outside the repo, so a failed generation leaves nothing to commit.
+          python3 k6/generate-results.py --json artifacts/ "$RUNNER_TEMP/results-json"
+          mkdir -p "benchmark-runs/${{ github.run_number }}"
+          mv "$RUNNER_TEMP/results-json/results.json" "benchmark-runs/${{ github.run_number }}/results.json"
+
+      - name: Commit results.json
+        run: |
+          RESULTS_JSON_FILE="benchmark-runs/${{ github.run_number }}/results.json"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if [[ -f "$RESULTS_JSON_FILE" ]]; then
+            git add "$RESULTS_JSON_FILE"
+          fi
+          git diff --cached --quiet || git commit -m "Add benchmark results JSON for run #${{ github.run_number }}"
+          git push
+
   benchmark-summary:
     needs:
       - prepare-matrix
@@ -914,6 +976,7 @@ jobs:
       - generate-results-constant
       - generate-results-burst
       - generate-results-constant-latency
+      - generate-results-json
     if: ${{ !cancelled() && needs.prepare-matrix.outputs.should_publish == 'true' }}
     runs-on: ubuntu-latest
     steps:
@@ -984,6 +1047,13 @@ jobs:
           git add RESULTS_CONSTANT.md RESULTS_BURST.md RESULTS_CONSTANT_LATENCY.md
           git diff --cached --quiet || git commit -m "Update latest benchmark results from run #${{ github.run_number }}"
           git push
+
+      - name: Report missing results.json
+        if: ${{ needs.generate-results-json.result != 'success' }}
+        run: |
+          echo "::warning::generate-results-json did not succeed (${{ needs.generate-results-json.result }}); this run has no results.json"
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- results.json was not generated (generate-results-json: \`${{ needs.generate-results-json.result }}\`); markdown results are unaffected." >> $GITHUB_STEP_SUMMARY
 
       - name: Skip latest root publish (errors detected)
         if: ${{ needs.benchmark-constant.result != 'success' || needs.benchmark-burst.result != 'success' || needs.benchmark-constant-latency.result != 'success' || needs.generate-results-constant.result != 'success' || needs.generate-results-burst.result != 'success' || needs.generate-results-constant-latency.result != 'success' }}

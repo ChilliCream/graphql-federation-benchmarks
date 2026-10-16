@@ -23,101 +23,68 @@ import urllib.request
 SUBGRAPHS_DIR = "subgraphs-net"
 SUBGRAPH_TECH = ".net"
 
-BASE_GATEWAYS = [
-    {
-        "path": "apollo-federation/gateways/apollo-gateway",
-        "name": "apollo-gateway",
-        "gateway_artifact": "prebuilt-gateway-apollo-gateway",
-    },
-    {
-        "path": "apollo-federation/gateways/apollo-router",
-        "name": "apollo-router",
-        "gateway_artifact": "prebuilt-gateway-apollo-router",
-    },
-    {
-        "path": "apollo-federation/gateways/apollo-router-v3",
-        "name": "apollo-router-v3",
-        "gateway_artifact": "prebuilt-gateway-apollo-router-v3",
-        "channel": "preview",
-    },
-    {
-        "path": "apollo-federation/gateways/caliban",
-        "name": "caliban",
-        "gateway_artifact": "prebuilt-gateway-caliban",
-    },
-    {
-        "path": "apollo-federation/gateways/cosmo",
-        "name": "cosmo",
-        "gateway_artifact": "prebuilt-gateway-cosmo",
-    },
-    {
-        "path": "apollo-federation/gateways/grafbase",
-        "name": "grafbase",
-        "gateway_artifact": "prebuilt-gateway-grafbase",
-    },
-    {
-        "path": "apollo-federation/gateways/hive-gateway",
-        "name": "hive-gateway",
-        "gateway_artifact": "prebuilt-gateway-hive-gateway",
-    },
-    {
-        "path": "apollo-federation/gateways/hive-gateway-router-runtime",
-        "name": "hive-gateway-router-runtime",
-        "gateway_artifact": "prebuilt-gateway-hive-gateway-router-runtime",
-    },
-    {
-        "path": "apollo-federation/gateways/hive-router",
-        "name": "hive-router",
-        "gateway_artifact": "prebuilt-gateway-hive-router",
-    },
-    {
-        "path": "composite-schema/gateways/fusion",
-        "name": "fusion",
-        "gateway_artifact": "prebuilt-gateway-fusion",
-        "channel": "stable",
-        "dotnet": "10",
-    },
-    {
-        "path": "composite-schema/gateways/fusion",
-        "name": "fusion-nightly",
-        "gateway_artifact": "prebuilt-gateway-fusion-nightly",
-        "channel": "preview",
-        "dotnet": "10",
-    },
-    {
-        "path": "composite-schema/gateways/fusion",
-        "name": "fusion-nightly-net11",
-        "gateway_artifact": "prebuilt-gateway-fusion-nightly-net11",
-        "channel": "preview",
-        "dotnet": "11",
-    },
-    {
-        # Fusion (preview channel) composing the Apollo Federation subgraphs
-        # via Apollo Federation connectors.
-        "path": "apollo-federation/gateways/fusion-nightly-fed",
-        "name": "fusion-nightly-fed",
-        "gateway_artifact": "prebuilt-gateway-fusion-nightly-fed",
-        "channel": "preview",
-        "dotnet": "10",
-    },
-    {
-        "path": "composite-schema/gateways/feddi",
-        "name": "feddi",
-        "gateway_artifact": "prebuilt-gateway-feddi",
-    },
-]
+CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "benchmark-config.json")
+with open(CONFIG_PATH, encoding="utf-8") as _fh:
+    CONFIG = json.load(_fh)
+
+GATEWAYS = CONFIG["gateways"]
+SUBGRAPHS = CONFIG["subgraphs"]
+
+VARIANTS = [variant for product in GATEWAYS for variant in product["variants"]]
+VARIANTS_BY_ID = {variant["id"]: variant for variant in VARIANTS}
+PRODUCT_BY_VARIANT = {v["id"]: product["id"] for product in GATEWAYS for v in product["variants"]}
+
+# Gateways whose HotChocolate packages install.sh resolves: an explicit
+# FUSION_VERSION pins all of these; every other gateway ignores it.
+FUSION_BASE_NAMES = tuple(v["id"] for v in VARIANTS if PRODUCT_BY_VARIANT[v["id"]] == "fusion")
+
+# Fusion variants running preview HotChocolate packages.
+NIGHTLY_BASE_NAMES = tuple(v for v in FUSION_BASE_NAMES if VARIANTS_BY_ID[v].get("channel") == "preview")
+
+
+def report_platform(language, runtime=None, features=()):
+    platform = {"language": {"name": language}}
+    if runtime:
+        platform["runtime"] = {"name": runtime}
+    if features:
+        platform["features"] = [dict(f) for f in features]
+    return platform
+
+
+def report_gateway_catalog():
+    catalog = []
+    for product in GATEWAYS:
+        variants = []
+        for gateway in product["variants"]:
+            variant = {"id": gateway["id"]}
+            if gateway.get("label"):
+                variant["label"] = gateway["label"]
+            variant.update({
+                "composition": gateway["path"].split("/", 1)[0],
+                "platform": report_platform(
+                    gateway["language"],
+                    gateway.get("runtime"),
+                    gateway.get("platformFeatures", ()),
+                ),
+            })
+            if gateway.get("gatewayFeatures"):
+                variant["features"] = [dict(f) for f in gateway["gatewayFeatures"]]
+            variants.append(variant)
+        catalog.append({
+            "id": product["id"],
+            "name": product["name"],
+            "vendor": product["vendor"],
+            "repositoryUrl": product["repositoryUrl"],
+            "variants": variants,
+        })
+    return catalog
+
 
 SUBGRAPH_ARTIFACT_BY_CATEGORY = {
     "apollo-federation": "prebuilt-apollo-federation-subgraphs",
     "composite-schema": "prebuilt-composite-schema-subgraphs",
 }
 
-# Gateway variants running preview HotChocolate packages.
-NIGHTLY_BASE_NAMES = ("fusion-nightly", "fusion-nightly-net11", "fusion-nightly-fed")
-
-# Gateways whose HotChocolate packages install.sh resolves: an explicit
-# FUSION_VERSION pins all of these; every other gateway ignores it.
-FUSION_BASE_NAMES = ("fusion",) + NIGHTLY_BASE_NAMES
 
 # Numeric X.Y.Z with an optional prerelease suffix of nonempty dot-separated
 # identifiers (e.g. "16.6.8", "16.7.0-p.27"). Mirrored by the
@@ -214,26 +181,24 @@ def build_gateway_entries(fusion_version=""):
     ignore it, and an empty version leaves every entry exactly as before.
     """
     entries = []
-    for gateway in BASE_GATEWAYS:
-        category = gateway["path"].split("/", 1)[0]
-        display_name = f"{gateway['name']} (HotChocolate subgraphs)"
+    for variant in VARIANTS:
+        name = variant["id"]
+        category = variant["path"].split("/", 1)[0]
         entry = {
-            "path": gateway["path"],
-            "name": gateway["name"],
-            "base_name": gateway["name"],
-            "channel": gateway.get("channel", "stable"),
-            "dotnet": gateway.get("dotnet", "10"),
+            "path": variant["path"],
+            "name": name,
+            "base_name": name,
+            "channel": variant.get("channel", "stable"),
+            "dotnet": variant.get("dotnet", "10"),
             "subgraphs": SUBGRAPHS_DIR,
             "subgraph_tech": SUBGRAPH_TECH,
-            "display_name": display_name,
+            "display_name": f"{name} (HotChocolate subgraphs)",
             "subgraphs_artifact": SUBGRAPH_ARTIFACT_BY_CATEGORY[category],
-            "gateway_artifact": gateway["gateway_artifact"],
+            "gateway_artifact": f"prebuilt-gateway-{name}",
         }
-        if fusion_version and gateway["name"] in FUSION_BASE_NAMES:
+        if fusion_version and name in FUSION_BASE_NAMES:
             entry["version"] = fusion_version
-            entry["display_name"] = (
-                f"{gateway['name']} {fusion_version} (HotChocolate subgraphs)"
-            )
+            entry["display_name"] = f"{name} {fusion_version} (HotChocolate subgraphs)"
         entries.append(entry)
     return entries
 
@@ -346,6 +311,7 @@ def build_matrices(selected, preview_check=hotchocolate_preview_is_ahead,
 
 
 def main():
+
     selected = os.environ.get("SELECTED_GATEWAY", "all")
     fusion_version = validate_fusion_version(os.environ.get("FUSION_VERSION", ""))
     matrices = build_matrices(selected, fusion_version=fusion_version)

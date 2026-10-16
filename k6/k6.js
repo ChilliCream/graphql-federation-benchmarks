@@ -10,6 +10,15 @@ const parsedVus = parseInt(__ENV.BENCH_VUS || "", 10);
 const defaultVus = isConstant ? 50 : 500;
 const vus = Number.isFinite(parsedVus) && parsedVus > 0 ? parsedVus : defaultVus;
 const duration = __ENV.BENCH_OVER_TIME || (isConstant ? "120s" : "60s");
+const burstStages = [
+  { duration: "10s", target: 50 },
+  { duration: "40s", target: vus },
+  { duration: "10s", target: 50 },
+];
+// Planned load duration (burst: its stages); excludes setup() and graceful stop.
+const plannedDurationSeconds = isConstant
+  ? parseInt(duration, 10)
+  : burstStages.reduce((sum, stage) => sum + parseInt(stage.duration, 10), 0);
 
 const successRate = new Rate("success_rate");
 
@@ -41,11 +50,7 @@ export const options = isConstant
         stress: {
           executor: "ramping-vus",
           startVUs: 50,
-          stages: [
-            { duration: "10s", target: 50 },
-            { duration: "40s", target: vus },
-            { duration: "10s", target: 50 },
-          ],
+          stages: burstStages,
           gracefulRampDown: "5s",
           gracefulStop: "5s",
         },
@@ -65,7 +70,11 @@ export default function () {
 }
 
 export function handleSummary(data) {
-  return handleBenchmarkSummary(data, { vus, duration });
+  return handleBenchmarkSummary(data, {
+    vus,
+    duration: `${plannedDurationSeconds}s`,
+    plannedDurationSeconds,
+  });
 }
 
 let printIdentifiersMap = {};

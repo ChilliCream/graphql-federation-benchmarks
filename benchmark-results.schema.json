@@ -1,0 +1,234 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GraphQL Federation Benchmark Results",
+  "description": "benchmark-runs/{run}/results.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["run", "hardware", "subgraphs", "gateways", "scenarios"],
+  "properties": {
+    "run": { "$ref": "#/$defs/run" },
+    "hardware": { "$ref": "#/$defs/hardware" },
+    "subgraphs": { "$ref": "#/$defs/subgraphs" },
+    "gateways": { "type": "array", "items": { "$ref": "#/$defs/gateway" } },
+    "scenarios": { "type": "array", "items": { "$ref": "#/$defs/scenario" } }
+  },
+  "$defs": {
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["number", "startedAt", "sourceCommit"],
+      "properties": {
+        "number": { "type": "integer" },
+        "url": { "type": "string", "format": "uri" },
+        "startedAt": { "type": ["string", "null"], "format": "date-time" },
+        "completedAt": { "type": "string", "format": "date-time" },
+        "sourceCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "inputs": { "type": "object", "description": "workflow_dispatch inputs; absent for scheduled runs." }
+      }
+    },
+    "hardware": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["host", "cpu", "logicalCpus", "memoryGb", "os"],
+      "properties": {
+        "host": { "type": "string" },
+        "cpu": { "type": "string" },
+        "logicalCpus": { "type": "integer", "minimum": 1 },
+        "memoryGb": { "type": "number", "minimum": 0 },
+        "os": { "type": "string" }
+      }
+    },
+    "feature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "platform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["language"],
+      "properties": {
+        "language": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name"],
+          "properties": { "name": { "type": "string" } }
+        },
+        "runtime": {
+          "type": "object",
+          "description": "Absent for native binaries without a separate runtime.",
+          "additionalProperties": false,
+          "required": ["name"],
+          "properties": {
+            "name": { "type": "string" },
+            "version": { "type": "string", "description": "Captured at run time; absent when it can't be determined." }
+          }
+        },
+        "features": { "type": "array", "items": { "$ref": "#/$defs/feature" } }
+      }
+    },
+    "subgraphs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["framework", "platform"],
+      "properties": {
+        "framework": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name"],
+          "properties": {
+            "name": { "type": "string" },
+            "version": { "type": "string" }
+          }
+        },
+        "platform": { "$ref": "#/$defs/platform" }
+      }
+    },
+    "gateway": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "variants"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "vendor": { "type": "string" },
+        "repositoryUrl": { "type": "string", "format": "uri" },
+        "variants": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/variant" } }
+      }
+    },
+    "variant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "composition", "platform"],
+      "properties": {
+        "id": { "type": "string", "description": "Unique across the run; matches the workflow gateway name." },
+        "label": { "type": "string", "minLength": 1, "description": "Display name." },
+        "version": { "type": ["string", "null"], "pattern": "^[^vV]" },
+        "composition": { "enum": ["composite-schema", "apollo-federation"] },
+        "platform": { "$ref": "#/$defs/platform" },
+        "features": { "type": "array", "items": { "$ref": "#/$defs/feature" } },
+        "notes": { "type": "string" }
+      }
+    },
+    "cpuset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cpuset", "cores"],
+      "properties": {
+        "cpuset": { "type": "string" },
+        "cores": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "status", "config", "results"],
+      "properties": {
+        "id": { "enum": ["constant", "constant-latency", "burst"] },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "enum": ["pending", "in-progress", "complete", "skipped", "failed"] },
+        "config": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["subgraphDelayMs", "warmupRuns"],
+          "properties": {
+            "durationSeconds": { "type": "integer", "minimum": 0, "description": "Planned load duration (burst: sum of its k6 stages); excludes setup() and graceful stop." },
+            "virtualUsers": { "type": "integer", "minimum": 1, "description": "Peak VUs." },
+            "subgraphDelayMs": { "type": "number", "minimum": 0 },
+            "warmupRuns": { "type": "integer", "minimum": 0 },
+            "measuredRuns": { "type": "integer", "minimum": 1 },
+            "cpuAllocation": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "gateway": { "$ref": "#/$defs/cpuset" },
+                "subgraphs": { "$ref": "#/$defs/cpuset" },
+                "k6": { "$ref": "#/$defs/cpuset" }
+              }
+            }
+          }
+        },
+        "results": { "type": "array", "items": { "$ref": "#/$defs/gatewayResult" } }
+      }
+    },
+    "gatewayResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gateway", "variants"],
+      "properties": {
+        "gateway": { "type": "string", "description": "gateways[].id" },
+        "variants": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/variantResult" } }
+      }
+    },
+    "variantResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["variant", "throughput", "requests"],
+      "properties": {
+        "variant": { "type": "string", "description": "gateways[].variants[].id" },
+        "throughput": {
+          "type": "object",
+          "description": "Requests per second over all measured runs.",
+          "additionalProperties": false,
+          "required": ["medianRps", "bestRps", "worstRps", "cvPercent"],
+          "properties": {
+            "medianRps": { "type": "number", "minimum": 0 },
+            "bestRps": { "type": "number", "minimum": 0 },
+            "worstRps": { "type": "number", "minimum": 0 },
+            "cvPercent": { "type": "number", "minimum": 0 },
+            "runsRps": { "type": "array", "items": { "type": "number", "minimum": 0 } }
+          }
+        },
+        "requests": {
+          "type": "object",
+          "description": "Summed over all measured runs; successful = passed all k6 checks.",
+          "additionalProperties": false,
+          "required": ["total", "successful", "failed"],
+          "properties": {
+            "total": { "type": "integer", "minimum": 0 },
+            "successful": { "type": "integer", "minimum": 0 },
+            "failed": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "latencyMs": {
+          "type": "object",
+          "description": "http_req_duration of the median run.",
+          "additionalProperties": false,
+          "required": ["avg", "med", "p90", "p95", "p99_9", "max"],
+          "properties": {
+            "avg": { "type": "number" },
+            "min": { "type": "number" },
+            "med": { "type": "number" },
+            "p90": { "type": "number" },
+            "p95": { "type": "number" },
+            "p99": { "type": "number" },
+            "p99_9": { "type": "number" },
+            "max": { "type": "number" }
+          }
+        },
+        "memory": {
+          "type": "object",
+          "description": "Median run.",
+          "additionalProperties": false,
+          "required": ["peakRssKiB"],
+          "properties": { "peakRssKiB": { "type": "integer", "minimum": 0 } }
+        },
+        "cpu": {
+          "type": "object",
+          "description": "Gateway cpuset utilisation of the median run, in cores.",
+          "additionalProperties": false,
+          "required": ["avgCores", "maxCores"],
+          "properties": {
+            "avgCores": { "type": "number", "minimum": 0 },
+            "maxCores": { "type": "number", "minimum": 0 }
+          }
+        }
+      }
+    }
+  }
+}

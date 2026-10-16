@@ -492,7 +492,7 @@ run_as_perfrunner() {
           BENCH_SUBGRAPH_VARIANT="${BENCH_SUBGRAPH_VARIANT:-}" \
           BENCH_DIAGNOSTIC_RUN="${BENCH_DIAGNOSTIC_RUN:-}" \
           BENCH_DIAGNOSTICS_DIR="${BENCH_DIAGNOSTICS_DIR:-}" \
-          BENCHMARK_SIMULATE_LATENCY="${BENCHMARK_SIMULATE_LATENCY:-}" \
+          BENCHMARK_SUBGRAPH_DELAY_MS="${BENCHMARK_SUBGRAPH_DELAY_MS:-}" \
           BENCH_GATEWAY_CHANNEL="${BENCH_GATEWAY_CHANNEL:-}" \
           BENCH_GATEWAY_DOTNET="${BENCH_GATEWAY_DOTNET:-}" \
           BENCH_GATEWAY_VERSION="${BENCH_GATEWAY_VERSION:-}" \
@@ -733,8 +733,12 @@ fi
 # ---- Start subgraphs --------------------------------------------------------
 
 if [[ "$SIMULATE_LATENCY" == true ]]; then
-  export BENCHMARK_SIMULATE_LATENCY="1"
-  echo "Latency simulation: enabled (BENCHMARK_SIMULATE_LATENCY=1)"
+  export BENCHMARK_SUBGRAPH_DELAY_MS="${BENCHMARK_SUBGRAPH_DELAY_MS:-4}"
+else
+  export BENCHMARK_SUBGRAPH_DELAY_MS="${BENCHMARK_SUBGRAPH_DELAY_MS:-0}"
+fi
+if [[ "$BENCHMARK_SUBGRAPH_DELAY_MS" != "0" ]]; then
+  echo "Latency simulation: ${BENCHMARK_SUBGRAPH_DELAY_MS}ms per subgraph request (BENCHMARK_SUBGRAPH_DELAY_MS)"
 fi
 
 echo ""
@@ -921,6 +925,12 @@ if [[ -f "$GATEWAY_DIR/version.txt" ]]; then
   echo "Gateway version: $GATEWAY_VERSION"
 fi
 
+# ---- Runtime versions ---------------------------------------------------------
+# As perfrunner, so node resolves to the one start.sh uses.
+GATEWAY_RUNTIME_VERSION="$(run_as_perfrunner python3 "$REPO_ROOT/k6/runtime-version.py" "$GATEWAY_DIR" 2>/dev/null || true)"
+SUBGRAPHS_RUNTIME_VERSION="$(python3 "$REPO_ROOT/k6/runtime-version.py" "$SUBGRAPHS_DIR" 2>/dev/null || true)"
+SUBGRAPHS_HOTCHOCOLATE_VERSION="$(python3 "$REPO_ROOT/k6/runtime-version.py" --package HotChocolate.AspNetCore "$SUBGRAPHS_DIR" 2>/dev/null || true)"
+
 # ---- Capture idle memory -----------------------------------------------------
 
 IDLE_RSS_KB=$(gateway_rss_kb)
@@ -981,9 +991,20 @@ json.dump({
     'machine_os': sys.argv[14],
     'machine_cpu': sys.argv[15],
     'machine_cores': sys.argv[16],
-    'machine_ram': sys.argv[17]
+    'machine_ram': sys.argv[17],
+    'gateway_cpuset': sys.argv[18],
+    'subgraphs_cpuset': sys.argv[19],
+    'k6_cpuset': sys.argv[20],
+    'runtime_version': sys.argv[21],
+    'subgraphs_runtime_version': sys.argv[22],
+    'subgraphs_hotchocolate_version': sys.argv[23],
+    'subgraph_delay_ms': int(sys.argv[24])
 }, open(sys.argv[8], 'w'), indent=2)
-" "$GATEWAY_NAME" "$GATEWAY_REL" "$CATEGORY" "$LOAD_MODE_LABEL" "$TIMESTAMP" "$RUN" "$BENCH_RUNS" "$RESULT_DIR/metadata.json" "$DISPLAY_NAME" "$GATEWAY_VERSION" "$SUBGRAPH_VARIANT" "$SUBGRAPH_TECH" "$MACHINE_HOSTNAME" "$MACHINE_OS" "$MACHINE_CPU" "$MACHINE_CORES" "$MACHINE_RAM"
+" "$GATEWAY_NAME" "$GATEWAY_REL" "$CATEGORY" "$LOAD_MODE_LABEL" "$TIMESTAMP" "$RUN" "$BENCH_RUNS" "$RESULT_DIR/metadata.json" "$DISPLAY_NAME" "$GATEWAY_VERSION" "$SUBGRAPH_VARIANT" "$SUBGRAPH_TECH" "$MACHINE_HOSTNAME" "$MACHINE_OS" "$MACHINE_CPU" "$MACHINE_CORES" "$MACHINE_RAM" \
+  "$([[ "$USE_PINNING" == true ]] && echo "$GATEWAY_CPUSET" || true)" \
+  "$([[ "$USE_PINNING" == true ]] && echo "$SUBGRAPH_CPUSET" || true)" \
+  "$([[ "$USE_PINNING" == true ]] && echo "$K6_CPUSET" || true)" \
+  "$GATEWAY_RUNTIME_VERSION" "$SUBGRAPHS_RUNTIME_VERSION" "$SUBGRAPHS_HOTCHOCOLATE_VERSION" "$BENCHMARK_SUBGRAPH_DELAY_MS"
 
   echo "Results for run $RUN: $RESULT_DIR"
 
