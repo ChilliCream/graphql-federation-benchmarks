@@ -1078,3 +1078,31 @@ jobs:
           else
             echo "- No \`$RUN_RESULTS_DIR\` directory to remove." >> $GITHUB_STEP_SUMMARY
           fi
+
+  publish-history:
+    needs:
+      - benchmark-constant
+      - benchmark-burst
+      - benchmark-constant-latency
+      - generate-results-constant
+      - generate-results-burst
+      - generate-results-constant-latency
+      - generate-results-json
+      - benchmark-summary
+    if: ${{ !cancelled() && github.event_name == 'schedule' && needs.benchmark-constant.result == 'success' && needs.benchmark-burst.result == 'success' && needs.benchmark-constant-latency.result == 'success' && needs.generate-results-constant.result == 'success' && needs.generate-results-burst.result == 'success' && needs.generate-results-constant-latency.result == 'success' && needs.generate-results-json.result == 'success' && needs.benchmark-summary.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Build history.json
+        run: python3 k6/build-history.py benchmark-runs benchmark-runs/history.json
+
+      - name: Commit history.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add benchmark-runs/history.json
+          git diff --cached --quiet || git commit -m "Update benchmark history from run #${{ github.run_number }}"
+          git push

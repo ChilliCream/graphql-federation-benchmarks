@@ -850,6 +850,7 @@ def json_run_info():
         "startedAt": os.environ.get("RUN_STARTED_AT", "").strip() or None,
         "completedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "sourceCommit": os.environ["GITHUB_SHA"],
+        "event": os.environ["GITHUB_EVENT_NAME"],
     }
     if repository and run_id:
         run["url"] = f"{server}/{repository}/actions/runs/{run_id}"
@@ -858,7 +859,7 @@ def json_run_info():
         run["inputs"] = inputs
     return {
         key: run[key]
-        for key in ("number", "url", "startedAt", "completedAt", "sourceCommit", "inputs")
+        for key in ("number", "url", "startedAt", "completedAt", "sourceCommit", "event", "inputs")
         if key == "startedAt" or run.get(key) is not None
     }
 

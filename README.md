@@ -151,7 +151,8 @@ Workflow: [benchmark.yml](./.github/workflows/benchmark.yml)
   - `generate-results-constant-latency`
   - `generate-results-constant`
   - `generate-results-burst`
-  - `generate-results-json` (`benchmark-runs/<run>/results.json`, see [example](./benchmark-results.example.json))
+  - `generate-results-json` (`benchmark-runs/<run>/results.json`)
+  - `publish-history` (scheduled runs only: `benchmark-runs/history.json`)
   - final `benchmark-summary` job publishes all result docs in the run summary
 - Result documents are committed back to the branch by the generator jobs
 
