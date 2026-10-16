@@ -4,9 +4,11 @@ All benchmarks run against the HotChocolate subgraphs only: every matrix entry m
 reference subgraphs-net, and gateway names carry no tech suffix.
 """
 
+import glob
 import importlib.util
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -414,6 +416,97 @@ class BuildMatrixTests(unittest.TestCase):
             gateways = json.loads(outputs["gateways"])
             self.assertEqual([g["name"] for g in gateways], ["cosmo"])
             self.assertEqual(gateways[0]["subgraphs"], "subgraphs-net")
+
+
+class ConfigTests(unittest.TestCase):
+
+    def read(self, *parts):
+        with open(os.path.join(REPO_ROOT, *parts), encoding="utf-8") as fh:
+            return fh.read()
+
+    def test_config_file_is_canonical_json_without_versions(self):
+        raw = self.read("k6", "benchmark-config.json")
+        self.assertEqual(raw, json.dumps(json.loads(raw), indent=2, ensure_ascii=False) + "\n")
+        self.assertEqual(list(MATRIX.CONFIG), ["subgraphs", "gateways"])
+        self.assertNotIn('"version"', raw)
+        allowed_variant_keys = {"id", "label", "path", "language", "runtime", "channel", "dotnet",
+                                "platformFeatures", "gatewayFeatures"}
+        for product in MATRIX.GATEWAYS:
+            self.assertEqual(set(product), {"id", "name", "vendor", "repositoryUrl", "variants"})
+            for variant in product["variants"]:
+                self.assertLessEqual(set(variant), allowed_variant_keys, variant["id"])
+        self.assertEqual(
+            {v["id"]: v["label"] for v in MATRIX.VARIANTS if "label" in v},
+            {"fusion-nightly-fed": "Fusion with Apollo Federation Connector"},
+        )
+
+    def test_variant_ids_unique_and_paths_exist(self):
+        ids = [v["id"] for v in MATRIX.VARIANTS]
+        self.assertEqual(len(ids), len(set(ids)))
+        for variant in MATRIX.VARIANTS:
+            with self.subTest(variant=variant["id"]):
+                self.assertTrue(os.path.isfile(os.path.join(REPO_ROOT, variant["path"], "install.sh")))
+                self.assertIn(variant["path"].split("/", 1)[0], MATRIX.SUBGRAPH_ARTIFACT_BY_CATEGORY)
+
+    def test_matrix_is_derived_from_variants(self):
+        matrices = MATRIX.build_matrices("all", preview_check=lambda: (True, "16.6.0", "16.7.0-p.1"))
+        self.assertEqual([e["name"] for e in matrices["gateways"]], [v["id"] for v in MATRIX.VARIANTS])
+        self.assertEqual(MATRIX.FUSION_BASE_NAMES,
+                         ("fusion", "fusion-nightly", "fusion-nightly-net11", "fusion-nightly-fed"))
+        self.assertEqual(MATRIX.NIGHTLY_BASE_NAMES,
+                         ("fusion-nightly", "fusion-nightly-net11", "fusion-nightly-fed"))
+
+    def test_workflow_dispatch_gateway_options_match_variants(self):
+        # Choice options can't be computed in GitHub Actions.
+        workflow = self.read(".github", "workflows", "benchmark.yml")
+        block = workflow.split("      gateway:\n", 1)[1].split("      fusion_version:", 1)[0]
+        options = re.findall(r"^          - (\S+)$", block, re.M)
+        self.assertEqual(options, ["all"] + [v["id"] for v in MATRIX.VARIANTS])
+
+    def test_runtime_async_feature_matches_dotnet_11_build(self):
+        # install.sh enables runtime-async exactly for the .NET 11 target.
+        declared = {
+            v["id"] for v in MATRIX.VARIANTS
+            if "runtime-async" in [f["id"] for f in v.get("platformFeatures", [])]
+        }
+        self.assertEqual(declared, {v["id"] for v in MATRIX.VARIANTS if v.get("dotnet") == "11"})
+        self.assertEqual(declared, {"fusion-nightly-net11"})
+        for path in {MATRIX.VARIANTS_BY_ID[v]["path"] for v in MATRIX.FUSION_BASE_NAMES}:
+            with self.subTest(script=path):
+                script = self.read(path, "install.sh")
+                block = script.split('    if [[ "$DOTNET_TARGET" == "11" ]]; then\n', 1)[1].split("    fi\n", 1)[0]
+                self.assertIn("<TargetFramework>net11.0</TargetFramework>", block)
+                self.assertIn("runtime-async=on", block)
+                code = "\n".join(l for l in script.splitlines() if not l.lstrip().startswith("#"))
+                self.assertEqual(code.count("runtime-async=on"), 1)
+                csproj = self.read(path, "eShop.Gateway", "eShop.Gateway.csproj")
+                self.assertNotIn("runtime-async=on", csproj)
+
+    def test_subgraph_delay_not_hardcoded(self):
+        for family in MATRIX.SUBGRAPH_ARTIFACT_BY_CATEGORY:
+            for program in glob.glob(os.path.join(REPO_ROOT, family, "subgraphs-net", "eShop.*", "Program.cs")):
+                with self.subTest(program=os.path.relpath(program, REPO_ROOT)):
+                    with open(program, encoding="utf-8") as fh:
+                        content = fh.read()
+                    self.assertNotRegex(content, r"Task\.Delay\(\d")
+                    self.assertIn('"BENCHMARK_SUBGRAPH_DELAY_MS"', content)
+                    self.assertNotIn("BENCHMARK_SIMULATE_LATENCY", content)
+        for path in (("k6", "benchmark.sh"), (".github", "workflows", "benchmark.yml")):
+            self.assertNotIn("BENCHMARK_SIMULATE_LATENCY", self.read(*path))
+
+    def test_catalog_groups_variants_by_product(self):
+        catalog = {p["id"]: p for p in MATRIX.report_gateway_catalog()}
+        self.assertEqual([p["id"] for p in MATRIX.GATEWAYS], list(catalog))
+        variants = {v["id"]: v for p in catalog.values() for v in p["variants"]}
+        self.assertEqual(list(variants), [v["id"] for v in MATRIX.VARIANTS])
+        self.assertEqual(variants["fusion-nightly-fed"]["composition"], "apollo-federation")
+        self.assertEqual(variants["feddi"]["composition"], "composite-schema")
+        self.assertEqual(
+            [f["id"] for f in variants["hive-gateway-router-runtime"]["features"]],
+            ["router-runtime"],
+        )
+        self.assertNotIn("runtime", variants["hive-router"]["platform"])
+        self.assertEqual(variants["fusion"]["platform"]["runtime"], {"name": ".NET"})
 
 
 if __name__ == "__main__":

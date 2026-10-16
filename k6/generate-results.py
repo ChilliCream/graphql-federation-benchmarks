@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """Generate RESULTS_CONSTANT.md and RESULTS_BURST.md from benchmark artifacts."""
 
+import csv
+import importlib.util
 import json
 import os
 import statistics
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -27,10 +30,28 @@ def find_results(artifacts_dir):
         txt_path = result_dir / "k6_summary.txt"
         k6_txt = txt_path.read_text() if txt_path.exists() else ""
 
+        memory_path = result_dir / "memory.json"
+        memory = {}
+        if memory_path.exists():
+            with open(memory_path) as f:
+                memory = json.load(f)
+
+        gateway_core_pct = []
+        data_path = result_dir / "data.csv"
+        if data_path.exists():
+            with open(data_path, newline="") as f:
+                for row in csv.DictReader(f):
+                    try:
+                        gateway_core_pct.append(float(row["Gateway_Core_CPU"]))
+                    except (KeyError, TypeError, ValueError):
+                        continue
+
         results.append({
             "metadata": metadata,
             "summary": summary,
             "k6_txt": k6_txt,
+            "memory": memory,
+            "gateway_core_pct": gateway_core_pct,
         })
     return results
 
@@ -68,6 +89,7 @@ def extract_metrics(summary):
         "total": total,
         "failed": failed,
         "sr_fails": sr_fails,
+        "sr_passes": int(success_rate.get("passes", 0)),
         "has_error": (sr_fails > 0 or failed > 0),
         "avg_ms": avg_ms,
         "p95_ms": p95_ms,
@@ -307,6 +329,27 @@ def format_cv(value):
     return f"{float(value):.1f}%"
 
 
+def rps_stats(runs):
+    """Median/best/worst/CV% of runs' RPS; ties broken by execution order."""
+    if not runs:
+        return None
+    ordered = sorted(runs, key=lambda x: (x["rps"], x["run"]))
+    rps = [r["rps"] for r in ordered]
+    median_run = ordered[len(ordered) // 2]
+    median_rps = median_run["rps"]
+    if len(rps) > 1 and median_rps > 0:
+        cv_pct = round(statistics.stdev(rps) / median_rps * 100, 1)
+    else:
+        cv_pct = 0.0
+    return {
+        "median_run": median_run,
+        "median_rps": median_rps,
+        "best_rps": max(rps),
+        "worst_rps": min(rps),
+        "cv_pct": cv_pct,
+    }
+
+
 def select_median_runs(results):
     """Group runs by gateway, compute aggregate stats (median, best, worst, CV%)."""
     groups = defaultdict(list)
@@ -319,6 +362,7 @@ def select_median_runs(results):
         metrics = extract_metrics(r["summary"])
         groups[(name, subgraph_tech)].append({
             "result": r,
+            "run": metadata.get("run", 0),
             "rps": rps,
             "version": version,
             "metrics": metrics,
@@ -332,27 +376,12 @@ def select_median_runs(results):
         errored_runs = [r for r in runs if r["metrics"]["has_error"]]
         successful_run_count = len(successful_runs)
 
-        median_run = None
-        median_rps = None
-        best_rps = None
-        worst_rps = None
-        cv_pct = None
-
+        stats = rps_stats(successful_runs)
         if successful_runs:
-            successful_runs.sort(key=lambda x: x["rps"])
-            successful_rps = [r["rps"] for r in successful_runs]
-            n_success = len(successful_rps)
-            median_idx = n_success // 2
-            median_run = successful_runs[median_idx]
-            median_rps = median_run["rps"]
-            best_rps = max(successful_rps)
-            worst_rps = min(successful_rps)
-
-            if n_success > 1 and median_rps > 0:
-                stdev = statistics.stdev(successful_rps)
-                cv_pct = round(stdev / median_rps * 100, 1)
-            else:
-                cv_pct = 0.0
+            successful_runs.sort(key=lambda x: (x["rps"], x["run"]))
+            median_run = stats["median_run"]
+            median_rps, best_rps = stats["median_rps"], stats["best_rps"]
+            worst_rps, cv_pct = stats["worst_rps"], stats["cv_pct"]
 
         version = runs[0]["version"]
 
@@ -366,6 +395,15 @@ def select_median_runs(results):
             notes = f"non-compatible response ({total_sr_fails} across {runs_with_errors}/{total_run_count} runs)"
         elif total_failed > 0:
             notes = f"{total_failed} failed requests across {runs_with_errors}/{total_run_count} runs"
+
+        # Not http_reqs: it also counts the setup() warm-up requests.
+        successful = sum(r["metrics"]["sr_passes"] for r in runs)
+        failed = sum(r["metrics"]["sr_fails"] for r in runs)
+        json_data = {
+            "stats": rps_stats(runs),
+            "runs_rps": [r["rps"] for r in sorted(runs, key=lambda x: x["run"])],
+            "requests": {"total": successful + failed, "successful": successful, "failed": failed},
+        }
 
         if successful_runs:
             successful_rps_str = ", ".join(str(r["rps"]) for r in successful_runs)
@@ -387,6 +425,7 @@ def select_median_runs(results):
                 "k6_txt": median_run["result"]["k6_txt"],
                 "summary": median_run["result"]["summary"],
                 "display_name": runs[0]["display_name"],
+                "json": json_data,
             })
         else:
             print(
@@ -407,9 +446,30 @@ def select_median_runs(results):
                 "summary": {},
                 "display_name": runs[0]["display_name"],
                 "failed_run": True,
+                "json": json_data,
             })
 
     return selected
+
+
+SCENARIOS = {
+    "constant": (
+        "constant-vus-over-time",
+        "This scenario executes a constant load of **{vus} VUs** over **{duration}**.",
+    ),
+    "constant-latency": (
+        "constant-vus-with-latency",
+        "This scenario executes a constant load of **{vus} VUs** over **{duration}** "
+        "with a simulated **{delay}ms IO delay** on each subgraph request.",
+    ),
+    "burst": (
+        "burst-vus",
+        "This scenario is a burst stress test with peaks up to **{vus} VUs** over **{duration}**.",
+    ),
+}
+
+# Must match k6/benchmark.sh; used for runs that predate subgraph_delay_ms.
+SUBGRAPH_DELAY_MS = {"constant-latency": 4}
 
 
 def generate_markdown(mode, results, expected_by_mode, not_run_by_mode=None):
@@ -483,31 +543,12 @@ def generate_markdown(mode, results, expected_by_mode, not_run_by_mode=None):
             "reflect the current setup."
         )
 
-    if mode == "constant":
-        lines.append("## Overview for: `constant-vus-over-time`")
-        lines.append("")
-        lines.append(SCENARIO_DESCRIPTION)
-        lines.append("")
-        lines.append(
-            f"This scenario executes a constant load of **{vus} VUs** over **{duration}**."
-        )
-    elif mode == "constant-latency":
-        lines.append("## Overview for: `constant-vus-with-latency`")
-        lines.append("")
-        lines.append(SCENARIO_DESCRIPTION)
-        lines.append("")
-        lines.append(
-            f"This scenario executes a constant load of **{vus} VUs** over **{duration}** "
-            f"with a simulated **4ms IO delay** on each subgraph request."
-        )
-    else:
-        lines.append("## Overview for: `burst-vus`")
-        lines.append("")
-        lines.append(SCENARIO_DESCRIPTION)
-        lines.append("")
-        lines.append(
-            f"This scenario is a burst stress test with peaks up to **{vus} VUs** over **{duration}**."
-        )
+    name, sentence = SCENARIOS.get(mode, SCENARIOS["burst"])
+    lines.append(f"## Overview for: `{name}`")
+    lines.append("")
+    lines.append(SCENARIO_DESCRIPTION)
+    lines.append("")
+    lines.append(sentence.format(vus=vus, duration=duration, delay=SUBGRAPH_DELAY_MS.get(mode, 0)))
 
     # Split entries by subgraph technology
     rust_entries = [e for e in entries if e["subgraph_tech"] == "rust"]
@@ -623,13 +664,369 @@ def generate_markdown(mode, results, expected_by_mode, not_run_by_mode=None):
     return "\n".join(lines)
 
 
-def main():
-    if len(sys.argv) < 2:
-        print("Usage: generate-results.py <artifacts-dir> [output-dir]")
+JSON_MODES = ("constant", "constant-latency", "burst")
+
+SCENARIO_STATUS_BY_JOB_RESULT = {
+    "success": "complete",
+    "failure": "failed",
+    "cancelled": "failed",
+    "skipped": "skipped",
+}
+
+_REPORT_METADATA = None
+
+
+def load_report_metadata():
+    """Load k6/build-matrix.py (gateway catalog)."""
+    global _REPORT_METADATA
+    if _REPORT_METADATA is None:
+        path = Path(__file__).with_name("build-matrix.py")
+        spec = importlib.util.spec_from_file_location("build_matrix", path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        _REPORT_METADATA = module
+    return _REPORT_METADATA
+
+
+def parse_leading_number(value):
+    """'16 logical (16 CPUs)' -> 16, '122 GB' -> 122."""
+    token = str(value or "").strip().split(" ", 1)[0]
+    try:
+        number = float(token)
+    except ValueError:
+        return None
+    return int(number) if number.is_integer() else number
+
+
+def json_hardware(results):
+    """Most common hardware profile across the run's metadata."""
+    profiles = collect_hardware_profiles(results)
+    if not profiles:
+        return None
+    host, os_name, cpu, cores, ram = profiles[0][0]
+    logical_cpus = parse_leading_number(cores)
+    memory_gb = parse_leading_number(ram)
+    if not (host and os_name and cpu and logical_cpus and memory_gb is not None):
+        return None
+    return {
+        "host": host,
+        "cpu": cpu,
+        "logicalCpus": int(logical_cpus),
+        "memoryGb": memory_gb,
+        "os": os_name,
+    }
+
+
+def json_version(value):
+    """Gateway version without a leading v."""
+    version = str(value or "").strip()
+    if version[:1] in ("v", "V"):
+        version = version[1:]
+    return version or None
+
+
+def json_latency(summary):
+    """http_req_duration trend stats (ms) of a k6 summary."""
+    values = summary.get("metrics", {}).get("http_req_duration", {}).get("values", {})
+    keys = [
+        ("avg", "avg"), ("min", "min"), ("med", "med"), ("p90", "p(90)"),
+        ("p95", "p(95)"), ("p99", "p(99)"), ("p99_9", "p(99.9)"), ("max", "max"),
+    ]
+    latency = {name: round(values[stat], 3) for name, stat in keys if stat in values}
+    required = {"avg", "med", "p90", "p95", "p99_9", "max"}
+    return latency if required <= latency.keys() else None
+
+
+def cpuset_size(cpuset):
+    """'2-3,10-11' -> 4."""
+    cpus = set()
+    for part in str(cpuset or "").replace(" ", "").split(","):
+        if not part:
+            continue
+        if "-" in part:
+            low, high = part.split("-", 1)
+            cpus.update(range(int(low), int(high) + 1))
+        else:
+            cpus.add(int(part))
+    return len(cpus)
+
+
+CPU_ROLES = ("gateway", "subgraphs", "k6")
+
+
+def run_cpuset(metadata, role):
+    """Cpuset of `role` from metadata, else profiles.json as benchmark.sh picks it."""
+    key = f"{role}_cpuset"
+    if key in metadata:
+        return metadata[key] or ""
+    logical_cpus = parse_leading_number(metadata.get("machine_cores"))
+    if not logical_cpus:
+        return ""
+    profiles_path = Path(__file__).resolve().parent.parent / "profiles.json"
+    if not profiles_path.exists():
+        return ""
+    with open(profiles_path) as f:
+        profiles = json.load(f)
+    profile = "16" if logical_cpus >= 16 else "8"
+    k6_mode = "ramping" if metadata.get("mode") in ("burst", "ramping") else "constant"
+    return profiles.get(profile, {}).get(k6_mode, {}).get(role, "")
+
+
+def json_cpu_allocation(mode_results):
+    """Most common per-run cpusets of a scenario."""
+    allocations = Counter(
+        tuple(run_cpuset(r.get("metadata", {}), role) for role in CPU_ROLES)
+        for r in mode_results
+    )
+    if not allocations:
+        return None
+    cpusets = allocations.most_common(1)[0][0]
+    allocation = {
+        role: {"cpuset": cpuset, "cores": cpuset_size(cpuset)}
+        for role, cpuset in zip(CPU_ROLES, cpusets)
+        if cpuset
+    }
+    return allocation or None
+
+
+def json_cpu(run):
+    """Gateway CPU of a run in cores."""
+    samples = run.get("gateway_core_pct") or []
+    cores = cpuset_size(run_cpuset(run.get("metadata") or {}, "gateway"))
+    if not samples or not cores:
+        return None
+    return {
+        "avgCores": round(sum(samples) / len(samples) / 100 * cores, 2),
+        "maxCores": round(max(samples) / 100 * cores, 2),
+    }
+
+
+def json_variant_result(entry):
+    """Scenario result of one gateway variant."""
+    data = entry["json"]
+    stats = data["stats"]
+    median = stats["median_run"]["result"]
+    result = {
+        "variant": entry["gateway"],
+        "throughput": {
+            "medianRps": stats["median_rps"],
+            "bestRps": stats["best_rps"],
+            "worstRps": stats["worst_rps"],
+            "cvPercent": stats["cv_pct"],
+            "runsRps": data["runs_rps"],
+        },
+    }
+    latency = json_latency(median["summary"])
+    if latency:
+        result["latencyMs"] = latency
+    result["requests"] = data["requests"]
+    peak_rss_kb = median.get("memory", {}).get("peak_rss_kb")
+    if peak_rss_kb:
+        result["memory"] = {"peakRssKiB": int(peak_rss_kb)}
+    cpu = json_cpu(median)
+    if cpu:
+        result["cpu"] = cpu
+    return result
+
+
+def load_json_env(var_name, default):
+    raw = os.environ.get(var_name, "").strip()
+    if not raw:
+        return default
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError as exc:
+        print(f"Warning: failed to parse {var_name}: {exc}")
+        return default
+
+
+def json_run_info():
+    """Run info from the GitHub Actions environment."""
+    server = os.environ.get("GITHUB_SERVER_URL", "https://github.com")
+    repository = os.environ.get("GITHUB_REPOSITORY", "")
+    run_id = os.environ.get("GITHUB_RUN_ID", "")
+    run = {
+        "number": int(os.environ["GITHUB_RUN_NUMBER"]),
+        "startedAt": os.environ.get("RUN_STARTED_AT", "").strip() or None,
+        "completedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "sourceCommit": os.environ["GITHUB_SHA"],
+    }
+    if repository and run_id:
+        run["url"] = f"{server}/{repository}/actions/runs/{run_id}"
+    inputs = load_json_env("RUN_INPUTS_JSON", None)
+    if isinstance(inputs, dict) and inputs:
+        run["inputs"] = inputs
+    return {
+        key: run[key]
+        for key in ("number", "url", "startedAt", "completedAt", "sourceCommit", "inputs")
+        if key == "startedAt" or run.get(key) is not None
+    }
+
+
+def most_common_value(results, field):
+    values = Counter(r["metadata"].get(field) for r in results if r["metadata"].get(field))
+    return values.most_common(1)[0][0] if values else None
+
+
+def json_scenario_description(mode, config):
+    """The markdown scenario sentence as plain text."""
+    if "virtualUsers" not in config or "durationSeconds" not in config:
+        return ""
+    return SCENARIOS[mode][1].replace("**", "").format(
+        vus=config["virtualUsers"], duration=f"{config['durationSeconds']}s", delay=config["subgraphDelayMs"],
+    )
+
+
+def planned_duration_seconds(mode, summary):
+    """Planned load duration from k6.js's summary; None if not reliably known."""
+    if "plannedDurationSeconds" in summary:
+        return int(summary["plannedDurationSeconds"])
+    # Older burst summaries report the unused BENCH_OVER_TIME, not the stage sum.
+    if mode == "burst":
+        return None
+    try:
+        return int(str(summary["duration"]).rstrip("s"))
+    except (KeyError, ValueError):
+        return None
+
+
+def json_scenario_config(mode, mode_results):
+    """Scenario config as the runs executed it."""
+    config = {
+        # benchmark.sh always runs a single warmup.
+        "warmupRuns": 1,
+        "subgraphDelayMs": int(
+            most_common_value(mode_results, "subgraph_delay_ms")
+            if any("subgraph_delay_ms" in r["metadata"] for r in mode_results)
+            else SUBGRAPH_DELAY_MS.get(mode, 0)
+        ),
+    }
+    if not mode_results:
+        return config
+    summaries = [r["summary"] for r in mode_results]
+    planned = Counter(planned_duration_seconds(mode, s) for s in summaries)
+    planned.pop(None, None)
+    if planned:
+        config["durationSeconds"] = planned.most_common(1)[0][0]
+    peaks = [s.get("metrics", {}).get("vus_max", {}).get("values", {}).get("max") for s in summaries]
+    peaks = [int(p) for p in peaks if p]
+    if peaks:
+        config["virtualUsers"] = max(peaks)
+    runs_per_gateway = Counter(Counter(get_gateway_name(r["metadata"]) for r in mode_results).values())
+    config["measuredRuns"] = runs_per_gateway.most_common(1)[0][0]
+    order = ("durationSeconds", "virtualUsers", "subgraphDelayMs", "warmupRuns", "measuredRuns")
+    return {key: config[key] for key in order if key in config}
+
+
+def generate_results_json(results, expected_by_mode):
+    """Build the results.json document."""
+    meta = load_report_metadata()
+    catalog = meta.report_gateway_catalog()
+    variant_to_product = {v["id"]: p["id"] for p in catalog for v in p["variants"]}
+    job_results = load_json_env("SCENARIO_RESULTS_JSON", {})
+
+    def mode_of(r):
+        mode = r["metadata"].get("mode")
+        return "burst" if mode == "ramping" else mode
+
+    in_run = {e["gateway"] for entries in expected_by_mode.values() for e in entries}
+    in_run |= {get_gateway_name(r["metadata"]) for r in results}
+    unknown = sorted(in_run - variant_to_product.keys())
+    if unknown:
+        print(f"Error: no variant in k6/benchmark-config.json for: {', '.join(unknown)}")
         sys.exit(1)
 
-    artifacts_dir = sys.argv[1]
-    output_dir = sys.argv[2] if len(sys.argv) > 2 else "."
+    versions, runtime_versions = {}, {}
+    for r in results:
+        name = get_gateway_name(r["metadata"])
+        versions[name] = versions.get(name) or json_version(get_version(r["metadata"]))
+        runtime_versions[name] = runtime_versions.get(name) or r["metadata"].get("runtime_version") or None
+
+    scenarios = []
+    for mode in JSON_MODES:
+        mode_results = [r for r in results if mode_of(r) == mode]
+        status = SCENARIO_STATUS_BY_JOB_RESULT.get(
+            job_results.get(mode), "complete" if mode_results else "skipped"
+        )
+        entries = []
+        if status != "skipped" and mode_results:
+            print(f"\nSelecting median runs for mode '{mode}':")
+            entries = sort_entries(select_median_runs(mode_results))
+
+        grouped = defaultdict(list)
+        for entry in entries:
+            grouped[variant_to_product[entry["gateway"]]].append(
+                json_variant_result(entry)
+            )
+
+        config = json_scenario_config(mode, mode_results)
+        cpu_allocation = json_cpu_allocation(mode_results)
+        if cpu_allocation:
+            config["cpuAllocation"] = cpu_allocation
+        scenario = {"id": mode, "name": SCENARIOS[mode][0]}
+        description = json_scenario_description(mode, config)
+        if description:
+            scenario["description"] = description
+        scenario.update({
+            "status": status,
+            "config": config,
+            "results": [
+                {"gateway": product["id"], "variants": grouped[product["id"]]}
+                for product in catalog
+                if grouped.get(product["id"])
+            ],
+        })
+        scenarios.append(scenario)
+
+    gateways = []
+    for product in catalog:
+        variants = []
+        for v in product["variants"]:
+            if v["id"] not in in_run:
+                continue
+            variant = {"id": v["id"], "version": versions.get(v["id"]), **{k: v[k] for k in v if k != "id"}}
+            runtime_version = runtime_versions.get(v["id"])
+            if runtime_version and "runtime" in variant["platform"]:
+                variant["platform"] = {
+                    **variant["platform"],
+                    "runtime": {**variant["platform"]["runtime"], "version": runtime_version},
+                }
+            variants.append(variant)
+        if variants:
+            gateways.append({**product, "variants": variants})
+
+    hardware = json_hardware(results)
+    if hardware is None:
+        print("Error: no benchmark hardware metadata found in the result artifacts.")
+        sys.exit(1)
+
+    subgraphs = meta.SUBGRAPHS
+    framework = dict(subgraphs["framework"])
+    platform = meta.report_platform(subgraphs["language"], subgraphs.get("runtime"))
+    hotchocolate = most_common_value(results, "subgraphs_hotchocolate_version")
+    if hotchocolate:
+        framework["version"] = hotchocolate
+    subgraph_runtime = most_common_value(results, "subgraphs_runtime_version")
+    if subgraph_runtime:
+        platform["runtime"]["version"] = subgraph_runtime
+    return {
+        "run": json_run_info(),
+        "hardware": hardware,
+        "subgraphs": {"framework": framework, "platform": platform},
+        "gateways": gateways,
+        "scenarios": scenarios,
+    }
+
+
+def main():
+    args = [a for a in sys.argv[1:] if a != "--json"]
+    write_json = len(args) != len(sys.argv) - 1
+    if len(args) < 1:
+        print("Usage: generate-results.py [--json] <artifacts-dir> [output-dir]")
+        sys.exit(1)
+
+    artifacts_dir = args[0]
+    output_dir = args[1] if len(args) > 1 else "."
     expected_by_mode = load_expected_gateways_by_mode()
     not_run_by_mode = load_not_run_gateways_by_mode()
     requested_modes = {
@@ -652,6 +1049,17 @@ def main():
         print(f"Found {len(results)} result(s)")
 
     os.makedirs(output_dir, exist_ok=True)
+
+    if write_json:
+        document = generate_results_json(results, expected_by_mode)
+        output_path = os.path.join(output_dir, "results.json")
+        # Rename so a crash never leaves a partial results.json.
+        with open(output_path + ".tmp", "w", encoding="utf-8") as f:
+            json.dump(document, f, indent=2, ensure_ascii=False)
+            f.write("\n")
+        os.replace(output_path + ".tmp", output_path)
+        print(f"Generated {output_path}")
+        return
 
     for mode, filename in [
         ("constant", "RESULTS_CONSTANT.md"),

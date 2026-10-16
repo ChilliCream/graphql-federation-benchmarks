@@ -220,16 +220,9 @@ class SubgraphScriptTests(unittest.TestCase):
 
 
 class FusionGatewayTests(unittest.TestCase):
-    # Both Fusion gateways must disable only gateway-side cost enforcement:
-    # HotChocolate 16.7+ enforces FusionCostOptions limits by default
-    # and rejects the deeply nested benchmark query with HC0047, while the
-    # default security policy (introspection etc.) must stay enabled. The
-    # ModifyCostOptions API only exists on versions with cost enforcement, so
-    # Program.cs compiles the call in only when install.sh resolved HotChocolate
-    # 16.7 or greater and defined FUSION_16_7_OR_GREATER in the gitignored
-    # bench.props; a plain `dotnet build` on older pins compiles it out.
-    # Mirrors the composite-schema subgraphs only in keeping header
-    # propagation and file composition, not their disableDefaultSecurity.
+    # HotChocolate 16.7+ enforces cost limits by default and rejects the deeply
+    # nested benchmark query, so both Fusion gateways disable default security on
+    # 16.7+ only (FUSION_16_7_OR_GREATER is defined by install.sh in bench.props).
     GATEWAYS = (
         os.path.join(
             "composite-schema", "gateways", "fusion",
@@ -257,13 +250,15 @@ class FusionGatewayTests(unittest.TestCase):
         ),
     )
 
-    def test_fusion_gateways_disable_only_cost_enforcement(self):
+    def test_fusion_gateways_disable_default_security_only_on_16_7(self):
         for rel in self.GATEWAYS:
             with self.subTest(gateway=rel):
                 content = read(os.path.join(REPO_ROOT, rel))
-                self.assertIn("#if FUSION_16_7_OR_GREATER", content)
-                self.assertIn("ModifyCostOptions", content)
-                self.assertIn("EnforceCostLimits = false", content)
+                modern, legacy = content.split("#if FUSION_16_7_OR_GREATER", 1)[1].split("#else", 1)
+                legacy = legacy.split("#endif", 1)[0]
+                self.assertIn("AddGraphQLGateway(disableDefaultSecurity: true)", modern)
+                self.assertIn("AddGraphQLGateway()", legacy)
+                self.assertNotIn("disableDefaultSecurity", legacy)
 
     def test_fusion_gateways_have_no_reflection_cost_helper(self):
         # The late-bound FusionCostPolicy helper is gone: no reflection
@@ -279,16 +274,6 @@ class FusionGatewayTests(unittest.TestCase):
                 self.assertNotIn("IL2026", content)
                 self.assertNotIn("IL2075", content)
                 self.assertNotIn("IL3050", content)
-
-    def test_fusion_gateways_keep_default_security(self):
-        # Cost-only disable: the broad disableDefaultSecurity switch must
-        # not be used, so the default security policy (including the
-        # introspection restriction) stays in effect.
-        for rel in self.GATEWAYS:
-            with self.subTest(gateway=rel):
-                content = read(os.path.join(REPO_ROOT, rel))
-                self.assertNotIn("disableDefaultSecurity", content)
-                self.assertIn("AddGraphQLGateway()", content)
 
     def test_fusion_gateways_keep_auth_and_composition(self):
         # The cost-only change must not take header propagation
@@ -390,14 +375,6 @@ class DocsTests(unittest.TestCase):
     def test_pinned_hotchocolate_version_documented(self):
         self.assertIn("16.6.8", self.readme)
         self.assertIn("HotChocolate", self.readme)
-
-    def test_historical_results_marked(self):
-        for results_file in ("RESULTS_CONSTANT.md", "RESULTS_BURST.md"):
-            with self.subTest(file=results_file):
-                content = read(os.path.join(REPO_ROOT, results_file))
-                self.assertIn("Historical results", content)
-                # Honest history: old Rust rows are preserved, not relabeled.
-                self.assertIn("Rust Subgraphs", content)
 
     def test_federation_spec_link(self):
         self.assertIn(

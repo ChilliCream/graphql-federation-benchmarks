@@ -11,13 +11,14 @@ builder
 
 var app = builder.Build();
 
-if (string.Equals(Environment.GetEnvironmentVariable("BENCHMARK_SIMULATE_LATENCY"), "1"))
+if (int.TryParse(Environment.GetEnvironmentVariable("BENCHMARK_SUBGRAPH_DELAY_MS"), out var subgraphDelayMs)
+    && subgraphDelayMs > 0)
 {
     // this will simulate IO latency, it will introduce jitter but this also makes it more realistic
-    app.Use(static next =>
+    app.Use(next =>
         async context =>
         {
-            await Task.Delay(4);
+            await Task.Delay(subgraphDelayMs);
             await next(context);
         });
 }
