@@ -81,11 +81,15 @@ MACHINE_OS="$(uname -sr)"
 MACHINE_CPU="unknown"
 MACHINE_CORES="unknown"
 MACHINE_RAM="unknown"
+MACHINE_CPU_TOPOLOGY=""
 
 if [[ "$UNAME_S" == "Linux" ]]; then
   MACHINE_CPU="$(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2 | xargs)"
   MACHINE_CORES="$(nproc --all) logical ($(grep -c '^processor' /proc/cpuinfo) CPUs)"
   MACHINE_RAM="$(awk '/MemTotal/ {printf "%.0f GB", $2/1024/1024}' /proc/meminfo)"
+  if command -v lscpu >/dev/null 2>&1; then
+    MACHINE_CPU_TOPOLOGY="$(lscpu -p=CPU,CORE | grep -v '^#' || true)"
+  fi
 elif [[ "$UNAME_S" == "Darwin" ]]; then
   MACHINE_CPU="$(sysctl -n machdep.cpu.brand_string)"
   MACHINE_CORES="$(sysctl -n hw.logicalcpu) logical"
@@ -343,14 +347,14 @@ GATEWAY_CPUSET=""
 SUBGRAPH_CPUSET=""
 
 if [[ -f "$PROFILES_FILE" ]]; then
-  # Detect core count
+  # Detect the number of hardware threads (Linux exposes each one as a CPU).
   case "$(uname -s)" in
     Darwin) CORES=$(sysctl -n hw.logicalcpu) ;;
     Linux)  CORES=$(nproc --all) ;;
     *)      CORES=0 ;;
   esac
 
-  echo "Detected $CORES logical cores"
+  echo "Detected $CORES hardware threads"
 
   # Find nearest profile key (8 or 16)
   if [[ $CORES -ge 16 ]]; then
@@ -373,10 +377,10 @@ print(p.get('system', ''), p.get('k6', ''), p.get('gateway', ''), p.get('subgrap
   if command -v taskset &>/dev/null; then
     USE_PINNING=true
     echo "CPU pinning enabled (profile=$PROFILE_KEY, mode=$LOAD_MODE_LABEL)"
-    echo "  system:    cores $SYSTEM_CPUSET"
-    echo "  k6:        cores $K6_CPUSET"
-    echo "  gateway:   cores $GATEWAY_CPUSET"
-    echo "  subgraphs: cores $SUBGRAPH_CPUSET"
+    echo "  system:    hardware threads $SYSTEM_CPUSET"
+    echo "  k6:        hardware threads $K6_CPUSET"
+    echo "  gateway:   hardware threads $GATEWAY_CPUSET"
+    echo "  subgraphs: hardware threads $SUBGRAPH_CPUSET"
   else
     echo "Note: taskset not available — CPU pinning disabled"
   fi
@@ -998,13 +1002,17 @@ json.dump({
     'runtime_version': sys.argv[21],
     'subgraphs_runtime_version': sys.argv[22],
     'subgraphs_hotchocolate_version': sys.argv[23],
-    'subgraph_delay_ms': int(sys.argv[24])
+    'subgraph_delay_ms': int(sys.argv[24]),
+    'system_cpuset': sys.argv[25],
+    'cpu_topology': [[int(n) for n in line.split(',')] for line in sys.argv[26].split()],
 }, open(sys.argv[8], 'w'), indent=2)
 " "$GATEWAY_NAME" "$GATEWAY_REL" "$CATEGORY" "$LOAD_MODE_LABEL" "$TIMESTAMP" "$RUN" "$BENCH_RUNS" "$RESULT_DIR/metadata.json" "$DISPLAY_NAME" "$GATEWAY_VERSION" "$SUBGRAPH_VARIANT" "$SUBGRAPH_TECH" "$MACHINE_HOSTNAME" "$MACHINE_OS" "$MACHINE_CPU" "$MACHINE_CORES" "$MACHINE_RAM" \
   "$([[ "$USE_PINNING" == true ]] && echo "$GATEWAY_CPUSET" || true)" \
   "$([[ "$USE_PINNING" == true ]] && echo "$SUBGRAPH_CPUSET" || true)" \
   "$([[ "$USE_PINNING" == true ]] && echo "$K6_CPUSET" || true)" \
-  "$GATEWAY_RUNTIME_VERSION" "$SUBGRAPHS_RUNTIME_VERSION" "$SUBGRAPHS_HOTCHOCOLATE_VERSION" "$BENCHMARK_SUBGRAPH_DELAY_MS"
+  "$GATEWAY_RUNTIME_VERSION" "$SUBGRAPHS_RUNTIME_VERSION" "$SUBGRAPHS_HOTCHOCOLATE_VERSION" "$BENCHMARK_SUBGRAPH_DELAY_MS" \
+  "$([[ "$USE_PINNING" == true ]] && echo "$SYSTEM_CPUSET" || true)" \
+  "$MACHINE_CPU_TOPOLOGY"
 
   echo "Results for run $RUN: $RESULT_DIR"
 

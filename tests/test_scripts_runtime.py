@@ -69,7 +69,21 @@ def assert_results_shape(test, doc):
     test.assertIsInstance(doc["run"]["event"], str)
     test.assertIsInstance(doc["run"]["number"], int)
     test.assertRegex(doc["run"]["sourceCommit"], r"^[0-9a-f]{40}$")
-    keys(doc["hardware"], ["host", "cpu", "logicalCpus", "memoryGb", "os"], where="hardware")
+    keys(
+        doc["hardware"],
+        ["host", "cpuModel", "hardwareThreads", "memoryGb", "os"],
+        ["physicalCores", "threadsPerCore", "coreThreads"],
+        where="hardware",
+    )
+    hardware = doc["hardware"]
+    test.assertGreater(hardware["hardwareThreads"], 0)
+    if "coreThreads" in hardware:
+        test.assertIn("physicalCores", hardware)
+        test.assertIn("threadsPerCore", hardware)
+        test.assertEqual(len(hardware["coreThreads"]), hardware["physicalCores"])
+        thread_ids = [thread for core in hardware["coreThreads"] for thread in core]
+        test.assertEqual(len(thread_ids), hardware["hardwareThreads"])
+        test.assertEqual(len(set(thread_ids)), len(thread_ids))
     keys(doc["subgraphs"], ["framework", "platform"], where="subgraphs")
     keys(doc["subgraphs"]["framework"], ["name"], ["version"], where="subgraphs.framework")
     platform(doc["subgraphs"]["platform"], "subgraphs.platform")
@@ -99,9 +113,17 @@ def assert_results_shape(test, doc):
         keys(scenario["config"], ["subgraphDelayMs", "warmupRuns"] + (measured if scenario["results"] else []),
              measured + ["durationSeconds", "cpuAllocation"], where=where + ".config")
         for role, alloc in scenario["config"].get("cpuAllocation", {}).items():
-            test.assertIn(role, ("gateway", "subgraphs", "k6"), where)
-            keys(alloc, ["cpuset", "cores"], where=f"{where}.cpuAllocation.{role}")
-            test.assertGreater(alloc["cores"], 0)
+            test.assertIn(role, ("system", "k6", "gateway", "subgraphs"), where)
+            keys(
+                alloc,
+                ["threadIds", "hardwareThreads"],
+                ["physicalCores"],
+                where=f"{where}.cpuAllocation.{role}",
+            )
+            test.assertEqual(len(alloc["threadIds"]), alloc["hardwareThreads"])
+            test.assertGreater(alloc["hardwareThreads"], 0)
+            if "physicalCores" in alloc:
+                test.assertGreater(alloc["physicalCores"], 0)
         for result in scenario["results"]:
             keys(result, ["gateway", "variants"], where=where)
             test.assertTrue(result["variants"])
@@ -121,8 +143,17 @@ def assert_results_shape(test, doc):
                 if "memory" in variant:
                     keys(variant["memory"], ["peakRssKiB"], where=vwhere)
                 if "cpu" in variant:
-                    keys(variant["cpu"], ["avgCores", "maxCores"], where=vwhere + ".cpu")
-                    test.assertLessEqual(variant["cpu"]["avgCores"], variant["cpu"]["maxCores"], vwhere)
+                    keys(
+                        variant["cpu"],
+                        ["avgUtilizationPercent", "maxUtilizationPercent"],
+                        where=vwhere + ".cpu",
+                    )
+                    test.assertLessEqual(
+                        variant["cpu"]["avgUtilizationPercent"],
+                        variant["cpu"]["maxUtilizationPercent"],
+                        vwhere,
+                    )
+                    test.assertLessEqual(variant["cpu"]["maxUtilizationPercent"], 100, vwhere)
 
 
 def make_run(artifacts_dir, gateway, display_name, run_index=1, mode="constant", summary=None,
@@ -513,7 +544,8 @@ class GenerateResultsJsonTests(unittest.TestCase):
         self.assertEqual(doc["run"]["event"], "workflow_dispatch")
         self.assertEqual(doc["run"]["url"], "https://github.com/owner/repo/actions/runs/1234")
         self.assertEqual(doc["run"]["inputs"], {"gateway": "all", "diagnostic_run": False})
-        self.assertEqual(doc["hardware"]["logicalCpus"], 16)
+        self.assertEqual(doc["hardware"]["hardwareThreads"], 16)
+        self.assertNotIn("physicalCores", doc["hardware"])
         self.assertEqual(doc["hardware"]["memoryGb"], 32)
 
         versions = {v["id"]: v["version"] for g in doc["gateways"] for v in g["variants"]}
@@ -556,12 +588,12 @@ class GenerateResultsJsonTests(unittest.TestCase):
         self.assertEqual(grafbase["requests"], {"total": 300, "successful": 270, "failed": 30})
         self.assertNotIn("failure", grafbase)
 
-    def test_cpuset_parsing_and_core_conversion(self):
+    def test_cpuset_parsing_and_cpu_utilization(self):
         gen = load_generator()
-        self.assertEqual(gen.cpuset_size("2-3,10-11"), 4)
-        self.assertEqual(gen.cpuset_size("0"), 1)
-        self.assertEqual(gen.cpuset_size("2-4"), 3)
-        self.assertEqual(gen.cpuset_size(""), 0)
+        self.assertEqual(gen.parse_cpuset("2-3,10-11"), {2, 3, 10, 11})
+        self.assertEqual(gen.parse_cpuset("0"), {0})
+        self.assertEqual(gen.parse_cpuset("2-4"), {2, 3, 4})
+        self.assertEqual(gen.parse_cpuset(""), set())
         self.assertEqual(gen.run_cpuset({"gateway_cpuset": "5"}, "gateway"), "5")
         self.assertEqual(gen.run_cpuset({"gateway_cpuset": ""}, "gateway"), "")
         with open(os.path.join(REPO_ROOT, "profiles.json")) as fh:
@@ -578,7 +610,10 @@ class GenerateResultsJsonTests(unittest.TestCase):
             "gateway_core_pct": [50.0, 100.0, 60.0],
             "metadata": {"gateway_cpuset": "2-3,10-11"},
         }
-        self.assertEqual(gen.json_cpu(run), {"avgCores": 2.8, "maxCores": 4.0})
+        self.assertEqual(
+            gen.json_cpu(run),
+            {"avgUtilizationPercent": 70.0, "maxUtilizationPercent": 100.0},
+        )
         self.assertIsNone(gen.json_cpu({"gateway_core_pct": [], "metadata": {"gateway_cpuset": "2"}}))
 
     def test_cpu_and_run_settings_from_median_run(self):
@@ -593,8 +628,14 @@ class GenerateResultsJsonTests(unittest.TestCase):
             "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion")]),
         })
         scenario, results = self.results_by_variant(doc, "constant-latency")
-        self.assertEqual(results["fusion"]["cpu"], {"avgCores": 1.0, "maxCores": 1.5})
-        self.assertEqual(scenario["config"].pop("cpuAllocation")["gateway"], {"cpuset": "2-3", "cores": 2})
+        self.assertEqual(
+            results["fusion"]["cpu"],
+            {"avgUtilizationPercent": 50.0, "maxUtilizationPercent": 75.0},
+        )
+        self.assertEqual(
+            scenario["config"].pop("cpuAllocation")["gateway"],
+            {"threadIds": [2, 3], "hardwareThreads": 2},
+        )
         self.assertEqual(scenario["config"], {
             "durationSeconds": 120, "virtualUsers": 50, "subgraphDelayMs": 7,
             "warmupRuns": 1, "measuredRuns": 1,
@@ -607,23 +648,35 @@ class GenerateResultsJsonTests(unittest.TestCase):
 
     def test_cpu_allocation_from_run_metadata(self):
         artifacts = self.make_artifacts()
-        pins = {"gateway_cpuset": "2", "subgraphs_cpuset": "3-5", "k6_cpuset": "1,9"}
+        pins = {
+            "system_cpuset": "0,8",
+            "k6_cpuset": "1,9",
+            "gateway_cpuset": "2",
+            "subgraphs_cpuset": "3-5",
+        }
         make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)", run_index=1, extra_metadata=pins)
         make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)", run_index=2, extra_metadata=pins)
         make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)", run_index=3,
-                 extra_metadata={"gateway_cpuset": "7", "subgraphs_cpuset": "8", "k6_cpuset": "9"})
+                 extra_metadata={
+                     "system_cpuset": "6", "k6_cpuset": "9",
+                     "gateway_cpuset": "7", "subgraphs_cpuset": "8",
+                 })
         doc = self.run_json_generator(artifacts, {
             "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion")]),
         })
         constant, _ = self.results_by_variant(doc, "constant")
         self.assertEqual(constant["config"]["cpuAllocation"], {
-            "gateway": {"cpuset": "2", "cores": 1},
-            "subgraphs": {"cpuset": "3-5", "cores": 3},
-            "k6": {"cpuset": "1,9", "cores": 2},
+            "system": {"threadIds": [0, 8], "hardwareThreads": 2},
+            "k6": {"threadIds": [1, 9], "hardwareThreads": 2},
+            "gateway": {"threadIds": [2], "hardwareThreads": 1},
+            "subgraphs": {"threadIds": [3, 4, 5], "hardwareThreads": 3},
         })
         artifacts = self.make_artifacts()
         make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)",
-                 extra_metadata={"gateway_cpuset": "", "subgraphs_cpuset": "", "k6_cpuset": ""})
+                 extra_metadata={
+                     "system_cpuset": "", "k6_cpuset": "",
+                     "gateway_cpuset": "", "subgraphs_cpuset": "",
+                 })
         doc = self.run_json_generator(artifacts, {
             "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion")]),
         })
@@ -641,8 +694,57 @@ class GenerateResultsJsonTests(unittest.TestCase):
             profile = json.load(fh)["16"]["ramping"]  # fixture: "16 logical"
         gen = load_generator()
         self.assertEqual(burst["config"]["cpuAllocation"], {
-            role: {"cpuset": profile[role], "cores": gen.cpuset_size(profile[role])}
-            for role in ("gateway", "subgraphs", "k6")
+            role: {
+                "threadIds": sorted(gen.parse_cpuset(profile[role])),
+                "hardwareThreads": len(gen.parse_cpuset(profile[role])),
+            }
+            for role in ("system", "k6", "gateway", "subgraphs")
+        })
+
+    def test_recorded_cpu_topology_reports_physical_cores(self):
+        artifacts = self.make_artifacts()
+        topology = [[thread, thread % 8] for thread in range(16)]
+        make_run(
+            artifacts,
+            "fusion",
+            "fusion (HotChocolate subgraphs)",
+            extra_metadata={
+                "cpu_topology": topology,
+                "system_cpuset": "0,8",
+                "k6_cpuset": "1,9",
+                "gateway_cpuset": "2-3,10-11",
+                "subgraphs_cpuset": "4-7,12-15",
+            },
+        )
+        doc = self.run_json_generator(artifacts, {
+            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion")]),
+        })
+        self.assertEqual(doc["hardware"], {
+            "host": "test-host",
+            "cpuModel": "Test CPU",
+            "hardwareThreads": 16,
+            "physicalCores": 8,
+            "threadsPerCore": 2,
+            "coreThreads": [[core, core + 8] for core in range(8)],
+            "memoryGb": 32,
+            "os": "Linux",
+        })
+        constant, _ = self.results_by_variant(doc, "constant")
+        self.assertEqual(constant["config"]["cpuAllocation"], {
+            "system": {
+                "threadIds": [0, 8], "hardwareThreads": 2, "physicalCores": 1,
+            },
+            "k6": {
+                "threadIds": [1, 9], "hardwareThreads": 2, "physicalCores": 1,
+            },
+            "gateway": {
+                "threadIds": [2, 3, 10, 11], "hardwareThreads": 4, "physicalCores": 2,
+            },
+            "subgraphs": {
+                "threadIds": [4, 5, 6, 7, 12, 13, 14, 15],
+                "hardwareThreads": 8,
+                "physicalCores": 4,
+            },
         })
 
     def test_scenario_config_for_older_artifacts(self):

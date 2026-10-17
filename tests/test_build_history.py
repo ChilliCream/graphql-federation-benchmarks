@@ -29,6 +29,19 @@ CATALOG = [
     ("feddi", [("feddi", "e91d605ed222", "Go")]),
 ]
 
+CPU_ALLOCATION = {
+    "system": {"threadIds": [0, 8], "physicalCores": 1, "hardwareThreads": 2},
+    "k6": {"threadIds": [1, 9], "physicalCores": 1, "hardwareThreads": 2},
+    "gateway": {
+        "threadIds": [2, 3, 10, 11], "physicalCores": 2, "hardwareThreads": 4,
+    },
+    "subgraphs": {
+        "threadIds": [4, 5, 6, 7, 12, 13, 14, 15],
+        "physicalCores": 4,
+        "hardwareThreads": 8,
+    },
+}
+
 
 def variant_result(variant_id):
     return {
@@ -38,7 +51,7 @@ def variant_result(variant_id):
         "latencyMs": {"avg": 10.0, "med": 9.5, "p90": 15.0, "p95": 18.0, "p99_9": 40.0, "max": 80.0},
         "requests": {"total": 120000, "successful": 120000, "failed": 0},
         "memory": {"peakRssKiB": 204800},
-        "cpu": {"avgCores": 3.5, "maxCores": 4.0},
+        "cpu": {"avgUtilizationPercent": 87.5, "maxUtilizationPercent": 100.0},
     }
 
 
@@ -57,14 +70,23 @@ def results_doc():
             "status": "complete",
             "config": {"durationSeconds": 120, "virtualUsers": 50,
                        "subgraphDelayMs": 4 if scenario_id == "constant-latency" else 0,
-                       "warmupRuns": 1, "measuredRuns": 9},
+                       "warmupRuns": 1, "measuredRuns": 9,
+                       "cpuAllocation": copy.deepcopy(CPU_ALLOCATION)},
             "results": results,
         })
     return {
         "run": {"number": 1, "startedAt": "2026-10-15T21:04:03Z", "completedAt": "2026-10-16T10:24:10Z",
                 "sourceCommit": "c" * 40, "event": "schedule"},
-        "hardware": {"host": "bench-001", "cpu": "AMD Ryzen 7 5700G", "logicalCpus": 16,
-                     "memoryGb": 122, "os": "Linux"},
+        "hardware": {
+            "host": "bench-001",
+            "cpuModel": "AMD Ryzen 7 5700G",
+            "physicalCores": 8,
+            "hardwareThreads": 16,
+            "threadsPerCore": 2,
+            "coreThreads": [[core, core + 8] for core in range(8)],
+            "memoryGb": 122,
+            "os": "Linux",
+        },
         "subgraphs": {
             "framework": {"name": "Hot Chocolate", "version": "16.6.8"},
             "platform": {"language": {"name": "C#"}, "runtime": {"name": ".NET", "version": "10.0.13"}},
@@ -251,7 +273,7 @@ class BuildHistoryTests(unittest.TestCase):
 
     def test_hardware_or_subgraph_change_resets_history(self):
         cpu = make_doc(1, versions={"fusion": "16.0.0"})
-        cpu["hardware"]["cpu"] = "Other CPU"
+        cpu["hardware"]["cpuModel"] = "Other CPU"
         subgraphs = make_doc(2, versions={"fusion": "16.1.0"})
         subgraphs["subgraphs"]["framework"]["version"] = "16.0.0"
         host = make_doc(3, versions={"fusion": "16.2.0"})
