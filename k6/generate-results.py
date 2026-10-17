@@ -372,6 +372,11 @@ def select_median_runs(results):
     selected = []
     for (gateway, subgraph_tech), runs in groups.items():
         total_run_count = len(runs)
+        expected_run_count = max(
+            int(r["result"]["metadata"].get("total_runs") or total_run_count)
+            for r in runs
+        )
+        execution_failed = total_run_count < expected_run_count
         successful_runs = [r for r in runs if not r["metrics"]["has_error"]]
         errored_runs = [r for r in runs if r["metrics"]["has_error"]]
         successful_run_count = len(successful_runs)
@@ -425,6 +430,7 @@ def select_median_runs(results):
                 "k6_txt": median_run["result"]["k6_txt"],
                 "summary": median_run["result"]["summary"],
                 "display_name": runs[0]["display_name"],
+                "execution_failed": execution_failed,
                 "json": json_data,
             })
         else:
@@ -446,6 +452,7 @@ def select_median_runs(results):
                 "summary": {},
                 "display_name": runs[0]["display_name"],
                 "failed_run": True,
+                "execution_failed": execution_failed,
                 "json": json_data,
             })
 
@@ -666,13 +673,6 @@ def generate_markdown(mode, results, expected_by_mode, not_run_by_mode=None):
 
 JSON_MODES = ("constant", "constant-latency", "burst")
 
-SCENARIO_STATUS_BY_JOB_RESULT = {
-    "success": "complete",
-    "failure": "failed",
-    "cancelled": "failed",
-    "skipped": "skipped",
-}
-
 _REPORT_METADATA = None
 
 
@@ -832,6 +832,7 @@ def json_variant_result(entry):
     median = stats["median_run"]["result"]
     result = {
         "variant": entry["gateway"],
+        "status": "failed" if entry.get("execution_failed") else "complete",
         "throughput": {
             "medianRps": stats["median_rps"],
             "bestRps": stats["best_rps"],
@@ -889,7 +890,11 @@ def json_run_info():
 
 
 def most_common_value(results, field):
-    values = Counter(r["metadata"].get(field) for r in results if r["metadata"].get(field))
+    values = Counter(
+        value
+        for r in results
+        if (value := r["metadata"].get(field)) is not None and value != ""
+    )
     return values.most_common(1)[0][0] if values else None
 
 
@@ -917,14 +922,14 @@ def planned_duration_seconds(mode, summary):
 
 def json_scenario_config(mode, mode_results):
     """Scenario config as the runs executed it."""
+    subgraph_delay_ms = most_common_value(mode_results, "subgraph_delay_ms")
+    if subgraph_delay_ms is None:
+        # Runs created before this metadata field existed use the scenario default.
+        subgraph_delay_ms = SUBGRAPH_DELAY_MS.get(mode, 0)
     config = {
         # benchmark.sh always runs a single warmup.
         "warmupRuns": 1,
-        "subgraphDelayMs": int(
-            most_common_value(mode_results, "subgraph_delay_ms")
-            if any("subgraph_delay_ms" in r["metadata"] for r in mode_results)
-            else SUBGRAPH_DELAY_MS.get(mode, 0)
-        ),
+        "subgraphDelayMs": int(subgraph_delay_ms),
     }
     if not mode_results:
         return config
@@ -970,19 +975,28 @@ def generate_results_json(results, expected_by_mode):
     scenarios = []
     for mode in JSON_MODES:
         mode_results = [r for r in results if mode_of(r) == mode]
-        status = SCENARIO_STATUS_BY_JOB_RESULT.get(
-            job_results.get(mode), "complete" if mode_results else "skipped"
-        )
+        job_result = job_results.get(mode)
+        if job_result == "skipped" or (job_result is None and not mode_results):
+            continue
         entries = []
-        if status != "skipped" and mode_results:
+        if mode_results:
             print(f"\nSelecting median runs for mode '{mode}':")
             entries = sort_entries(select_median_runs(mode_results))
 
-        grouped = defaultdict(list)
+        by_variant = {}
         for entry in entries:
-            grouped[variant_to_product[entry["gateway"]]].append(
-                json_variant_result(entry)
+            by_variant[entry["gateway"]] = json_variant_result(entry)
+        for expected in expected_by_mode.get(mode, []):
+            by_variant.setdefault(
+                expected["gateway"],
+                {"variant": expected["gateway"], "status": "failed"},
             )
+
+        grouped = defaultdict(list)
+        for product in catalog:
+            for variant in product["variants"]:
+                if variant["id"] in by_variant:
+                    grouped[product["id"]].append(by_variant[variant["id"]])
 
         config = json_scenario_config(mode, mode_results)
         cpu_allocation = json_cpu_allocation(mode_results)
@@ -993,7 +1007,6 @@ def generate_results_json(results, expected_by_mode):
         if description:
             scenario["description"] = description
         scenario.update({
-            "status": status,
             "config": config,
             "results": [
                 {"gateway": product["id"], "variants": grouped[product["id"]]}

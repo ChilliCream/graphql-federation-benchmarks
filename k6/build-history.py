@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Build benchmark-runs/history.json from every benchmark-runs/<run>/results.json.
 
-Only scheduled runs count. The latest such run defines the emitted scenarios,
-their config and the gateway catalog; per scenario, a variant keeps its newest
-MAX_VERSIONS versions (each from the newest run that measured it) among runs
-whose config, hardware.cpuModel and subgraphs (runtime major only) match the latest
-run's.
+Only scheduled runs count. The latest such run defines the emitted scenarios
+that were run, their config and the gateway catalog. Failed gateway executions
+are excluded while successful gateway results from the same scenario remain.
+Per scenario, a variant keeps its newest MAX_VERSIONS measured versions (each
+from the newest run that measured it) among runs whose config, hardware.cpuModel
+and subgraphs (runtime major only) match the latest run's.
 
 Usage: build-history.py <benchmark-runs-dir> <output-path>
 """
@@ -18,6 +19,7 @@ from pathlib import Path
 MAX_VERSIONS = 3
 WARMUP_RUNS = 1
 MEASURED_RUNS = 9
+RAN_SCENARIO_STATUSES = {"complete", "failed"}
 
 
 def load_runs(runs_dir):
@@ -65,6 +67,12 @@ def catalog_variants(doc):
     }
 
 
+def scenario_was_run(scenario):
+    """New documents omit scenario status; accept legacy completed/failed runs."""
+    status = scenario.get("status")
+    return status is None or status in RAN_SCENARIO_STATUSES
+
+
 def build_history(runs):
     runs = [doc for doc in runs if is_eligible(doc)]
     if not runs:
@@ -74,7 +82,7 @@ def build_history(runs):
 
     scenarios = []
     for latest_scenario in latest["scenarios"]:
-        if latest_scenario["status"] != "complete":
+        if not scenario_was_run(latest_scenario):
             continue
         key = comparability_key(latest, latest_scenario)
         by_variant = {}
@@ -84,7 +92,7 @@ def build_history(runs):
             )
             if (
                 scenario is None
-                or scenario["status"] != "complete"
+                or not scenario_was_run(scenario)
                 or scenario["config"].get("warmupRuns") != WARMUP_RUNS
                 or scenario["config"].get("measuredRuns") != MEASURED_RUNS
                 or comparability_key(doc, scenario) != key
@@ -93,6 +101,8 @@ def build_history(runs):
             catalog = catalog_variants(doc)
             for result in scenario["results"]:
                 for variant_result in result["variants"]:
+                    if variant_result.get("status") == "failed":
+                        continue
                     variant_id = variant_result["variant"]
                     variant = catalog.get(variant_id, (None, {}))[1]
                     version = variant.get("version")
@@ -104,7 +114,9 @@ def build_history(runs):
                         "platform": variant["platform"],
                     }
                     entry.update(
-                        (k, v) for k, v in variant_result.items() if k != "variant"
+                        (k, v)
+                        for k, v in variant_result.items()
+                        if k not in ("variant", "status")
                     )
                     # Runs are in ascending order, so the newest run per version wins.
                     by_variant.setdefault(variant_id, {})[version] = entry

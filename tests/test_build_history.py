@@ -51,6 +51,7 @@ CPU_ALLOCATION = {
 def variant_result(variant_id):
     return {
         "variant": variant_id,
+        "status": "complete",
         "throughput": {"medianRps": 1000, "bestRps": 1010, "worstRps": 990, "cvPercent": 0.5,
                        "runsRps": [1010, 1000, 990]},
         "latencyMs": {"avg": 10.0, "med": 9.5, "p90": 15.0, "p95": 18.0, "p99_9": 40.0, "max": 80.0},
@@ -141,6 +142,36 @@ def scenario(doc, scenario_id):
     return next(s for s in doc["scenarios"] if s["id"] == scenario_id)
 
 
+def remove_result(doc, scenario_id, variant_id):
+    found = False
+    for result in scenario(doc, scenario_id)["results"]:
+        found = found or any(
+            variant["variant"] == variant_id for variant in result["variants"]
+        )
+        result["variants"] = [
+            variant for variant in result["variants"]
+            if variant["variant"] != variant_id
+        ]
+    scenario(doc, scenario_id)["results"] = [
+        result for result in scenario(doc, scenario_id)["results"]
+        if result["variants"]
+    ]
+    if not found:
+        raise AssertionError(f"missing result for {variant_id} in {scenario_id}")
+
+
+def mark_result_failed(doc, scenario_id, variant_id):
+    for result in scenario(doc, scenario_id)["results"]:
+        for index, variant in enumerate(result["variants"]):
+            if variant["variant"] == variant_id:
+                result["variants"][index] = {
+                    "variant": variant_id,
+                    "status": "failed",
+                }
+                return
+    raise AssertionError(f"missing result for {variant_id} in {scenario_id}")
+
+
 def versions_of(history, variant_id, scenario_id="constant"):
     entry = next(
         (v for v in scenario(history, scenario_id)["variants"] if v["variant"] == variant_id),
@@ -210,7 +241,7 @@ class BuildHistoryTests(unittest.TestCase):
         )
         expected = {"version": "3.0.0-preview.0", "run": entry["versions"][0]["run"],
                     "platform": {"language": {"name": "Rust"}}}
-        expected.update((k, v) for k, v in source.items() if k != "variant")
+        expected.update((k, v) for k, v in source.items() if k not in ("variant", "status"))
         self.assertEqual(entry["versions"], [expected])
         self.assertEqual(list(entry["versions"][0]), list(expected))
 
@@ -238,15 +269,56 @@ class BuildHistoryTests(unittest.TestCase):
         history = self.build(legacy, dispatched, make_doc(3, versions={"fusion": "16.2.0"}))
         self.assertEqual(versions_of(history, "fusion"), [("16.0.0", 1), ("16.2.0", 3)])
 
-    def test_non_complete_scenario_skipped(self):
+    def test_failed_scenario_kept_and_missing_variant_excluded(self):
         old = make_doc(1, versions={"fusion": "16.0.0"})
-        scenario(old, "constant")["status"] = "failed"
         latest = make_doc(2, versions={"fusion": "16.1.0"})
-        scenario(latest, "burst")["status"] = "skipped"
+        scenario(latest, "constant-latency")["status"] = "failed"
+        remove_result(latest, "constant-latency", "fusion")
         history = self.build(old, latest)
-        self.assertEqual(versions_of(history, "fusion"), [("16.1.0", 2)])
-        self.assertEqual(versions_of(history, "fusion", "constant-latency"), [("16.0.0", 1), ("16.1.0", 2)])
-        self.assertEqual([s["id"] for s in history["scenarios"]], ["constant", "constant-latency"])
+        self.assertEqual(
+            [s["id"] for s in history["scenarios"]],
+            ["constant", "constant-latency", "burst"],
+        )
+        self.assertEqual(
+            versions_of(history, "fusion", "constant-latency"),
+            [("16.0.0", 1)],
+        )
+        self.assertEqual(
+            versions_of(history, "caliban", "constant-latency"),
+            [("3.2.0", 2)],
+        )
+        self.assertEqual(
+            versions_of(history, "fusion"),
+            [("16.0.0", 1), ("16.1.0", 2)],
+        )
+
+    def test_failed_variant_excluded_without_dropping_scenario(self):
+        old = make_doc(1, versions={"fusion": "16.0.0"})
+        latest = make_doc(2, versions={"fusion": "16.1.0"})
+        del scenario(latest, "constant-latency")["status"]
+        mark_result_failed(latest, "constant-latency", "fusion")
+        history = self.build(old, latest)
+        self.assertEqual(
+            [s["id"] for s in history["scenarios"]],
+            ["constant", "constant-latency", "burst"],
+        )
+        self.assertEqual(
+            versions_of(history, "fusion", "constant-latency"),
+            [("16.0.0", 1)],
+        )
+        self.assertEqual(
+            versions_of(history, "caliban", "constant-latency"),
+            [("3.2.0", 2)],
+        )
+
+    def test_skipped_scenario_omitted(self):
+        latest = make_doc(1)
+        scenario(latest, "burst")["status"] = "skipped"
+        history = self.build(latest)
+        self.assertEqual(
+            [s["id"] for s in history["scenarios"]],
+            ["constant", "constant-latency"],
+        )
 
     def test_non_default_run_counts_skipped(self):
         old = make_doc(1, versions={"fusion": "16.0.0"})

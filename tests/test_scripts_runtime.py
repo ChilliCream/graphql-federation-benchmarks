@@ -113,11 +113,15 @@ def assert_results_shape(test, doc):
 
     for scenario in doc["scenarios"]:
         where = f"scenario {scenario.get('id')}"
-        keys(scenario, ["id", "name", "status", "config", "results"], ["description"], where)
+        keys(scenario, ["id", "name", "config", "results"], ["description"], where)
         test.assertIn(scenario["id"], ("constant", "constant-latency", "burst"))
-        test.assertIn(scenario["status"], ("pending", "in-progress", "complete", "skipped", "failed"))
+        has_measurements = any(
+            "throughput" in variant
+            for result in scenario["results"]
+            for variant in result["variants"]
+        )
         measured = ["virtualUsers", "measuredRuns"]
-        keys(scenario["config"], ["subgraphDelayMs", "warmupRuns"] + (measured if scenario["results"] else []),
+        keys(scenario["config"], ["subgraphDelayMs", "warmupRuns"] + (measured if has_measurements else []),
              measured + ["durationSeconds", "cpuAllocation"], where=where + ".config")
         for role, alloc in scenario["config"].get("cpuAllocation", {}).items():
             test.assertIn(role, ("system", "k6", "gateway", "subgraphs"), where)
@@ -136,17 +140,24 @@ def assert_results_shape(test, doc):
             test.assertTrue(result["variants"])
             for variant in result["variants"]:
                 vwhere = f"{where} / {variant.get('variant')}"
-                keys(variant, ["variant", "throughput", "requests"],
-                     ["latencyMs", "memory", "cpu"], vwhere)
+                keys(variant, ["variant", "status"],
+                     ["throughput", "requests", "latencyMs", "memory", "cpu"], vwhere)
                 test.assertEqual(variants[variant["variant"]], result["gateway"], vwhere)
-                keys(variant["throughput"], ["medianRps", "bestRps", "worstRps", "cvPercent"],
-                     ["runsRps"], vwhere + ".throughput")
+                test.assertIn(variant["status"], ("complete", "failed"), vwhere)
+                if variant["status"] == "complete":
+                    test.assertIn("throughput", variant, vwhere)
+                    test.assertIn("requests", variant, vwhere)
+                if "throughput" in variant:
+                    test.assertIn("requests", variant, vwhere)
+                    keys(variant["throughput"], ["medianRps", "bestRps", "worstRps", "cvPercent"],
+                         ["runsRps"], vwhere + ".throughput")
                 if "latencyMs" in variant:
                     keys(variant["latencyMs"], ["avg", "med", "p90", "p95", "p99_9", "max"],
                          ["min", "p99"], vwhere + ".latencyMs")
-                keys(variant["requests"], ["total", "successful", "failed"], where=vwhere + ".requests")
-                test.assertEqual(variant["requests"]["total"],
-                                 variant["requests"]["successful"] + variant["requests"]["failed"], vwhere)
+                if "requests" in variant:
+                    keys(variant["requests"], ["total", "successful", "failed"], where=vwhere + ".requests")
+                    test.assertEqual(variant["requests"]["total"],
+                                     variant["requests"]["successful"] + variant["requests"]["failed"], vwhere)
                 if "memory" in variant:
                     keys(variant["memory"], ["peakRssKiB"], where=vwhere)
                 if "cpu" in variant:
@@ -532,7 +543,7 @@ class GenerateResultsJsonTests(unittest.TestCase):
             v["variant"]: v for r in scenario["results"] for v in r["variants"]
         }
 
-    def test_statuses_follow_job_results_and_matrix(self):
+    def test_scenarios_and_variant_statuses_follow_job_results_and_matrix(self):
         artifacts = self.make_artifacts()
         make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)", mode="constant")
         make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)", mode="burst")
@@ -559,21 +570,22 @@ class GenerateResultsJsonTests(unittest.TestCase):
         self.assertEqual(versions, {"fusion": "16.6.0", "grafbase": None, "feddi": None})
 
         constant, results = self.results_by_variant(doc, "constant")
-        self.assertEqual(constant["status"], "complete")
+        self.assertNotIn("status", constant)
         self.assertEqual(results["fusion"]["throughput"]["medianRps"], 1000)
         self.assertEqual(results["fusion"]["throughput"]["runsRps"], [1000])
         self.assertEqual(results["fusion"]["requests"], {"total": 120000, "successful": 120000, "failed": 0})
-        self.assertNotIn("status", results["fusion"])
-        self.assertEqual(set(results), {"fusion"})
+        self.assertEqual(results["fusion"]["status"], "complete")
+        self.assertEqual(results["grafbase"], {"variant": "grafbase", "status": "failed"})
+        self.assertEqual(results["feddi"], {"variant": "feddi", "status": "failed"})
+        self.assertEqual(set(results), {"fusion", "grafbase", "feddi"})
 
         burst, results = self.results_by_variant(doc, "burst")
-        self.assertEqual(burst["status"], "failed")
-        self.assertEqual(set(results), {"fusion"})
+        self.assertNotIn("status", burst)
+        self.assertEqual(results["fusion"]["status"], "complete")
+        self.assertEqual(results["grafbase"]["status"], "failed")
+        self.assertEqual(results["feddi"]["status"], "failed")
 
-        latency, results = self.results_by_variant(doc, "constant-latency")
-        self.assertEqual(latency["status"], "skipped")
-        self.assertEqual(latency["results"], [])
-        self.assertEqual(latency["config"]["subgraphDelayMs"], 4)
+        self.assertNotIn("constant-latency", [s["id"] for s in doc["scenarios"]])
 
     def test_incompatible_response_gets_full_entry_over_all_runs(self):
         artifacts = self.make_artifacts()
@@ -594,6 +606,46 @@ class GenerateResultsJsonTests(unittest.TestCase):
         self.assertEqual(grafbase["throughput"]["runsRps"], [900, 1000, 1100])
         self.assertEqual(grafbase["requests"], {"total": 300, "successful": 270, "failed": 30})
         self.assertNotIn("failure", grafbase)
+        self.assertEqual(grafbase["status"], "complete")
+
+    def test_all_incompatible_runs_keep_complete_execution_status(self):
+        artifacts = self.make_artifacts()
+        for run_index, rate in enumerate((900, 1000, 1100), 1):
+            summary = json.loads(json.dumps(SUMMARY))
+            summary["metrics"]["http_reqs"]["values"]["rate"] = rate
+            summary["metrics"]["success_rate"]["values"] = {"passes": 90, "fails": 10}
+            make_run(
+                artifacts,
+                "grafbase",
+                "grafbase (HotChocolate subgraphs)",
+                run_index=run_index,
+                summary=summary,
+            )
+        doc = self.run_json_generator(artifacts, {
+            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("grafbase")]),
+        })
+        _, results = self.results_by_variant(doc, "constant")
+        self.assertEqual(results["grafbase"]["status"], "complete")
+        self.assertEqual(results["grafbase"]["throughput"]["runsRps"], [900, 1000, 1100])
+        self.assertEqual(
+            results["grafbase"]["requests"],
+            {"total": 300, "successful": 270, "failed": 30},
+        )
+
+    def test_incomplete_gateway_execution_is_failed_with_partial_metrics(self):
+        artifacts = self.make_artifacts()
+        make_run(
+            artifacts,
+            "fusion",
+            "fusion (HotChocolate subgraphs)",
+            extra_metadata={"total_runs": 3},
+        )
+        doc = self.run_json_generator(artifacts, {
+            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion")]),
+        })
+        _, results = self.results_by_variant(doc, "constant")
+        self.assertEqual(results["fusion"]["status"], "failed")
+        self.assertEqual(results["fusion"]["throughput"]["runsRps"], [1000])
 
     def test_cpuset_parsing_and_cpu_utilization(self):
         gen = load_generator()
@@ -652,6 +704,20 @@ class GenerateResultsJsonTests(unittest.TestCase):
             "This scenario executes a constant load of 50 VUs over 120s "
             "with a simulated 7ms IO delay on each subgraph request.",
         )
+
+    def test_zero_subgraph_delay_from_run_metadata(self):
+        artifacts = self.make_artifacts()
+        make_run(
+            artifacts,
+            "fusion",
+            "fusion (HotChocolate subgraphs)",
+            extra_metadata={"subgraph_delay_ms": 0},
+        )
+        doc = self.run_json_generator(artifacts, {
+            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion")]),
+        })
+        constant, _ = self.results_by_variant(doc, "constant")
+        self.assertEqual(constant["config"]["subgraphDelayMs"], 0)
 
     def test_cpu_allocation_from_run_metadata(self):
         artifacts = self.make_artifacts()
