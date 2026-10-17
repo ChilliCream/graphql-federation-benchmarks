@@ -704,17 +704,26 @@ def json_hardware(results):
     if not profiles:
         return None
     host, os_name, cpu, cores, ram = profiles[0][0]
-    logical_cpus = parse_leading_number(cores)
+    hardware_threads = parse_leading_number(cores)
     memory_gb = parse_leading_number(ram)
-    if not (host and os_name and cpu and logical_cpus and memory_gb is not None):
+    if not (host and os_name and cpu and hardware_threads and memory_gb is not None):
         return None
-    return {
+    hardware = {
         "host": host,
-        "cpu": cpu,
-        "logicalCpus": int(logical_cpus),
-        "memoryGb": memory_gb,
-        "os": os_name,
+        "cpuModel": cpu,
+        "hardwareThreads": int(hardware_threads),
     }
+    topology = cpu_topology(results)
+    if topology:
+        threads_by_core = defaultdict(list)
+        for thread, core in sorted(topology.items()):
+            threads_by_core[core].append(thread)
+        hardware["physicalCores"] = len(threads_by_core)
+        hardware["threadsPerCore"] = max(len(threads) for threads in threads_by_core.values())
+        hardware["coreThreads"] = [threads_by_core[core] for core in sorted(threads_by_core)]
+    hardware["memoryGb"] = memory_gb
+    hardware["os"] = os_name
+    return hardware
 
 
 def json_version(value):
@@ -737,8 +746,8 @@ def json_latency(summary):
     return latency if required <= latency.keys() else None
 
 
-def cpuset_size(cpuset):
-    """'2-3,10-11' -> 4."""
+def parse_cpuset(cpuset):
+    """'2-3,10-11' -> {2, 3, 10, 11}."""
     cpus = set()
     for part in str(cpuset or "").replace(" ", "").split(","):
         if not part:
@@ -748,10 +757,22 @@ def cpuset_size(cpuset):
             cpus.update(range(int(low), int(high) + 1))
         else:
             cpus.add(int(part))
-    return len(cpus)
+    return cpus
 
 
-CPU_ROLES = ("gateway", "subgraphs", "k6")
+def cpu_topology(results):
+    """Most common hardware thread -> physical core map recorded by benchmark.sh, or {}."""
+    topologies = Counter(
+        tuple(tuple(pair) for pair in r.get("metadata", {}).get("cpu_topology") or [])
+        for r in results
+    )
+    topologies.pop((), None)
+    if not topologies:
+        return {}
+    return dict(topologies.most_common(1)[0][0])
+
+
+CPU_ROLES = ("system", "k6", "gateway", "subgraphs")
 
 
 def run_cpuset(metadata, role):
@@ -759,21 +780,21 @@ def run_cpuset(metadata, role):
     key = f"{role}_cpuset"
     if key in metadata:
         return metadata[key] or ""
-    logical_cpus = parse_leading_number(metadata.get("machine_cores"))
-    if not logical_cpus:
+    hardware_threads = parse_leading_number(metadata.get("machine_cores"))
+    if not hardware_threads:
         return ""
     profiles_path = Path(__file__).resolve().parent.parent / "profiles.json"
     if not profiles_path.exists():
         return ""
     with open(profiles_path) as f:
         profiles = json.load(f)
-    profile = "16" if logical_cpus >= 16 else "8"
+    profile = "16" if hardware_threads >= 16 else "8"
     k6_mode = "ramping" if metadata.get("mode") in ("burst", "ramping") else "constant"
     return profiles.get(profile, {}).get(k6_mode, {}).get(role, "")
 
 
 def json_cpu_allocation(mode_results):
-    """Most common per-run cpusets of a scenario."""
+    """Most common per-run hardware threads of each role in a scenario."""
     allocations = Counter(
         tuple(run_cpuset(r.get("metadata", {}), role) for role in CPU_ROLES)
         for r in mode_results
@@ -781,23 +802,26 @@ def json_cpu_allocation(mode_results):
     if not allocations:
         return None
     cpusets = allocations.most_common(1)[0][0]
-    allocation = {
-        role: {"cpuset": cpuset, "cores": cpuset_size(cpuset)}
-        for role, cpuset in zip(CPU_ROLES, cpusets)
-        if cpuset
-    }
+    topology = cpu_topology(mode_results)
+    allocation = {}
+    for role, cpuset in zip(CPU_ROLES, cpusets):
+        threads = sorted(parse_cpuset(cpuset))
+        if not threads:
+            continue
+        allocation[role] = {"threadIds": threads, "hardwareThreads": len(threads)}
+        if topology and all(thread in topology for thread in threads):
+            allocation[role]["physicalCores"] = len({topology[thread] for thread in threads})
     return allocation or None
 
 
 def json_cpu(run):
-    """Gateway CPU of a run in cores."""
+    """Utilization of the gateway's pinned hardware threads, in percent."""
     samples = run.get("gateway_core_pct") or []
-    cores = cpuset_size(run_cpuset(run.get("metadata") or {}, "gateway"))
-    if not samples or not cores:
+    if not samples:
         return None
     return {
-        "avgCores": round(sum(samples) / len(samples) / 100 * cores, 2),
-        "maxCores": round(max(samples) / 100 * cores, 2),
+        "avgUtilizationPercent": round(sum(samples) / len(samples), 1),
+        "maxUtilizationPercent": round(max(samples), 1),
     }
 
 

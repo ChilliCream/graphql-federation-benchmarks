@@ -4,7 +4,7 @@
 Only scheduled runs count. The latest such run defines the emitted scenarios,
 their config and the gateway catalog; per scenario, a variant keeps its newest
 MAX_VERSIONS versions (each from the newest run that measured it) among runs
-whose config, hardware.cpu and subgraphs (runtime major only) match the latest
+whose config, hardware.cpuModel and subgraphs (runtime major only) match the latest
 run's.
 
 Usage: build-history.py <benchmark-runs-dir> <output-path>
@@ -52,7 +52,7 @@ def subgraphs_key(subgraphs):
 
 def comparability_key(doc, scenario):
     return json.dumps(
-        [scenario["config"], doc["hardware"]["cpu"], subgraphs_key(doc["subgraphs"])],
+        [scenario["config"], doc["hardware"]["cpuModel"], subgraphs_key(doc["subgraphs"])],
         sort_keys=True,
     )
 
