@@ -24,6 +24,11 @@ WARMUP_RUNS = 1
 MEASURED_RUNS = 9
 RAN_SCENARIO_STATUSES = {"complete", "failed"}
 
+# Feddi's request-throughput implementation landed before run 400. Earlier
+# measurements (roughly 20 RPS) exercise a different request path and are not
+# comparable with the implementation benchmarked by the current catalog.
+VARIANT_HISTORY_START_RUN = {"feddi": 400}
+
 
 def load_runs(runs_dir):
     runs = []
@@ -132,6 +137,8 @@ def build_history(runs):
                     if variant_result.get("status") == "failed":
                         continue
                     variant_id = variant_result["variant"]
+                    if doc["run"]["number"] < VARIANT_HISTORY_START_RUN.get(variant_id, 0):
+                        continue
                     variant = catalog.get(variant_id, (None, {}))[1]
                     version = variant.get("version")
                     if not version:
