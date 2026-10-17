@@ -25,7 +25,12 @@ BUILDER = load_builder()
 CATALOG = [
     ("apollo-router", [("apollo-router", "2.18.0", "Rust"), ("apollo-router-v3", "3.0.0-preview.0", "Rust")]),
     ("caliban", [("caliban", "3.2.0", "Scala")]),
-    ("fusion", [("fusion", "16.6.8", "C#"), ("fusion-nightly-fed", "16.7.0-p.27", "C#")]),
+    ("fusion", [
+        ("fusion", "16.6.8", "C#"),
+        ("fusion-nightly", "16.7.0-p.27", "C#"),
+        ("fusion-nightly-net11", "16.7.0-p.27", "C#"),
+        ("fusion-nightly-fed", "16.7.0-p.27", "C#"),
+    ]),
     ("feddi", [("feddi", "e91d605ed222", "Go")]),
 ]
 
@@ -94,7 +99,11 @@ def results_doc():
         "gateways": [
             {"id": gateway_id, "name": gateway_id, "variants": [
                 {"id": vid, "version": version, "composition": "apollo-federation",
-                 "platform": {"language": {"name": language}}}
+                 "platform": {"language": {"name": language}},
+                 **({"label": "Fusion Nightly"} if vid in (
+                     "fusion-nightly", "fusion-nightly-net11", "fusion-nightly-fed"
+                 ) else {}),
+                 **({"preview": True} if vid == "feddi" else {})}
                 for vid, version, language in variants
             ]}
             for gateway_id, variants in CATALOG
@@ -177,6 +186,15 @@ class BuildHistoryTests(unittest.TestCase):
             "url": "https://github.com/owner/repo/actions/runs/7",
         })
         self.assertEqual(history["gateways"], EXAMPLE["gateways"])
+        variants = {
+            variant["id"]: variant
+            for gateway in history["gateways"]
+            for variant in gateway["variants"]
+        }
+        self.assertEqual(variants["fusion-nightly"]["label"], "Fusion Nightly")
+        self.assertEqual(variants["fusion-nightly-net11"]["label"], "Fusion Nightly")
+        self.assertEqual(variants["fusion-nightly-fed"]["label"], "Fusion Nightly")
+        self.assertIs(variants["feddi"]["preview"], True)
         self.assertEqual([s["id"] for s in history["scenarios"]], ["constant", "constant-latency", "burst"])
         self.assertEqual(scenario(history, "constant")["config"], scenario(EXAMPLE, "constant")["config"])
 

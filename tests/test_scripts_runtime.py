@@ -94,9 +94,16 @@ def assert_results_shape(test, doc):
         test.assertTrue(gateway["variants"])
         for variant in gateway["variants"]:
             where = f"variant {variant.get('id')}"
-            keys(variant, ["id", "version", "composition", "platform"], ["label", "features", "notes"], where)
+            keys(
+                variant,
+                ["id", "version", "composition", "platform"],
+                ["label", "preview", "features", "notes"],
+                where,
+            )
             if "label" in variant:
                 test.assertTrue(variant["label"], where)
+            if "preview" in variant:
+                test.assertIsInstance(variant["preview"], bool, where)
             test.assertIn(variant["composition"], ("composite-schema", "apollo-federation"))
             if variant["version"] is not None:
                 test.assertNotRegex(variant["version"], r"^[vV]", where)
@@ -800,16 +807,25 @@ class GenerateResultsJsonTests(unittest.TestCase):
         self.assertEqual(doc["subgraphs"]["framework"], {"name": "Hot Chocolate", "version": "16.6.8"})
         self.assertEqual(doc["subgraphs"]["platform"]["runtime"], {"name": ".NET", "version": "10.0.13"})
 
-    def test_variant_label_passed_through(self):
+    def test_variant_display_metadata_passed_through(self):
         artifacts = self.make_artifacts()
         make_run(artifacts, "fusion-nightly-fed", "fusion-nightly-fed (HotChocolate subgraphs)")
         doc = self.run_json_generator(artifacts, {
-            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion-nightly-fed"), expected_entry("fusion")]),
+            "EXPECTED_GATEWAYS_JSON": json.dumps([
+                expected_entry(variant_id)
+                for variant_id in (
+                    "fusion", "fusion-nightly", "fusion-nightly-net11",
+                    "fusion-nightly-fed", "feddi",
+                )
+            ]),
         })
         variants = {v["id"]: v for g in doc["gateways"] for v in g["variants"]}
-        self.assertEqual(variants["fusion-nightly-fed"]["label"],
-                         CONFIG.VARIANTS_BY_ID["fusion-nightly-fed"]["label"])
+        self.assertEqual(variants["fusion-nightly"]["label"], "Fusion Nightly")
+        self.assertEqual(variants["fusion-nightly-net11"]["label"], "Fusion Nightly")
+        self.assertEqual(variants["fusion-nightly-fed"]["label"], "Fusion Nightly")
+        self.assertIs(variants["feddi"]["preview"], True)
         self.assertNotIn("label", variants["fusion"])
+        self.assertNotIn("preview", variants["fusion"])
 
     def test_median_run_tie_broken_by_execution_order(self):
         artifacts = self.make_artifacts()

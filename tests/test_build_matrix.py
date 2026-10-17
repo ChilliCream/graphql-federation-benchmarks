@@ -429,7 +429,7 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(raw, json.dumps(json.loads(raw), indent=2, ensure_ascii=False) + "\n")
         self.assertEqual(list(MATRIX.CONFIG), ["subgraphs", "gateways"])
         self.assertNotIn('"version"', raw)
-        allowed_variant_keys = {"id", "label", "path", "language", "runtime", "channel", "dotnet",
+        allowed_variant_keys = {"id", "label", "preview", "path", "language", "runtime", "channel", "dotnet",
                                 "platformFeatures", "gatewayFeatures"}
         for product in MATRIX.GATEWAYS:
             self.assertEqual(set(product), {"id", "name", "vendor", "repositoryUrl", "variants"})
@@ -437,7 +437,15 @@ class ConfigTests(unittest.TestCase):
                 self.assertLessEqual(set(variant), allowed_variant_keys, variant["id"])
         self.assertEqual(
             {v["id"]: v["label"] for v in MATRIX.VARIANTS if "label" in v},
-            {"fusion-nightly-fed": "Fusion with Apollo Federation Connector"},
+            {
+                "fusion-nightly": "Fusion Nightly",
+                "fusion-nightly-net11": "Fusion Nightly",
+                "fusion-nightly-fed": "Fusion Nightly",
+            },
+        )
+        self.assertEqual(
+            {v["id"]: v["preview"] for v in MATRIX.VARIANTS if "preview" in v},
+            {"feddi": True},
         )
 
     def test_variant_ids_unique_and_paths_exist(self):
@@ -501,6 +509,10 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(list(variants), [v["id"] for v in MATRIX.VARIANTS])
         self.assertEqual(variants["fusion-nightly-fed"]["composition"], "apollo-federation")
         self.assertEqual(variants["feddi"]["composition"], "composite-schema")
+        self.assertTrue(variants["feddi"]["preview"])
+        self.assertEqual(variants["fusion-nightly"]["label"], "Fusion Nightly")
+        self.assertEqual(variants["fusion-nightly-net11"]["label"], "Fusion Nightly")
+        self.assertEqual(variants["fusion-nightly-fed"]["label"], "Fusion Nightly")
         self.assertEqual(
             [f["id"] for f in variants["hive-gateway-router-runtime"]["features"]],
             ["router-runtime"],
