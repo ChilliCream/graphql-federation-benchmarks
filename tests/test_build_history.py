@@ -256,6 +256,14 @@ class BuildHistoryTests(unittest.TestCase):
         self.assertEqual(emitted, catalog)
         self.assertEqual(results_of(history, "feddi", "burst"), [])
 
+    def test_feddi_history_starts_with_request_throughput_implementation(self):
+        history = self.build(
+            make_doc(399, versions={"feddi": "5ff8b6165878"}),
+            make_doc(400, versions={"feddi": "e91d605ed222"}),
+        )
+        self.assertEqual(results_of(history, "feddi"), [("e91d605ed222", 400)])
+        self.assertEqual(results_of(history, "fusion"), [("16.6.8", 399), ("16.6.8", 400)])
+
     def test_workflow_dispatch_runs_ignored(self):
         history = self.build(
             make_doc(1, versions={"fusion": "16.0.0"}),
