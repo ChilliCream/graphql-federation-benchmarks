@@ -1,0 +1,2051 @@
+{
+  "run": {
+    "number": 350,
+    "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/35023393432",
+    "startedAt": "2026-09-15T21:03:52Z",
+    "completedAt": "2026-09-16T16:36:50Z",
+    "sourceCommit": "463f6f5f28aa009ad12ff822d69d63ec68591bcb",
+    "event": "schedule"
+  },
+  "hardware": {
+    "host": "bench-001",
+    "cpuModel": "AMD Ryzen 7 5700G with Radeon Graphics",
+    "hardwareThreads": 16,
+    "physicalCores": 8,
+    "threadsPerCore": 2,
+    "coreThreads": [
+      [
+        0,
+        8
+      ],
+      [
+        1,
+        9
+      ],
+      [
+        2,
+        10
+      ],
+      [
+        3,
+        11
+      ],
+      [
+        4,
+        12
+      ],
+      [
+        5,
+        13
+      ],
+      [
+        6,
+        14
+      ],
+      [
+        7,
+        15
+      ]
+    ],
+    "memoryGb": 122,
+    "os": "Linux 6.8.0-147-generic"
+  },
+  "subgraphs": {
+    "framework": {
+      "name": "Hot Chocolate",
+      "version": "16.6.6"
+    },
+    "platform": {
+      "language": {
+        "name": "C#"
+      },
+      "runtime": {
+        "name": ".NET"
+      }
+    }
+  },
+  "gateways": [
+    {
+      "id": "apollo-gateway",
+      "name": "Apollo Gateway",
+      "vendor": "Apollo",
+      "repositoryUrl": "https://github.com/apollographql/federation",
+      "variants": [
+        {
+          "id": "apollo-gateway",
+          "version": "2.14.3",
+          "composition": "apollo-federation",
+          "platform": {
+            "language": {
+              "name": "TypeScript"
+            },
+            "runtime": {
+              "name": "Node.js"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "apollo-router",
+      "name": "Apollo Router",
+      "vendor": "Apollo",
+      "repositoryUrl": "https://github.com/apollographql/router",
+      "variants": [
+        {
+          "id": "apollo-router",
+          "version": "2.16.1",
+          "composition": "apollo-federation",
+          "platform": {
+            "language": {
+              "name": "Rust"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cosmo",
+      "name": "Cosmo Router",
+      "vendor": "WunderGraph",
+      "repositoryUrl": "https://github.com/wundergraph/cosmo",
+      "variants": [
+        {
+          "id": "cosmo",
+          "version": "0.334.0",
+          "composition": "apollo-federation",
+          "platform": {
+            "language": {
+              "name": "Go"
+            },
+            "runtime": {
+              "name": "Go"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "grafbase",
+      "name": "Grafbase Gateway",
+      "vendor": "Grafbase",
+      "repositoryUrl": "https://github.com/grafbase/grafbase",
+      "variants": [
+        {
+          "id": "grafbase",
+          "version": "0.53.5",
+          "composition": "apollo-federation",
+          "platform": {
+            "language": {
+              "name": "Rust"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "hive-gateway",
+      "name": "Hive Gateway",
+      "vendor": "The Guild",
+      "repositoryUrl": "https://github.com/graphql-hive/gateway",
+      "variants": [
+        {
+          "id": "hive-gateway",
+          "version": "2.10.8",
+          "composition": "apollo-federation",
+          "platform": {
+            "language": {
+              "name": "TypeScript"
+            },
+            "runtime": {
+              "name": "Node.js"
+            }
+          }
+        },
+        {
+          "id": "hive-gateway-router-runtime",
+          "version": "2.10.8",
+          "composition": "apollo-federation",
+          "platform": {
+            "language": {
+              "name": "TypeScript"
+            },
+            "runtime": {
+              "name": "Node.js"
+            }
+          },
+          "features": [
+            {
+              "id": "router-runtime",
+              "description": "Rust query planner/executor (@graphql-hive/router-runtime) instead of the JS one."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hive-router",
+      "name": "Hive Router",
+      "vendor": "The Guild",
+      "repositoryUrl": "https://github.com/graphql-hive/router",
+      "variants": [
+        {
+          "id": "hive-router",
+          "version": "0.0.84",
+          "composition": "apollo-federation",
+          "platform": {
+            "language": {
+              "name": "Rust"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "fusion",
+      "name": "Fusion",
+      "vendor": "ChilliCream",
+      "repositoryUrl": "https://github.com/ChilliCream/graphql-platform",
+      "variants": [
+        {
+          "id": "fusion",
+          "version": "16.6.6",
+          "composition": "composite-schema",
+          "platform": {
+            "language": {
+              "name": "C#"
+            },
+            "runtime": {
+              "name": ".NET"
+            }
+          }
+        },
+        {
+          "id": "fusion-nightly",
+          "version": "16.7.0-p.7",
+          "label": "Fusion Nightly",
+          "composition": "composite-schema",
+          "platform": {
+            "language": {
+              "name": "C#"
+            },
+            "runtime": {
+              "name": ".NET"
+            }
+          }
+        },
+        {
+          "id": "fusion-nightly-net11",
+          "version": "16.7.0-p.7",
+          "label": "Fusion Nightly",
+          "composition": "composite-schema",
+          "platform": {
+            "language": {
+              "name": "C#"
+            },
+            "runtime": {
+              "name": ".NET"
+            },
+            "features": [
+              {
+                "id": "runtime-async",
+                "description": "C# async methods compiled to runtime-async (.NET 11 opt-in)."
+              }
+            ]
+          }
+        },
+        {
+          "id": "fusion-nightly-fed",
+          "version": "16.7.0-p.7",
+          "label": "Fusion Nightly",
+          "composition": "apollo-federation",
+          "platform": {
+            "language": {
+              "name": "C#"
+            },
+            "runtime": {
+              "name": ".NET"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "feddi",
+      "name": "feddi",
+      "vendor": "feddi",
+      "repositoryUrl": "https://github.com/feddi-dev/feddi-gateway",
+      "variants": [
+        {
+          "id": "feddi",
+          "version": "5ff8b6165878",
+          "preview": true,
+          "composition": "composite-schema",
+          "platform": {
+            "language": {
+              "name": "Java"
+            },
+            "runtime": {
+              "name": "JVM"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "constant",
+      "name": "constant-vus-over-time",
+      "description": "This scenario executes a constant load of 50 VUs over 120s.",
+      "config": {
+        "durationSeconds": 120,
+        "virtualUsers": 50,
+        "subgraphDelayMs": 0,
+        "warmupRuns": 1,
+        "measuredRuns": 9,
+        "cpuAllocation": {
+          "system": {
+            "threadIds": [
+              0,
+              8
+            ],
+            "hardwareThreads": 2,
+            "physicalCores": 1
+          },
+          "k6": {
+            "threadIds": [
+              1,
+              9
+            ],
+            "hardwareThreads": 2,
+            "physicalCores": 1
+          },
+          "gateway": {
+            "threadIds": [
+              2,
+              3,
+              10,
+              11
+            ],
+            "hardwareThreads": 4,
+            "physicalCores": 2
+          },
+          "subgraphs": {
+            "threadIds": [
+              4,
+              5,
+              6,
+              7,
+              12,
+              13,
+              14,
+              15
+            ],
+            "hardwareThreads": 8,
+            "physicalCores": 4
+          }
+        }
+      },
+      "results": [
+        {
+          "gateway": "apollo-gateway",
+          "variants": [
+            {
+              "variant": "apollo-gateway",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 266,
+                "bestRps": 271,
+                "worstRps": 265,
+                "cvPercent": 0.7,
+                "runsRps": [
+                  271,
+                  268,
+                  267,
+                  267,
+                  266,
+                  266,
+                  265,
+                  265,
+                  265
+                ]
+              },
+              "latencyMs": {
+                "avg": 185.627,
+                "min": 7.769,
+                "med": 192.053,
+                "p90": 200.72,
+                "p95": 205.847,
+                "p99_9": 287.418,
+                "max": 419.446
+              },
+              "requests": {
+                "total": 290062,
+                "successful": 290062,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 2191340
+              },
+              "cpu": {
+                "avgUtilizationPercent": 99.4,
+                "maxUtilizationPercent": 100.0
+              }
+            }
+          ]
+        },
+        {
+          "gateway": "apollo-router",
+          "variants": [
+            {
+              "variant": "apollo-router",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 411,
+                "bestRps": 427,
+                "worstRps": 406,
+                "cvPercent": 1.7,
+                "runsRps": [
+                  427,
+                  416,
+                  414,
+                  411,
+                  413,
+                  406,
+                  408,
+                  406,
+                  406
+                ]
+              },
+              "latencyMs": {
+                "avg": 120.562,
+                "min": 5.188,
+                "med": 118.36,
+                "p90": 159.237,
+                "p95": 171.341,
+                "p99_9": 223.857,
+                "max": 327.458
+              },
+              "requests": {
+                "total": 446952,
+                "successful": 446952,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 179472
+              },
+              "cpu": {
+                "avgUtilizationPercent": 100.0,
+                "maxUtilizationPercent": 100.0
+              }
+            }
+          ]
+        },
+        {
+          "gateway": "cosmo",
+          "variants": [
+            {
+              "variant": "cosmo",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 1246,
+                "bestRps": 1292,
+                "worstRps": 1238,
+                "cvPercent": 1.6,
+                "runsRps": [
+                  1292,
+                  1282,
+                  1262,
+                  1252,
+                  1246,
+                  1241,
+                  1240,
+                  1241,
+                  1238
+                ]
+              },
+              "latencyMs": {
+                "avg": 39.774,
+                "min": 2.053,
+                "med": 39.345,
+                "p90": 55.252,
+                "p95": 60.156,
+                "p99_9": 83.485,
+                "max": 315.787
+              },
+              "requests": {
+                "total": 1358127,
+                "successful": 1358127,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 159956
+              },
+              "cpu": {
+                "avgUtilizationPercent": 99.4,
+                "maxUtilizationPercent": 100.0
+              }
+            }
+          ]
+        },
+        {
+          "gateway": "grafbase",
+          "variants": [
+            {
+              "variant": "grafbase",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 1617,
+                "bestRps": 1669,
+                "worstRps": 1610,
+                "cvPercent": 1.3,
+                "runsRps": [
+                  1669,
+                  1647,
+                  1632,
+                  1617,
+                  1613,
+                  1611,
+                  1610,
+                  1612,
+                  1618
+                ]
+              },
+              "latencyMs": {
+                "avg": 30.604,
+                "min": 2.26,
+                "med": 29.968,
+                "p90": 40.077,
+                "p95": 43.458,
+                "p99_9": 64.13,
+                "max": 323.773
+              },
+              "requests": {
+                "total": 1759255,
+                "successful": 1759255,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 120516
+              },
+              "cpu": {
+                "avgUtilizationPercent": 95.7,
+                "maxUtilizationPercent": 98.3
+              }
+            }
+          ]
+        },
+        {
+          "gateway": "hive-gateway",
+          "variants": [
+            {
+              "variant": "hive-gateway",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 263,
+                "bestRps": 271,
+                "worstRps": 261,
+                "cvPercent": 1.2,
+                "runsRps": [
+                  271,
+                  268,
+                  265,
+                  264,
+                  263,
+                  263,
+                  261,
+                  262,
+                  263
+                ]
+              },
+              "latencyMs": {
+                "avg": 188.204,
+                "min": 6.359,
+                "med": 175.613,
+                "p90": 221.467,
+                "p95": 269.068,
+                "p99_9": 607.997,
+                "max": 712.611
+              },
+              "requests": {
+                "total": 287715,
+                "successful": 287715,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 3376808
+              },
+              "cpu": {
+                "avgUtilizationPercent": 99.4,
+                "maxUtilizationPercent": 100.0
+              }
+            },
+            {
+              "variant": "hive-gateway-router-runtime",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 592,
+                "bestRps": 609,
+                "worstRps": 590,
+                "cvPercent": 1.1,
+                "runsRps": [
+                  609,
+                  600,
+                  595,
+                  592,
+                  592,
+                  590,
+                  590,
+                  592,
+                  591
+                ]
+              },
+              "latencyMs": {
+                "avg": 83.862,
+                "min": 3.881,
+                "med": 81.876,
+                "p90": 103.155,
+                "p95": 113.638,
+                "p99_9": 199.374,
+                "max": 319.407
+              },
+              "requests": {
+                "total": 644436,
+                "successful": 644436,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 2741384
+              },
+              "cpu": {
+                "avgUtilizationPercent": 99.6,
+                "maxUtilizationPercent": 100.0
+              }
+            }
+          ]
+        },
+        {
+          "gateway": "hive-router",
+          "variants": [
+            {
+              "variant": "hive-router",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 2588,
+                "bestRps": 2780,
+                "worstRps": 2564,
+                "cvPercent": 2.9,
+                "runsRps": [
+                  2780,
+                  2700,
+                  2641,
+                  2568,
+                  2571,
+                  2578,
+                  2564,
+                  2597,
+                  2588
+                ]
+              },
+              "latencyMs": {
+                "avg": 19.071,
+                "min": 1.693,
+                "med": 18.792,
+                "p90": 26.286,
+                "p95": 28.64,
+                "p99_9": 47.777,
+                "max": 291.695
+              },
+              "requests": {
+                "total": 2835243,
+                "successful": 2835243,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 79512
+              },
+              "cpu": {
+                "avgUtilizationPercent": 93.9,
+                "maxUtilizationPercent": 95.4
+              }
+            }
+          ]
+        },
+        {
+          "gateway": "fusion",
+          "variants": [
+            {
+              "variant": "fusion",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 2469,
+                "bestRps": 2575,
+                "worstRps": 2458,
+                "cvPercent": 1.7,
+                "runsRps": [
+                  2575,
+                  2531,
+                  2495,
+                  2470,
+                  2469,
+                  2462,
+                  2458,
+                  2458,
+                  2458
+                ]
+              },
+              "latencyMs": {
+                "avg": 19.988,
+                "min": 1.6,
+                "med": 16.744,
+                "p90": 32.823,
+                "p95": 40.117,
+                "p99_9": 146.077,
+                "max": 358.029
+              },
+              "requests": {
+                "total": 2689223,
+                "successful": 2689223,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 393048
+              },
+              "cpu": {
+                "avgUtilizationPercent": 98.0,
+                "maxUtilizationPercent": 99.0
+              }
+            },
+            {
+              "variant": "fusion-nightly",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 2484,
+                "bestRps": 2592,
+                "worstRps": 2474,
+                "cvPercent": 1.7,
+                "runsRps": [
+                  2592,
+                  2551,
+                  2501,
+                  2484,
+                  2482,
+                  2476,
+                  2476,
+                  2484,
+                  2474
+                ]
+              },
+              "latencyMs": {
+                "avg": 19.872,
+                "min": 1.594,
+                "med": 16.564,
+                "p90": 32.751,
+                "p95": 40.367,
+                "p99_9": 150.28,
+                "max": 381.011
+              },
+              "requests": {
+                "total": 2706650,
+                "successful": 2706650,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 388356
+              },
+              "cpu": {
+                "avgUtilizationPercent": 97.9,
+                "maxUtilizationPercent": 99.0
+              }
+            },
+            {
+              "variant": "fusion-nightly-net11",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 2511,
+                "bestRps": 2626,
+                "worstRps": 2500,
+                "cvPercent": 1.9,
+                "runsRps": [
+                  2626,
+                  2598,
+                  2541,
+                  2522,
+                  2511,
+                  2500,
+                  2500,
+                  2502,
+                  2502
+                ]
+              },
+              "latencyMs": {
+                "avg": 19.655,
+                "min": 1.511,
+                "med": 18.579,
+                "p90": 28.595,
+                "p95": 32.391,
+                "p99_9": 53.92,
+                "max": 269.18
+              },
+              "requests": {
+                "total": 2740240,
+                "successful": 2740240,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 409828
+              },
+              "cpu": {
+                "avgUtilizationPercent": 96.7,
+                "maxUtilizationPercent": 98.6
+              }
+            },
+            {
+              "variant": "fusion-nightly-fed",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 2282,
+                "bestRps": 2374,
+                "worstRps": 2274,
+                "cvPercent": 1.5,
+                "runsRps": [
+                  2374,
+                  2333,
+                  2299,
+                  2282,
+                  2283,
+                  2274,
+                  2275,
+                  2274,
+                  2274
+                ]
+              },
+              "latencyMs": {
+                "avg": 21.636,
+                "min": 1.881,
+                "med": 18.302,
+                "p90": 35.31,
+                "p95": 43.185,
+                "p99_9": 149.709,
+                "max": 393.402
+              },
+              "requests": {
+                "total": 2484768,
+                "successful": 2484768,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 380904
+              },
+              "cpu": {
+                "avgUtilizationPercent": 97.9,
+                "maxUtilizationPercent": 98.9
+              }
+            }
+          ]
+        },
+        {
+          "gateway": "feddi",
+          "variants": [
+            {
+              "variant": "feddi",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 19,
+                "bestRps": 20,
+                "worstRps": 19,
+                "cvPercent": 1.8,
+                "runsRps": [
+                  19,
+                  19,
+                  19,
+                  19,
+                  19,
+                  19,
+                  19,
+                  20,
+                  19
+                ]
+              },
+              "latencyMs": {
+                "avg": 2414.865,
+                "min": 27.671,
+                "med": 2477.58,
+                "p90": 3232.018,
+                "p95": 3437.943,
+                "p99_9": 4175.058,
+                "max": 4297.371
+              },
+              "requests": {
+                "total": 21489,
+                "successful": 21489,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 1498136
+              },
+              "cpu": {
+                "avgUtilizationPercent": 61.5,
+                "maxUtilizationPercent": 83.9
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "constant-latency",
+      "name": "constant-vus-with-latency",
+      "description": "This scenario executes a constant load of 50 VUs over 120s with a simulated 4ms IO delay on each subgraph request.",
+      "config": {
+        "durationSeconds": 120,
+        "virtualUsers": 50,
+        "subgraphDelayMs": 4,
+        "warmupRuns": 1,
+        "measuredRuns": 9,
+        "cpuAllocation": {
+          "system": {
+            "threadIds": [
+              0,
+              8
+            ],
+            "hardwareThreads": 2,
+            "physicalCores": 1
+          },
+          "k6": {
+            "threadIds": [
+              1,
+              9
+            ],
+            "hardwareThreads": 2,
+            "physicalCores": 1
+          },
+          "gateway": {
+            "threadIds": [
+              2,
+              3,
+              10,
+              11
+            ],
+            "hardwareThreads": 4,
+            "physicalCores": 2
+          },
+          "subgraphs": {
+            "threadIds": [
+              4,
+              5,
+              6,
+              7,
+              12,
+              13,
+              14,
+              15
+            ],
+            "hardwareThreads": 8,
+            "physicalCores": 4
+          }
+        }
+      },
+      "results": [
+        {
+          "gateway": "apollo-gateway",
+          "variants": [
+            {
+              "variant": "apollo-gateway",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 256,
+                "bestRps": 261,
+                "worstRps": 256,
+                "cvPercent": 0.6,
+                "runsRps": [
+                  261,
+                  258,
+                  257,
+                  256,
+                  256,
+                  256,
+                  256,
+                  256,
+                  257
+                ]
+              },
+              "latencyMs": {
+                "avg": 190.293,
+                "min": 23.796,
+                "med": 189.964,
+                "p90": 229.079,
+                "p95": 235.713,
+                "p99_9": 310.754,
+                "max": 402.16
+              },
+              "requests": {
+                "total": 283519,
+                "successful": 283519,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 2212872
+              },
+              "cpu": {
+                "avgUtilizationPercent": 99.5,
+                "maxUtilizationPercent": 100.0
+              }
+            }
+          ]
+        },
+        {
+          "gateway": "apollo-router",
+          "variants": [
+            {
+              "variant": "apollo-router",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 397,
+                "bestRps": 414,
+                "worstRps": 393,
+                "cvPercent": 1.9,
+                "runsRps": [
+                  414,
+                  410,
+                  402,
+                  400,
+                  397,
+                  395,
+                  394,
+                  394,
+                  393
+                ]
+              },
+              "latencyMs": {
+                "avg": 123.288,
+                "min": 20.295,
+                "med": 121.195,
+                "p90": 154.462,
+                "p95": 165.104,
+                "p99_9": 208.69,
+                "max": 340.537
+              },
+              "requests": {
+                "total": 440003,
+                "successful": 440003,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 190984
+              },
+              "cpu": {
+                "avgUtilizationPercent": 100.0,
+                "maxUtilizationPercent": 100.0
+              }
+            }
+          ]
+        },
+        {
+          "gateway": "cosmo",
+          "variants": [
+            {
+              "variant": "cosmo",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 1225,
+                "bestRps": 1266,
+                "worstRps": 1218,
+                "cvPercent": 1.3,
+                "runsRps": [
+                  1266,
+                  1247,
+                  1239,
+                  1231,
+                  1225,
+                  1221,
+                  1218,
+                  1221,
+                  1218
+                ]
+              },
+              "latencyMs": {
+                "avg": 39.909,
+                "min": 18.611,
+                "med": 39.291,
+                "p90": 47.871,
+                "p95": 50.657,
+                "p99_9": 64.895,
+                "max": 315.482
+              },
+              "requests": {
+                "total": 1352221,
+                "successful": 1352221,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 154940
+              },
+              "cpu": {
+                "avgUtilizationPercent": 99.1,
+                "maxUtilizationPercent": 100.0
+              }
+            }
+          ]
+        },
+        {
+          "gateway": "grafbase",
+          "variants": [
+            {
+              "variant": "grafbase",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 1286,
+                "bestRps": 1313,
+                "worstRps": 1282,
+                "cvPercent": 0.8,
+                "runsRps": [
+                  1313,
+                  1306,
+                  1295,
+                  1290,
+                  1284,
+                  1286,
+                  1282,
+                  1285,
+                  1285
+                ]
+              },
+              "latencyMs": {
+                "avg": 37.984,
+                "min": 18.008,
+                "med": 37.723,
+                "p90": 44.786,
+                "p95": 46.929,
+                "p99_9": 63.31,
+                "max": 307.193
+              },
+              "requests": {
+                "total": 1417715,
+                "successful": 1417715,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 103972
+              },
+              "cpu": {
+                "avgUtilizationPercent": 71.1,
+                "maxUtilizationPercent": 74.0
+              }
+            }
+          ]
+        },
+        {
+          "gateway": "hive-gateway",
+          "variants": [
+            {
+              "variant": "hive-gateway",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 257,
+                "bestRps": 263,
+                "worstRps": 254,
+                "cvPercent": 1.2,
+                "runsRps": [
+                  263,
+                  261,
+                  257,
+                  257,
+                  257,
+                  255,
+                  256,
+                  254,
+                  254
+                ]
+              },
+              "latencyMs": {
+                "avg": 190.284,
+                "min": 18.503,
+                "med": 178.215,
+                "p90": 225.547,
+                "p95": 255.36,
+                "p99_9": 607.731,
+                "max": 694.361
+              },
+              "requests": {
+                "total": 282244,
+                "successful": 282244,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 3311772
+              },
+              "cpu": {
+                "avgUtilizationPercent": 99.7,
+                "maxUtilizationPercent": 100.0
+              }
+            },
+            {
+              "variant": "hive-gateway-router-runtime",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 556,
+                "bestRps": 576,
+                "worstRps": 553,
+                "cvPercent": 1.3,
+                "runsRps": [
+                  576,
+                  566,
+                  559,
+                  556,
+                  556,
+                  557,
+                  554,
+                  554,
+                  553
+                ]
+              },
+              "latencyMs": {
+                "avg": 88.066,
+                "min": 20.401,
+                "med": 86.399,
+                "p90": 106.498,
+                "p95": 115.167,
+                "p99_9": 202.419,
+                "max": 334.228
+              },
+              "requests": {
+                "total": 614600,
+                "successful": 614600,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 2724200
+              },
+              "cpu": {
+                "avgUtilizationPercent": 99.9,
+                "maxUtilizationPercent": 100.0
+              }
+            }
+          ]
+        },
+        {
+          "gateway": "hive-router",
+          "variants": [
+            {
+              "variant": "hive-router",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 1848,
+                "bestRps": 1923,
+                "worstRps": 1834,
+                "cvPercent": 1.6,
+                "runsRps": [
+                  1923,
+                  1893,
+                  1868,
+                  1857,
+                  1848,
+                  1847,
+                  1837,
+                  1834,
+                  1840
+                ]
+              },
+              "latencyMs": {
+                "avg": 26.393,
+                "min": 18.118,
+                "med": 25.932,
+                "p90": 30.168,
+                "p95": 31.639,
+                "p99_9": 48.03,
+                "max": 299.197
+              },
+              "requests": {
+                "total": 2041915,
+                "successful": 2041915,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 79612
+              },
+              "cpu": {
+                "avgUtilizationPercent": 72.6,
+                "maxUtilizationPercent": 77.2
+              }
+            }
+          ]
+        },
+        {
+          "gateway": "fusion",
+          "variants": [
+            {
+              "variant": "fusion",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 1875,
+                "bestRps": 1923,
+                "worstRps": 1863,
+                "cvPercent": 1.1,
+                "runsRps": [
+                  1923,
+                  1909,
+                  1882,
+                  1888,
+                  1871,
+                  1871,
+                  1863,
+                  1875,
+                  1875
+                ]
+              },
+              "latencyMs": {
+                "avg": 26.019,
+                "min": 17.422,
+                "med": 25.441,
+                "p90": 30.42,
+                "p95": 32.211,
+                "p99_9": 48.691,
+                "max": 289.928
+              },
+              "requests": {
+                "total": 2067159,
+                "successful": 2067159,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 390480
+              },
+              "cpu": {
+                "avgUtilizationPercent": 86.4,
+                "maxUtilizationPercent": 89.3
+              }
+            },
+            {
+              "variant": "fusion-nightly",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 1890,
+                "bestRps": 1941,
+                "worstRps": 1884,
+                "cvPercent": 1.0,
+                "runsRps": [
+                  1941,
+                  1924,
+                  1902,
+                  1899,
+                  1889,
+                  1889,
+                  1886,
+                  1890,
+                  1884
+                ]
+              },
+              "latencyMs": {
+                "avg": 25.822,
+                "min": 17.281,
+                "med": 25.227,
+                "p90": 30.121,
+                "p95": 31.888,
+                "p99_9": 49.809,
+                "max": 301.324
+              },
+              "requests": {
+                "total": 2084975,
+                "successful": 2084975,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 391248
+              },
+              "cpu": {
+                "avgUtilizationPercent": 85.4,
+                "maxUtilizationPercent": 87.9
+              }
+            },
+            {
+              "variant": "fusion-nightly-net11",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 1864,
+                "bestRps": 1913,
+                "worstRps": 1854,
+                "cvPercent": 1.0,
+                "runsRps": [
+                  1913,
+                  1894,
+                  1874,
+                  1874,
+                  1864,
+                  1854,
+                  1861,
+                  1861,
+                  1862
+                ]
+              },
+              "latencyMs": {
+                "avg": 26.175,
+                "min": 17.343,
+                "med": 25.585,
+                "p90": 30.498,
+                "p95": 32.325,
+                "p99_9": 50.452,
+                "max": 306.257
+              },
+              "requests": {
+                "total": 2054693,
+                "successful": 2054693,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 408184
+              },
+              "cpu": {
+                "avgUtilizationPercent": 73.1,
+                "maxUtilizationPercent": 78.2
+              }
+            },
+            {
+              "variant": "fusion-nightly-fed",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 1802,
+                "bestRps": 1862,
+                "worstRps": 1791,
+                "cvPercent": 1.4,
+                "runsRps": [
+                  1862,
+                  1840,
+                  1830,
+                  1813,
+                  1799,
+                  1791,
+                  1792,
+                  1792,
+                  1802
+                ]
+              },
+              "latencyMs": {
+                "avg": 27.086,
+                "min": 17.763,
+                "med": 26.498,
+                "p90": 31.698,
+                "p95": 33.541,
+                "p99_9": 51.172,
+                "max": 290.44
+              },
+              "requests": {
+                "total": 1990134,
+                "successful": 1990134,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 383996
+              },
+              "cpu": {
+                "avgUtilizationPercent": 87.4,
+                "maxUtilizationPercent": 89.5
+              }
+            }
+          ]
+        },
+        {
+          "gateway": "feddi",
+          "variants": [
+            {
+              "variant": "feddi",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 16,
+                "bestRps": 18,
+                "worstRps": 16,
+                "cvPercent": 4.5,
+                "runsRps": [
+                  18,
+                  17,
+                  17,
+                  16,
+                  16,
+                  16,
+                  16,
+                  16,
+                  17
+                ]
+              },
+              "latencyMs": {
+                "avg": 2814.39,
+                "min": 42.508,
+                "med": 2973.137,
+                "p90": 3538.778,
+                "p95": 3715.516,
+                "p99_9": 10364.252,
+                "max": 12619.367
+              },
+              "requests": {
+                "total": 18770,
+                "successful": 18770,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 1535732
+              },
+              "cpu": {
+                "avgUtilizationPercent": 56.5,
+                "maxUtilizationPercent": 68.1
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "burst",
+      "name": "burst-vus",
+      "config": {
+        "durationSeconds": 60,
+        "virtualUsers": 500,
+        "subgraphDelayMs": 0,
+        "warmupRuns": 1,
+        "measuredRuns": 9,
+        "cpuAllocation": {
+          "system": {
+            "threadIds": [
+              0,
+              8
+            ],
+            "hardwareThreads": 2,
+            "physicalCores": 1
+          },
+          "k6": {
+            "threadIds": [
+              1,
+              9
+            ],
+            "hardwareThreads": 2,
+            "physicalCores": 1
+          },
+          "gateway": {
+            "threadIds": [
+              2,
+              3,
+              10,
+              11
+            ],
+            "hardwareThreads": 4,
+            "physicalCores": 2
+          },
+          "subgraphs": {
+            "threadIds": [
+              4,
+              5,
+              6,
+              7,
+              12,
+              13,
+              14,
+              15
+            ],
+            "hardwareThreads": 8,
+            "physicalCores": 4
+          }
+        }
+      },
+      "results": [
+        {
+          "gateway": "apollo-gateway",
+          "variants": [
+            {
+              "variant": "apollo-gateway",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 230,
+                "bestRps": 236,
+                "worstRps": 230,
+                "cvPercent": 0.8,
+                "runsRps": [
+                  236,
+                  231,
+                  231,
+                  230,
+                  230,
+                  230,
+                  231,
+                  230,
+                  230
+                ]
+              },
+              "latencyMs": {
+                "avg": 911.98,
+                "min": 8.091,
+                "med": 819.971,
+                "p90": 1859.775,
+                "p95": 1996.077,
+                "p99_9": 2989.939,
+                "max": 3448.607
+              },
+              "requests": {
+                "total": 134727,
+                "successful": 134727,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 2539756
+              },
+              "cpu": {
+                "avgUtilizationPercent": 98.7,
+                "maxUtilizationPercent": 100.0
+              }
+            }
+          ]
+        },
+        {
+          "gateway": "apollo-router",
+          "variants": [
+            {
+              "variant": "apollo-router",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 360,
+                "bestRps": 396,
+                "worstRps": 354,
+                "cvPercent": 4.3,
+                "runsRps": [
+                  381,
+                  372,
+                  396,
+                  382,
+                  357,
+                  360,
+                  355,
+                  354,
+                  355
+                ]
+              },
+              "latencyMs": {
+                "avg": 542.716,
+                "min": 5.253,
+                "med": 541.517,
+                "p90": 868.536,
+                "p95": 944.581,
+                "p99_9": 17214.086,
+                "max": 20650.97
+              },
+              "requests": {
+                "total": 209620,
+                "successful": 188077,
+                "failed": 21543
+              },
+              "memory": {
+                "peakRssKiB": 497928
+              },
+              "cpu": {
+                "avgUtilizationPercent": 100.0,
+                "maxUtilizationPercent": 100.0
+              }
+            }
+          ]
+        },
+        {
+          "gateway": "cosmo",
+          "variants": [
+            {
+              "variant": "cosmo",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 1163,
+                "bestRps": 1207,
+                "worstRps": 1159,
+                "cvPercent": 1.5,
+                "runsRps": [
+                  1207,
+                  1194,
+                  1180,
+                  1170,
+                  1161,
+                  1159,
+                  1159,
+                  1163,
+                  1159
+                ]
+              },
+              "latencyMs": {
+                "avg": 195.852,
+                "min": 2.069,
+                "med": 196.395,
+                "p90": 360.597,
+                "p95": 388.037,
+                "p99_9": 498.921,
+                "max": 574.16
+              },
+              "requests": {
+                "total": 651656,
+                "successful": 651656,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 626132
+              },
+              "cpu": {
+                "avgUtilizationPercent": 98.9,
+                "maxUtilizationPercent": 100.0
+              }
+            }
+          ]
+        },
+        {
+          "gateway": "grafbase",
+          "variants": [
+            {
+              "variant": "grafbase",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 1768,
+                "bestRps": 1977,
+                "worstRps": 1609,
+                "cvPercent": 6.6,
+                "runsRps": [
+                  1884,
+                  1768,
+                  1826,
+                  1672,
+                  1609,
+                  1719,
+                  1869,
+                  1707,
+                  1977
+                ]
+              },
+              "latencyMs": {
+                "avg": 112.591,
+                "min": 0.487,
+                "med": 91.689,
+                "p90": 166.838,
+                "p95": 184.491,
+                "p99_9": 10917.534,
+                "max": 25118.795
+              },
+              "requests": {
+                "total": 994637,
+                "successful": 647877,
+                "failed": 346760
+              },
+              "memory": {
+                "peakRssKiB": 176864
+              },
+              "cpu": {
+                "avgUtilizationPercent": 98.3,
+                "maxUtilizationPercent": 100.0
+              }
+            }
+          ]
+        },
+        {
+          "gateway": "hive-gateway",
+          "variants": [
+            {
+              "variant": "hive-gateway",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 237,
+                "bestRps": 243,
+                "worstRps": 234,
+                "cvPercent": 1.2,
+                "runsRps": [
+                  243,
+                  239,
+                  240,
+                  236,
+                  237,
+                  237,
+                  234,
+                  237,
+                  235
+                ]
+              },
+              "latencyMs": {
+                "avg": 897.948,
+                "min": 6.434,
+                "med": 802.052,
+                "p90": 1829.235,
+                "p95": 2025.543,
+                "p99_9": 4434.615,
+                "max": 5239.051
+              },
+              "requests": {
+                "total": 136940,
+                "successful": 136940,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 3741300
+              },
+              "cpu": {
+                "avgUtilizationPercent": 99.6,
+                "maxUtilizationPercent": 100.0
+              }
+            },
+            {
+              "variant": "hive-gateway-router-runtime",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 530,
+                "bestRps": 545,
+                "worstRps": 526,
+                "cvPercent": 1.3,
+                "runsRps": [
+                  545,
+                  542,
+                  531,
+                  530,
+                  530,
+                  530,
+                  526,
+                  527,
+                  527
+                ]
+              },
+              "latencyMs": {
+                "avg": 418.393,
+                "min": 3.821,
+                "med": 386.482,
+                "p90": 826.26,
+                "p95": 888.534,
+                "p99_9": 1359.292,
+                "max": 2008.632
+              },
+              "requests": {
+                "total": 301029,
+                "successful": 301029,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 2949672
+              },
+              "cpu": {
+                "avgUtilizationPercent": 99.2,
+                "maxUtilizationPercent": 100.0
+              }
+            }
+          ]
+        },
+        {
+          "gateway": "hive-router",
+          "variants": [
+            {
+              "variant": "hive-router",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 2216,
+                "bestRps": 2378,
+                "worstRps": 2208,
+                "cvPercent": 2.7,
+                "runsRps": [
+                  2378,
+                  2306,
+                  2271,
+                  2236,
+                  2216,
+                  2216,
+                  2209,
+                  2209,
+                  2208
+                ]
+              },
+              "latencyMs": {
+                "avg": 103.462,
+                "min": 1.648,
+                "med": 98.043,
+                "p90": 200.074,
+                "p95": 217.144,
+                "p99_9": 265.407,
+                "max": 305.569
+              },
+              "requests": {
+                "total": 1246050,
+                "successful": 1246050,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 143160
+              },
+              "cpu": {
+                "avgUtilizationPercent": 98.7,
+                "maxUtilizationPercent": 100.0
+              }
+            }
+          ]
+        },
+        {
+          "gateway": "fusion",
+          "variants": [
+            {
+              "variant": "fusion",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 2399,
+                "bestRps": 2464,
+                "worstRps": 2360,
+                "cvPercent": 1.7,
+                "runsRps": [
+                  2464,
+                  2463,
+                  2423,
+                  2378,
+                  2364,
+                  2360,
+                  2369,
+                  2399,
+                  2400
+                ]
+              },
+              "latencyMs": {
+                "avg": 95.721,
+                "min": 1.597,
+                "med": 82.719,
+                "p90": 183.363,
+                "p95": 210.387,
+                "p99_9": 967.057,
+                "max": 1959.629
+              },
+              "requests": {
+                "total": 1329880,
+                "successful": 1329880,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 598436
+              },
+              "cpu": {
+                "avgUtilizationPercent": 98.1,
+                "maxUtilizationPercent": 98.9
+              }
+            },
+            {
+              "variant": "fusion-nightly",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 2353,
+                "bestRps": 2471,
+                "worstRps": 2330,
+                "cvPercent": 2.2,
+                "runsRps": [
+                  2471,
+                  2439,
+                  2415,
+                  2368,
+                  2347,
+                  2330,
+                  2353,
+                  2339,
+                  2331
+                ]
+              },
+              "latencyMs": {
+                "avg": 97.698,
+                "min": 1.464,
+                "med": 83.628,
+                "p90": 186.114,
+                "p95": 210.473,
+                "p99_9": 800.211,
+                "max": 2345.418
+              },
+              "requests": {
+                "total": 1315166,
+                "successful": 1315166,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 631004
+              },
+              "cpu": {
+                "avgUtilizationPercent": 98.0,
+                "maxUtilizationPercent": 99.1
+              }
+            },
+            {
+              "variant": "fusion-nightly-net11",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 2452,
+                "bestRps": 2544,
+                "worstRps": 2442,
+                "cvPercent": 1.4,
+                "runsRps": [
+                  2544,
+                  2502,
+                  2479,
+                  2468,
+                  2448,
+                  2452,
+                  2448,
+                  2442,
+                  2442
+                ]
+              },
+              "latencyMs": {
+                "avg": 93.888,
+                "min": 1.368,
+                "med": 88.309,
+                "p90": 179.85,
+                "p95": 197.838,
+                "p99_9": 283.281,
+                "max": 374.267
+              },
+              "requests": {
+                "total": 1363935,
+                "successful": 1363935,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 521336
+              },
+              "cpu": {
+                "avgUtilizationPercent": 97.5,
+                "maxUtilizationPercent": 99.2
+              }
+            },
+            {
+              "variant": "fusion-nightly-fed",
+              "status": "complete",
+              "throughput": {
+                "medianRps": 2230,
+                "bestRps": 2317,
+                "worstRps": 2222,
+                "cvPercent": 1.5,
+                "runsRps": [
+                  2317,
+                  2277,
+                  2256,
+                  2239,
+                  2230,
+                  2224,
+                  2224,
+                  2223,
+                  2222
+                ]
+              },
+              "latencyMs": {
+                "avg": 102.482,
+                "min": 1.813,
+                "med": 90.331,
+                "p90": 195.763,
+                "p95": 223.865,
+                "p99_9": 705.795,
+                "max": 1362.726
+              },
+              "requests": {
+                "total": 1248778,
+                "successful": 1248778,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 597192
+              },
+              "cpu": {
+                "avgUtilizationPercent": 97.8,
+                "maxUtilizationPercent": 99.1
+              }
+            }
+          ]
+        }
+      ],
+      "description": "This scenario is a burst stress test with peaks up to 500 VUs over 60s."
+    }
+  ]
+}
