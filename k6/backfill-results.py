@@ -31,6 +31,16 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 
+# The retained build logs identify the .NET 11 SDK installed for every
+# backfilled fusion-nightly-net11 run. The runtime shipped in each SDK has the
+# same prerelease build suffix (run 402 captures this relationship directly).
+NET11_RUNTIME_CHANGES = (
+    (400, "11.0.0-rc.2.26504.105"),
+    (343, "11.0.0-rc.1.26425.128"),
+    (317, "11.0.0-preview.7.26381.103"),
+    (298, "11.0.0-preview.6.26359.118"),
+)
+
 
 def load_generator():
     path = SCRIPT_DIR / "generate-results.py"
@@ -95,14 +105,67 @@ def fusion_version(document):
     return None
 
 
+def inferred_net11_runtime(run_number, fallback=None):
+    for first_run, version in NET11_RUNTIME_CHANGES:
+        if run_number >= first_run:
+            return version
+    return fallback
+
+
+def apply_assumed_runtime_versions(document, baseline):
+    """Fill versions absent from artifacts using the current runtime baseline.
+
+    The historical commits target net10.0 for subgraphs and every .NET gateway
+    except the explicitly named fusion-nightly-net11 variant. Runtime version
+    capture was added later, so use the current result's version for the same
+    target while preserving any version an artifact did capture.
+    """
+    baseline_subgraphs_runtime = baseline["subgraphs"]["platform"]["runtime"]
+    subgraphs_runtime = document["subgraphs"]["platform"]["runtime"]
+    if (
+        "version" not in subgraphs_runtime
+        and subgraphs_runtime.get("name") == baseline_subgraphs_runtime.get("name")
+    ):
+        subgraphs_runtime["version"] = baseline_subgraphs_runtime["version"]
+
+    baseline_variants = {
+        variant["id"]: variant
+        for gateway in baseline["gateways"]
+        for variant in gateway["variants"]
+    }
+    for gateway in document["gateways"]:
+        for variant in gateway["variants"]:
+            runtime = variant["platform"].get("runtime")
+            if runtime is None or runtime.get("name") != ".NET" or "version" in runtime:
+                continue
+            baseline_runtime = (
+                baseline_variants.get(variant["id"], {})
+                .get("platform", {})
+                .get("runtime", {})
+            )
+            if variant["id"] == "fusion-nightly-net11":
+                version = inferred_net11_runtime(
+                    document["run"]["number"], baseline_runtime.get("version")
+                )
+            else:
+                version = baseline_runtime.get("version")
+            if version:
+                runtime["version"] = version
+            elif "net11" not in variant["id"]:
+                runtime["version"] = baseline_subgraphs_runtime["version"]
+
+
 def normalize_document(document, run, baseline):
     document["run"] = github_run_info(run)
     document["hardware"] = copy.deepcopy(baseline["hardware"])
+    captured_subgraphs_runtime = copy.deepcopy(
+        document["subgraphs"]["platform"].get("runtime", {"name": ".NET"})
+    )
 
     # Before runtime-version metadata was recorded, both the stable Fusion
     # gateway and the .NET subgraphs resolved the latest stable Hot Chocolate
     # release. The raw Fusion version therefore identifies the framework
-    # release; the unrecorded .NET patch version is intentionally omitted.
+    # release.
     framework = {"name": "Hot Chocolate"}
     if version := fusion_version(document):
         framework["version"] = version
@@ -110,9 +173,10 @@ def normalize_document(document, run, baseline):
         "framework": framework,
         "platform": {
             "language": {"name": "C#"},
-            "runtime": {"name": ".NET"},
+            "runtime": captured_subgraphs_runtime,
         },
     }
+    apply_assumed_runtime_versions(document, baseline)
 
     baseline_scenarios = {
         scenario["id"]: scenario for scenario in baseline["scenarios"]

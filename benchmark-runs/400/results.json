@@ -60,7 +60,8 @@
         "name": "C#"
       },
       "runtime": {
-        "name": ".NET"
+        "name": ".NET",
+        "version": "10.0.13"
       }
     }
   },
@@ -247,7 +248,8 @@
               "name": "C#"
             },
             "runtime": {
-              "name": ".NET"
+              "name": ".NET",
+              "version": "10.0.13"
             }
           }
         },
@@ -261,7 +263,8 @@
               "name": "C#"
             },
             "runtime": {
-              "name": ".NET"
+              "name": ".NET",
+              "version": "10.0.13"
             }
           }
         },
@@ -275,7 +278,8 @@
               "name": "C#"
             },
             "runtime": {
-              "name": ".NET"
+              "name": ".NET",
+              "version": "11.0.0-rc.2.26504.105"
             },
             "features": [
               {
@@ -295,7 +299,8 @@
               "name": "C#"
             },
             "runtime": {
-              "name": ".NET"
+              "name": ".NET",
+              "version": "10.0.13"
             }
           }
         }

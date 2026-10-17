@@ -35,7 +35,17 @@ def load_config():
     return module
 
 
+def load_backfill():
+    spec = importlib.util.spec_from_file_location(
+        "backfill_results", os.path.join(REPO_ROOT, "k6", "backfill-results.py")
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 CONFIG = load_config()
+BACKFILL = load_backfill()
 
 SUMMARY = {
     "vus": 50,
@@ -909,6 +919,108 @@ class GenerateResultsJsonTests(unittest.TestCase):
         })
         _, results = self.results_by_variant(doc, "constant")
         self.assertEqual(results["fusion"]["latencyMs"]["avg"], 2.0)
+
+
+class BackfillRuntimeVersionTests(unittest.TestCase):
+
+    def test_missing_versions_use_current_runtime_for_matching_target(self):
+        document = {
+            "run": {"number": 298},
+            "subgraphs": {
+                "platform": {
+                    "runtime": {"name": ".NET"},
+                },
+            },
+            "gateways": [{
+                "variants": [
+                    {
+                        "id": "fusion",
+                        "platform": {"runtime": {"name": ".NET"}},
+                    },
+                    {
+                        "id": "fusion-nightly-net11",
+                        "platform": {"runtime": {"name": ".NET"}},
+                    },
+                ],
+            }],
+        }
+        baseline = {
+            "subgraphs": {
+                "platform": {
+                    "runtime": {"name": ".NET", "version": "10.0.13"},
+                },
+            },
+            "gateways": [{
+                "variants": [
+                    {
+                        "id": "fusion",
+                        "platform": {
+                            "runtime": {"name": ".NET", "version": "10.0.13"},
+                        },
+                    },
+                    {
+                        "id": "fusion-nightly-net11",
+                        "platform": {
+                            "runtime": {
+                                "name": ".NET",
+                                "version": "11.0.0-rc.2.26504.105",
+                            },
+                        },
+                    },
+                ],
+            }],
+        }
+
+        BACKFILL.apply_assumed_runtime_versions(document, baseline)
+
+        self.assertEqual(
+            document["subgraphs"]["platform"]["runtime"]["version"],
+            "10.0.13",
+        )
+        variants = document["gateways"][0]["variants"]
+        self.assertEqual(variants[0]["platform"]["runtime"]["version"], "10.0.13")
+        self.assertEqual(
+            variants[1]["platform"]["runtime"]["version"],
+            "11.0.0-preview.6.26359.118",
+        )
+
+    def test_captured_version_is_preserved(self):
+        document = {
+            "run": {"number": 298},
+            "subgraphs": {
+                "platform": {
+                    "runtime": {"name": ".NET", "version": "10.0.12"},
+                },
+            },
+            "gateways": [],
+        }
+        baseline = {
+            "subgraphs": {
+                "platform": {
+                    "runtime": {"name": ".NET", "version": "10.0.13"},
+                },
+            },
+            "gateways": [],
+        }
+
+        BACKFILL.apply_assumed_runtime_versions(document, baseline)
+
+        self.assertEqual(
+            document["subgraphs"]["platform"]["runtime"]["version"],
+            "10.0.12",
+        )
+
+    def test_net11_runtime_changes_follow_retained_build_logs(self):
+        expected = {
+            298: "11.0.0-preview.6.26359.118",
+            317: "11.0.0-preview.7.26381.103",
+            343: "11.0.0-rc.1.26425.128",
+            400: "11.0.0-rc.2.26504.105",
+        }
+        self.assertEqual(
+            {run: BACKFILL.inferred_net11_runtime(run) for run in expected},
+            expected,
+        )
 
 
 class RuntimeVersionTests(unittest.TestCase):
