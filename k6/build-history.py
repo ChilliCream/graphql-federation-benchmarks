@@ -24,10 +24,10 @@ WARMUP_RUNS = 1
 MEASURED_RUNS = 9
 RAN_SCENARIO_STATUSES = {"complete", "failed"}
 
-# Feddi's request-throughput implementation landed before run 400. Earlier
-# measurements (roughly 20 RPS) exercise a different request path and are not
-# comparable with the implementation benchmarked by the current catalog.
-VARIANT_HISTORY_START_RUN = {"feddi": 400}
+# feddi-gateway's request-throughput implementation landed before run 400.
+# Earlier measurements (roughly 20 RPS) exercise a different request path and
+# are not comparable with the implementation benchmarked by the current catalog.
+VARIANT_HISTORY_START_RUN = {"feddi-gateway": 400}
 
 
 def load_runs(runs_dir):

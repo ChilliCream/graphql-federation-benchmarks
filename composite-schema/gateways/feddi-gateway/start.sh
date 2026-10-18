@@ -4,8 +4,8 @@ set -Eeuo pipefail
 # =============================================================================
 # start.sh — Launch the feddi Gateway and activate the federated schema.
 #
-# Unlike gateways that embed a pre-composed supergraph, feddi composes at runtime
-# from a subgraph-definition ZIP pushed to its admin endpoint. So startup is:
+# Unlike gateways that embed a pre-composed supergraph, feddi Gateway composes at
+# runtime from a subgraph-definition ZIP pushed to its admin endpoint. So startup is:
 #   1. Launch bin/feddi-gateway (binds :5220 GraphQL, :9091 admin, :9090 health).
 #      Before the upload it answers /graphql with HTTP 503 (not initialized).
 #   2. POST subgraphs.zip to the admin endpoint; feddi composes the supergraph.
@@ -43,7 +43,7 @@ elif [[ -x "$SCRIPT_DIR/.jdk/Contents/Home/bin/java" ]]; then
   export FEDDI_GATEWAY_JAVA_HOME="$SCRIPT_DIR/.jdk/Contents/Home"
 fi
 
-# Launch the gateway. CWD is the gateway dir, so feddi reads feddi-gateway.yml
+# Launch the gateway. CWD is the gateway dir, so feddi Gateway reads feddi-gateway.yml
 # from here and writes its rolling log under ./logs. The launcher exec()s java,
 # so $GATEWAY_PID is the JVM itself (correct for the harness's metrics/cleanup).
 "$DIST_BIN" > "$SCRIPT_DIR/gateway_log.txt" 2>&1 &

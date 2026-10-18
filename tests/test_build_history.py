@@ -31,7 +31,7 @@ CATALOG = [
         ("fusion-nightly-net11", "16.7.0-p.27", "C#"),
         ("fusion-nightly-fed", "16.7.0-p.27", "C#"),
     ]),
-    ("feddi", [("feddi", "e91d605ed222", "Go")]),
+    ("feddi-gateway", [("feddi-gateway", "e91d605ed222", "Go")]),
 ]
 
 CPU_ALLOCATION = {
@@ -67,8 +67,8 @@ def results_doc():
         results = [
             {"gateway": gateway_id, "variants": [variant_result(v[0]) for v in variants]}
             for gateway_id, variants in CATALOG
-            # burst omits feddi, like the real runs.
-            if not (scenario_id == "burst" and gateway_id == "feddi")
+            # burst omits feddi-gateway, like the real runs.
+            if not (scenario_id == "burst" and gateway_id == "feddi-gateway")
         ]
         scenarios.append({
             "id": scenario_id,
@@ -104,7 +104,7 @@ def results_doc():
                  **({"label": "Fusion Nightly"} if vid in (
                      "fusion-nightly", "fusion-nightly-net11", "fusion-nightly-fed"
                  ) else {}),
-                 **({"preview": True} if vid == "feddi" else {})}
+                 **({"preview": True} if vid == "feddi-gateway" else {})}
                 for vid, version, language in variants
             ]}
             for gateway_id, variants in CATALOG
@@ -225,7 +225,7 @@ class BuildHistoryTests(unittest.TestCase):
         self.assertEqual(variants["fusion-nightly"]["label"], "Fusion Nightly")
         self.assertEqual(variants["fusion-nightly-net11"]["label"], "Fusion Nightly")
         self.assertEqual(variants["fusion-nightly-fed"]["label"], "Fusion Nightly")
-        self.assertIs(variants["feddi"]["preview"], True)
+        self.assertIs(variants["feddi-gateway"]["preview"], True)
         self.assertEqual([s["id"] for s in history["scenarios"]], ["constant", "constant-latency", "burst"])
         self.assertEqual(scenario(history, "constant")["config"], scenario(EXAMPLE, "constant")["config"])
 
@@ -254,14 +254,14 @@ class BuildHistoryTests(unittest.TestCase):
         catalog = [v["id"] for g in EXAMPLE["gateways"] for v in g["variants"]]
         emitted = [v["variant"] for v in scenario(history, "constant")["variants"]]
         self.assertEqual(emitted, catalog)
-        self.assertEqual(results_of(history, "feddi", "burst"), [])
+        self.assertEqual(results_of(history, "feddi-gateway", "burst"), [])
 
     def test_feddi_history_starts_with_request_throughput_implementation(self):
         history = self.build(
-            make_doc(399, versions={"feddi": "5ff8b6165878"}),
-            make_doc(400, versions={"feddi": "e91d605ed222"}),
+            make_doc(399, versions={"feddi-gateway": "5ff8b6165878"}),
+            make_doc(400, versions={"feddi-gateway": "e91d605ed222"}),
         )
-        self.assertEqual(results_of(history, "feddi"), [("e91d605ed222", 400)])
+        self.assertEqual(results_of(history, "feddi-gateway"), [("e91d605ed222", 400)])
         self.assertEqual(results_of(history, "fusion"), [("16.6.8", 399), ("16.6.8", 400)])
 
     def test_workflow_dispatch_runs_ignored(self):

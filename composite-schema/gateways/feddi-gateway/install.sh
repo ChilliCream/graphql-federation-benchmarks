@@ -4,11 +4,11 @@ set -Eeuo pipefail
 # =============================================================================
 # install.sh — Build the feddi Gateway (https://feddi.dev / feddi-dev/feddi-gateway)
 #
-# feddi is a JVM-native GraphQL composite-schema federation gateway built on
-# GraphQL Java. There is no published prebuilt OSS binary, so this script builds
-# the distribution from source, pinned to a specific commit for reproducibility:
+# feddi Gateway is a JVM-native GraphQL federation gateway built on
+# GraphQL Java. This script builds the distribution from source, pinned to a specific
+# commit for reproducibility:
 #
-#   1. Bundle a JDK 25 into ./.jdk (feddi requires Java 25+). Bundling — rather
+#   1. Bundle a JDK 25 into ./.jdk (feddi Gateway requires Java 25+). Bundling — rather
 #      than relying on a system JDK — keeps the runtime reproducible and lets the
 #      built artifact travel for prebuilt-gateway runs (start.sh prefers ./.jdk).
 #   2. Clone feddi-gateway at the pinned commit into ./source.
@@ -21,8 +21,8 @@ set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-FEDDI_REPO="https://github.com/feddi-dev/feddi-gateway.git"
-FEDDI_REF="3c75a7db8876aa2ee15fe07225452f94c4baadc3"  # pinned for reproducibility (tag bench-2026-10-17)
+FEDDI_GATEWAY_REPO="https://github.com/feddi-dev/feddi-gateway.git"
+FEDDI_GATEWAY_REF="3c75a7db8876aa2ee15fe07225452f94c4baadc3"  # pinned for reproducibility (tag bench-2026-10-17)
 
 JDK_DIR="$SCRIPT_DIR/.jdk"
 SOURCE_DIR="$SCRIPT_DIR/source"
@@ -85,14 +85,14 @@ export PATH="$JAVA_HOME/bin:$PATH"
 # --- 2. Clone feddi-gateway at the pinned commit -----------------------------
 
 if [[ -d "$SOURCE_DIR/.git" ]] && \
-   [[ "$(git -C "$SOURCE_DIR" rev-parse HEAD 2>/dev/null || true)" == "$FEDDI_REF" ]]; then
-  echo "feddi-gateway source already at $FEDDI_REF"
+   [[ "$(git -C "$SOURCE_DIR" rev-parse HEAD 2>/dev/null || true)" == "$FEDDI_GATEWAY_REF" ]]; then
+  echo "feddi-gateway source already at $FEDDI_GATEWAY_REF"
 else
-  echo "Fetching feddi-gateway at $FEDDI_REF ..."
+  echo "Fetching feddi-gateway at $FEDDI_GATEWAY_REF ..."
   rm -rf "$SOURCE_DIR"
   git init -q "$SOURCE_DIR"
-  git -C "$SOURCE_DIR" remote add origin "$FEDDI_REPO"
-  git -C "$SOURCE_DIR" fetch -q --depth 1 origin "$FEDDI_REF"
+  git -C "$SOURCE_DIR" remote add origin "$FEDDI_GATEWAY_REPO"
+  git -C "$SOURCE_DIR" fetch -q --depth 1 origin "$FEDDI_GATEWAY_REF"
   git -C "$SOURCE_DIR" checkout -q FETCH_HEAD
 fi
 
@@ -119,12 +119,12 @@ fi
 
 # --- 4. Refresh subgraph SDLs from the canonical .NET source schemas ---------
 #
-# feddi composes from subgraph-config/<name>/schema.graphqls. Rather than keep
+# feddi Gateway composes from subgraph-config/<name>/schema.graphqls. Rather than keep
 # hand-maintained copies (which silently drift from the subgraphs the benchmark
 # actually runs), copy the canonical HotChocolate exports straight in. Since
 # HotChocolate 16.3+ emits @key(fields:…) on entities natively, the raw export
-# composes in feddi as-is — no directive trimming needed. Each subgraph's
-# config.yaml (the feddi-specific subgraph URL) stays source-controlled; only the
+# composes in feddi Gateway as-is — no directive trimming needed. Each subgraph's
+# config.yaml (the feddi Gateway specific subgraph URL) stays source-controlled; only the
 # .graphqls SDL is generated here.
 
 SUBGRAPHS_NET="$SCRIPT_DIR/../../subgraphs-net"
@@ -156,5 +156,5 @@ rm -f "$SCRIPT_DIR/subgraphs.zip"
 
 # --- 6. Record version -------------------------------------------------------
 
-echo "$FEDDI_REF" | cut -c1-12 > "$SCRIPT_DIR/version.txt"
+echo "$FEDDI_GATEWAY_REF" | cut -c1-12 > "$SCRIPT_DIR/version.txt"
 echo "feddi Gateway build complete (commit: $(cat "$SCRIPT_DIR/version.txt"))."

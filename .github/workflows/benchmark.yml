@@ -27,7 +27,7 @@ on:
           - fusion-nightly
           - fusion-nightly-net11
           - fusion-nightly-fed
-          - feddi
+          - feddi-gateway
       fusion_version:
         description: 'Fusion-family gateway version pin (e.g. 16.6.8). Non-fusion gateways ignore this input.'
         required: false

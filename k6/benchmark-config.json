@@ -167,15 +167,15 @@
       ]
     },
     {
-      "id": "feddi",
-      "name": "feddi",
+      "id": "feddi-gateway",
+      "name": "feddi-gateway",
       "vendor": "feddi",
       "repositoryUrl": "https://github.com/feddi-dev/feddi-gateway",
       "variants": [
         {
-          "id": "feddi",
+          "id": "feddi-gateway",
           "preview": true,
-          "path": "composite-schema/gateways/feddi",
+          "path": "composite-schema/gateways/feddi-gateway",
           "language": "Java",
           "runtime": "JVM"
         }

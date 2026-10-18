@@ -20,7 +20,7 @@ Also run `bash -n` on changed shell scripts (`sh -n` for `apollo-federation/gate
 
 ## Bump a gateway version
 
-1. Change the pin: `VERSION` / `DOWNLOAD_VERSION` in `install.sh` (apollo-router, apollo-router-v3, hive-router, grafbase, cosmo), `FEDDI_REF` (feddi), `Main.scala` (caliban), or `package.json` + `npm i` (apollo-gateway, hive-gateway, hive-gateway-router-runtime).
+1. Change the pin: `VERSION` / `DOWNLOAD_VERSION` in `install.sh` (apollo-router, apollo-router-v3, hive-router, grafbase, cosmo), `FEDDI_GATEWAY_REF` (feddi-gateway), `Main.scala` (caliban), or `package.json` + `npm i` (apollo-gateway, hive-gateway, hive-gateway-router-runtime).
 2. Update the version asserted in `tests/test_apollo_gateways.py`, `tests/test_hive_gateways.py` or `tests/test_cosmo_grafbase_install.py`.
 
 Fusion variants resolve the latest HotChocolate for their `channel` (or the `fusion_version` input) and have no pin.
@@ -28,7 +28,7 @@ Fusion variants resolve the latest HotChocolate for their `channel` (or the `fus
 ## Bump a runtime
 
 - .NET: the `dotnet-install` channel in the fusion `install.sh` scripts and both `subgraphs-net/build.sh`. A new major also needs the TargetFramework (csprojs, `composite-schema/Directory.Build.props`), `REQUIRED_DOTNET_MAJOR`, and the `10|11` cases in the fusion `install.sh`. `runtime-async` must stay on exactly the variants with `"dotnet": "11"` (tested).
-- JDK: the Temurin URL in the caliban and feddi `install.sh`.
+- JDK: the Temurin URL in the caliban and feddi-gateway `install.sh`.
 - Node.js: the benchmark machine's `node`; the Node gateways' `install.sh` only installs the latest LTS via nvm when none is present.
 
 ## Bump Hot Chocolate for the subgraphs

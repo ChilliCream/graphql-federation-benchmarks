@@ -42,7 +42,7 @@ not relabeled.
 
 ### [GraphQL Federation](https://graphql.github.io/graphql-federation-spec/)
 - [Fusion](./composite-schema/gateways/fusion) (.NET) — benchmarked as latest stable (`fusion`, built and run on the .NET 10 SDK), plus, when a HotChocolate preview newer than the latest stable exists, the latest preview on two runtimes: `fusion-nightly` (built and run on the .NET 10 SDK) and `fusion-nightly-net11` (built and run on the latest .NET 11 preview SDK bundled into its prebuilt artifact, with runtime-async). Running the same preview packages on both runtimes isolates framework effects from library changes.
-- [feddi](./composite-schema/gateways/feddi) (JVM) — built from source and bundled with a JDK 25 ([feddi-dev/feddi-gateway](https://github.com/feddi-dev/feddi-gateway)). See its [README](./composite-schema/gateways/feddi/README.md) for setup and a known heavy-query planner limitation.
+- [feddi-gateway](./composite-schema/gateways/feddi-gateway) (JVM) by [feddi](https://feddi.dev) — built from the open-source repository ([feddi-dev/feddi-gateway](https://github.com/feddi-dev/feddi-gateway), Apache 2.0) at a pinned commit. See its [README](./composite-schema/gateways/feddi-gateway/README.md) for setup.
 
 Version pins and upstream changes for the latest refresh are listed in [Gateway version updates](./GATEWAY_UPDATES.md). Apollo Router 2 and Router 3 preview have independent installs, artifacts, and result rows; both run when `all` is selected, or select `apollo-router` / `apollo-router-v3` individually.
 
