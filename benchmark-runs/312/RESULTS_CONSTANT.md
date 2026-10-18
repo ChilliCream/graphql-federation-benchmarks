@@ -23,7 +23,7 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 | apollo-router | v2.16.1 | 488 | 506 | 485 | 1.4% |  |
 | hive-gateway | 2.10.8 | 285 | 292 | 284 | 1.0% |  |
 | apollo-gateway | 2.14.3 | 281 | 283 | 279 | 0.4% |  |
-| feddi | 5ff8b6165878 | — | — | — | — | non-compatible response (877 across 9/9 runs) |
+| feddi-gateway | 5ff8b6165878 | — | — | — | — | non-compatible response (877 across 9/9 runs) |
 
 
 ### .NET Subgraphs
@@ -38,7 +38,7 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 | apollo-router | v2.16.1 | 448 | 467 | 446 | 1.5% |  |
 | apollo-gateway | 2.14.3 | 266 | 271 | 264 | 0.8% |  |
 | hive-gateway | 2.10.8 | 264 | 271 | 262 | 1.1% |  |
-| feddi | 5ff8b6165878 | 17 | 18 | 17 | 2.9% |  |
+| feddi-gateway | 5ff8b6165878 | 17 | 18 | 17 | 2.9% |  |
 
 
 ### Details
@@ -796,7 +796,7 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: feddi (.net subgraphs) (5ff8b6165878)</summary>
+  <summary>Summary for: feddi-gateway (.net subgraphs) (5ff8b6165878)</summary>
 
   **K6 Output**
 

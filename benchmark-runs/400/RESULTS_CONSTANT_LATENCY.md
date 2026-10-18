@@ -19,7 +19,7 @@ This scenario executes a constant load of **50 VUs** over **120s** with a simula
 | cosmo | 0.359.0 | 1,352 | 1,402 | 1,345 | 1.5% |  |
 | grafbase | 0.53.5 | 1,308 | 1,335 | 1,298 | 1.0% |  |
 | caliban | 3.2.0 | 1,277 | 1,330 | 1,267 | 1.8% |  |
-| feddi | e91d605ed222 | 1,120 | 1,158 | 1,114 | 1.2% |  |
+| feddi-gateway | e91d605ed222 | 1,120 | 1,158 | 1,114 | 1.2% |  |
 | hive-gateway-router-runtime | 2.15.2 | 498 | 514 | 495 | 1.4% |  |
 | apollo-router | v2.18.0 | 435 | 452 | 429 | 1.8% |  |
 | apollo-router-v3 | v3.0.0-preview.0 | 402 | 418 | 400 | 1.5% |  |
@@ -406,7 +406,7 @@ This scenario executes a constant load of **50 VUs** over **120s** with a simula
 </details>
 
 <details>
-  <summary>Summary for: feddi (HotChocolate subgraphs) (e91d605ed222)</summary>
+  <summary>Summary for: feddi-gateway (HotChocolate subgraphs) (e91d605ed222)</summary>
 
   **K6 Output**
 

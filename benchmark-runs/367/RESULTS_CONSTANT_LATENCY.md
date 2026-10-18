@@ -18,7 +18,7 @@ This scenario executes a constant load of **50 VUs** over **120s** with a simula
 | apollo-gateway | — | — | — | — | — | benchmark run failed |
 | apollo-router | — | — | — | — | — | benchmark run failed |
 | cosmo | — | — | — | — | — | benchmark run failed |
-| feddi | — | — | — | — | — | benchmark run failed |
+| feddi-gateway | — | — | — | — | — | benchmark run failed |
 | fusion | — | — | — | — | — | benchmark run failed |
 | fusion-nightly | — | — | — | — | — | benchmark run failed |
 | fusion-nightly-fed | — | — | — | — | — | benchmark run failed |
