@@ -311,13 +311,13 @@
       ]
     },
     {
-      "id": "feddi",
-      "name": "feddi",
+      "id": "feddi-gateway",
+      "name": "feddi-gateway",
       "vendor": "feddi",
       "repositoryUrl": "https://github.com/feddi-dev/feddi-gateway",
       "variants": [
         {
-          "id": "feddi",
+          "id": "feddi-gateway",
           "version": "e91d605ed222",
           "preview": true,
           "composition": "composite-schema",
@@ -976,10 +976,10 @@
           ]
         },
         {
-          "gateway": "feddi",
+          "gateway": "feddi-gateway",
           "variants": [
             {
-              "variant": "feddi",
+              "variant": "feddi-gateway",
               "status": "complete",
               "throughput": {
                 "medianRps": 1131,
@@ -1627,10 +1627,10 @@
           ]
         },
         {
-          "gateway": "feddi",
+          "gateway": "feddi-gateway",
           "variants": [
             {
-              "variant": "feddi",
+              "variant": "feddi-gateway",
               "status": "complete",
               "throughput": {
                 "medianRps": 1175,
@@ -2316,10 +2316,10 @@
           ]
         },
         {
-          "gateway": "feddi",
+          "gateway": "feddi-gateway",
           "variants": [
             {
-              "variant": "feddi",
+              "variant": "feddi-gateway",
               "status": "complete",
               "throughput": {
                 "medianRps": 833,

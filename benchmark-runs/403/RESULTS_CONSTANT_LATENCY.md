@@ -11,7 +11,7 @@ This scenario executes a constant load of **50 VUs** over **120s** with a simula
 
 | Gateway | Version | Median RPS | Best RPS | Worst RPS | CV% | Notes |
 | :------ | :------ | ---------: | -------: | --------: | --: | :---- |
-| feddi | 3c75a7db8876 | 2,416 | 2,518 | 2,410 | 1.6% |  |
+| feddi-gateway | 3c75a7db8876 | 2,416 | 2,518 | 2,410 | 1.6% |  |
 | fusion-nightly-net11 | 16.7.0-p.28 | 1,951 | 2,000 | 1,940 | 1.1% |  |
 | fusion-nightly | 16.7.0-p.28 | 1,928 | 1,976 | 1,910 | 1.1% |  |
 | fusion | 16.6.8 | 1,880 | 1,939 | 1,867 | 1.4% |  |
@@ -30,7 +30,7 @@ This scenario executes a constant load of **50 VUs** over **120s** with a simula
 ### Details
 
 <details>
-  <summary>Summary for: feddi (HotChocolate subgraphs) (3c75a7db8876)</summary>
+  <summary>Summary for: feddi-gateway (HotChocolate subgraphs) (3c75a7db8876)</summary>
 
   **K6 Output**
 

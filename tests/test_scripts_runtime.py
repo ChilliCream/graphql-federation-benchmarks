@@ -393,8 +393,8 @@ class GenerateResultsTests(unittest.TestCase):
         self.assertIn("benchmark run failed", md)
 
     def test_excluded_gateway_marked_not_run(self):
-        md = self.run_generator(["fusion", "feddi"], with_runs=["fusion"], not_run=("feddi",))
-        feddi_rows = [line for line in md.splitlines() if line.startswith("| feddi |")]
+        md = self.run_generator(["fusion", "feddi-gateway"], with_runs=["fusion"], not_run=("feddi-gateway",))
+        feddi_rows = [line for line in md.splitlines() if line.startswith("| feddi-gateway |")]
         self.assertEqual(len(feddi_rows), 1)
         self.assertIn("not run", feddi_rows[0])
         self.assertNotIn("benchmark run failed", feddi_rows[0])
@@ -559,7 +559,7 @@ class GenerateResultsJsonTests(unittest.TestCase):
         make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)", mode="burst")
         doc = self.run_json_generator(artifacts, {
             "EXPECTED_GATEWAYS_JSON": json.dumps(
-                [expected_entry(g) for g in ("fusion", "grafbase", "feddi")]
+                [expected_entry(g) for g in ("fusion", "grafbase", "feddi-gateway")]
             ),
             "SCENARIO_RESULTS_JSON": json.dumps(
                 {"constant": "success", "burst": "failure", "constant-latency": "skipped"}
@@ -577,7 +577,7 @@ class GenerateResultsJsonTests(unittest.TestCase):
         self.assertEqual(doc["hardware"]["memoryGb"], 32)
 
         versions = {v["id"]: v["version"] for g in doc["gateways"] for v in g["variants"]}
-        self.assertEqual(versions, {"fusion": "16.6.0", "grafbase": None, "feddi": None})
+        self.assertEqual(versions, {"fusion": "16.6.0", "grafbase": None, "feddi-gateway": None})
 
         constant, results = self.results_by_variant(doc, "constant")
         self.assertNotIn("status", constant)
@@ -586,14 +586,14 @@ class GenerateResultsJsonTests(unittest.TestCase):
         self.assertEqual(results["fusion"]["requests"], {"total": 120000, "successful": 120000, "failed": 0})
         self.assertEqual(results["fusion"]["status"], "complete")
         self.assertEqual(results["grafbase"], {"variant": "grafbase", "status": "failed"})
-        self.assertEqual(results["feddi"], {"variant": "feddi", "status": "failed"})
-        self.assertEqual(set(results), {"fusion", "grafbase", "feddi"})
+        self.assertEqual(results["feddi-gateway"], {"variant": "feddi-gateway", "status": "failed"})
+        self.assertEqual(set(results), {"fusion", "grafbase", "feddi-gateway"})
 
         burst, results = self.results_by_variant(doc, "burst")
         self.assertNotIn("status", burst)
         self.assertEqual(results["fusion"]["status"], "complete")
         self.assertEqual(results["grafbase"]["status"], "failed")
-        self.assertEqual(results["feddi"]["status"], "failed")
+        self.assertEqual(results["feddi-gateway"]["status"], "failed")
 
         self.assertNotIn("constant-latency", [s["id"] for s in doc["scenarios"]])
 
@@ -891,7 +891,7 @@ class GenerateResultsJsonTests(unittest.TestCase):
                 expected_entry(variant_id)
                 for variant_id in (
                     "fusion", "fusion-nightly", "fusion-nightly-net11",
-                    "fusion-nightly-fed", "feddi",
+                    "fusion-nightly-fed", "feddi-gateway",
                 )
             ]),
         })
@@ -899,7 +899,7 @@ class GenerateResultsJsonTests(unittest.TestCase):
         self.assertEqual(variants["fusion-nightly"]["label"], "Fusion Nightly")
         self.assertEqual(variants["fusion-nightly-net11"]["label"], "Fusion Nightly")
         self.assertEqual(variants["fusion-nightly-fed"]["label"], "Fusion Nightly")
-        self.assertIs(variants["feddi"]["preview"], True)
+        self.assertIs(variants["feddi-gateway"]["preview"], True)
         self.assertNotIn("label", variants["fusion"])
         self.assertNotIn("preview", variants["fusion"])
 

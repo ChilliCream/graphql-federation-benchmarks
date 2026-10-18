@@ -26,7 +26,7 @@ This scenario executes a constant load of **50 VUs** over **120s** with a simula
 | apollo-router | v2.16.1 | 408 | 420 | 389 | 2.3% |  |
 | hive-gateway | 2.10.8 | 265 | 273 | 263 | 1.1% |  |
 | apollo-gateway | 2.14.3 | 257 | 262 | 257 | 0.7% |  |
-| feddi | 5ff8b6165878 | 19 | 19 | 18 | 2.6% |  |
+| feddi-gateway | 5ff8b6165878 | 19 | 19 | 18 | 2.6% |  |
 
 
 ### Details
@@ -549,7 +549,7 @@ This scenario executes a constant load of **50 VUs** over **120s** with a simula
 </details>
 
 <details>
-  <summary>Summary for: feddi (.net subgraphs) (5ff8b6165878)</summary>
+  <summary>Summary for: feddi-gateway (.net subgraphs) (5ff8b6165878)</summary>
 
   **K6 Output**
 

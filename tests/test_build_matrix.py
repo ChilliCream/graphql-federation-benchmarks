@@ -127,11 +127,11 @@ class BuildMatrixTests(unittest.TestCase):
             "all", preview_check=lambda: (False, "16.6.0", None)
         )
         burst_names = {e["base_name"] for e in matrices["gateways_burst"]}
-        self.assertIn("feddi", burst_names)
+        self.assertIn("feddi-gateway", burst_names)
         not_run_names = {e["base_name"] for e in matrices["not_run_burst"]}
-        self.assertNotIn("feddi", not_run_names)
+        self.assertNotIn("feddi-gateway", not_run_names)
         constant_names = {e["base_name"] for e in matrices["gateways_constant"]}
-        self.assertIn("feddi", constant_names)
+        self.assertIn("feddi-gateway", constant_names)
 
     def test_single_gateway_selection(self):
         matrices = MATRIX.build_matrices(
@@ -445,7 +445,7 @@ class ConfigTests(unittest.TestCase):
         )
         self.assertEqual(
             {v["id"]: v["preview"] for v in MATRIX.VARIANTS if "preview" in v},
-            {"feddi": True},
+            {"feddi-gateway": True},
         )
 
     def test_variant_ids_unique_and_paths_exist(self):
@@ -508,8 +508,8 @@ class ConfigTests(unittest.TestCase):
         variants = {v["id"]: v for p in catalog.values() for v in p["variants"]}
         self.assertEqual(list(variants), [v["id"] for v in MATRIX.VARIANTS])
         self.assertEqual(variants["fusion-nightly-fed"]["composition"], "apollo-federation")
-        self.assertEqual(variants["feddi"]["composition"], "composite-schema")
-        self.assertTrue(variants["feddi"]["preview"])
+        self.assertEqual(variants["feddi-gateway"]["composition"], "composite-schema")
+        self.assertTrue(variants["feddi-gateway"]["preview"])
         self.assertEqual(variants["fusion-nightly"]["label"], "Fusion Nightly")
         self.assertEqual(variants["fusion-nightly-net11"]["label"], "Fusion Nightly")
         self.assertEqual(variants["fusion-nightly-fed"]["label"], "Fusion Nightly")

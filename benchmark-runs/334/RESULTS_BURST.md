@@ -25,7 +25,7 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **120s**.
 | hive-gateway | 2.10.8 | 251 | 258 | 249 | 1.1% |  |
 | apollo-gateway | 2.14.3 | 235 | 241 | 234 | 0.9% |  |
 | apollo-router | v2.16.1 | — | — | — | — | non-compatible response (15215 across 9/9 runs) |
-| feddi | — | — | — | — | — | not run |
+| feddi-gateway | — | — | — | — | — | not run |
 | grafbase | 0.53.5 | — | — | — | — | non-compatible response (505634 across 9/9 runs) |
 
 
@@ -43,7 +43,7 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **120s**.
 | hive-gateway | 2.10.8 | 245 | 250 | 242 | 1.1% |  |
 | apollo-gateway | 2.14.3 | 236 | 238 | 233 | 0.6% |  |
 | apollo-router | v2.16.1 | — | — | — | — | non-compatible response (25124 across 9/9 runs) |
-| feddi | — | — | — | — | — | not run |
+| feddi-gateway | — | — | — | — | — | not run |
 | grafbase | 0.53.5 | — | — | — | — | non-compatible response (345506 across 9/9 runs) |
 
 
