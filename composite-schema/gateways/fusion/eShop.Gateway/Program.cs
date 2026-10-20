@@ -1,8 +1,6 @@
 using HotChocolate.Fusion.Configuration;
 using eShop.Gateway.BenchmarkDiagnostics;
 
-ThreadPool.SetMinThreads(256, 256);
-
 var builder = WebApplication.CreateBuilder(args);
 
 if (Environment.GetEnvironmentVariable("BENCH_DIAGNOSTIC_RUN") == "1")

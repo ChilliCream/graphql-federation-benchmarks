@@ -1,7 +1,5 @@
 [assembly: Module("ReviewTypes")]
 
-ThreadPool.SetMinThreads(256, 256);
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder
