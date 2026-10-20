@@ -1,8 +1,6 @@
 using HotChocolate.AspNetCore;
 using HotChocolate.ApolloFederation;
 
-ThreadPool.SetMinThreads(256, 256);
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
