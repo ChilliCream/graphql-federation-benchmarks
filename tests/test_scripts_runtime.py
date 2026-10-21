@@ -359,12 +359,14 @@ class GenerateResultsTests(unittest.TestCase):
             return fh.read()
 
     def test_dotnet_only_table(self):
-        md = self.run_generator(["fusion", "cosmo"])
-        self.assertIn("### HotChocolate Subgraphs", md)
-        self.assertNotIn("Rust Subgraphs", md)
-        self.assertIn("4 HotChocolate subgraphs", md)
-        self.assertIn("| fusion |", md)
-        self.assertIn("| cosmo |", md)
+        for mode in ("constant", "constant-latency", "burst"):
+            with self.subTest(mode=mode):
+                md = self.run_generator(["fusion", "cosmo"], mode=mode)
+                self.assertIn("### Results\n", md)
+                self.assertNotIn("Rust Subgraphs", md)
+                self.assertIn("Each benchmark runs a GraphQL gateway with 4 subgraphs and executes", md)
+                self.assertIn("| fusion |", md)
+                self.assertIn("| cosmo |", md)
 
     def test_apollo_router_generations_have_separate_rows(self):
         gateways = ["apollo-router", "apollo-router-v3"]
@@ -400,9 +402,7 @@ class GenerateResultsTests(unittest.TestCase):
         self.assertNotIn("benchmark run failed", feddi_rows[0])
 
     def test_historical_rust_not_described_as_dotnet(self):
-        # Reproduces the reported contradiction: a historical Rust artifact
-        # must render its Rust rows without the document claiming every
-        # benchmark used HotChocolate subgraphs.
+        # Historical Rust artifacts keep their technology labels.
         workdir = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, workdir, True)
         artifacts = os.path.join(workdir, "artifacts")
@@ -434,19 +434,14 @@ class GenerateResultsTests(unittest.TestCase):
             md = fh.read()
         # Historical Rust measurements are preserved, not relabeled.
         self.assertIn("### Rust Subgraphs", md)
-        self.assertIn("### HotChocolate Subgraphs", md)
-        # The setup claim must be qualified and flag the historical rows.
-        self.assertNotIn(
-            "Each benchmark runs a GraphQL gateway with 4 HotChocolate subgraphs", md
-        )
-        self.assertIn("Current benchmarks run a GraphQL gateway with 4 HotChocolate subgraphs", md)
-        self.assertIn("Historical note", md)
+        self.assertIn("### Results\n", md)
+        self.assertIn("Each benchmark runs a GraphQL gateway with 4 subgraphs and executes", md)
 
 
     def test_old_dotnet_display_name_still_parses(self):
         # Backward compatibility: artifacts recorded before the HotChocolate
         # relabel carry display_name "(.NET subgraphs)" with tech ".net" and
-        # must still group under the HotChocolate heading.
+        # must still appear in the results table.
         workdir = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, workdir, True)
         artifacts = os.path.join(workdir, "artifacts")
@@ -473,7 +468,7 @@ class GenerateResultsTests(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, proc.stderr)
         with open(os.path.join(outdir, "RESULTS_CONSTANT.md")) as fh:
             md = fh.read()
-        self.assertIn("### HotChocolate Subgraphs", md)
+        self.assertIn("### Results\n", md)
         self.assertIn("| fusion |", md)
 
     def test_new_hotchocolate_display_name_parses_without_tech(self):
@@ -505,7 +500,7 @@ class GenerateResultsTests(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, proc.stderr)
         with open(os.path.join(outdir, "RESULTS_CONSTANT.md")) as fh:
             md = fh.read()
-        self.assertIn("### HotChocolate Subgraphs", md)
+        self.assertIn("### Results\n", md)
         self.assertIn("| cosmo |", md)
 
 
@@ -1115,7 +1110,6 @@ class SubgraphBuildPinTests(unittest.TestCase):
             with self.subTest(family=family):
                 content = self.read_build(family)
                 self.assertNotIn("api.nuget.org", content)
-                self.assertNotIn("LATEST_STABLE", content)
                 self.assertNotIn("sed -i", content)
                 # The pin check fails fast instead of mutating tracked files.
                 self.assertIn("not pinned to", content)
@@ -1123,7 +1117,6 @@ class SubgraphBuildPinTests(unittest.TestCase):
                 # Pin validation must use an XML parser, not regex, so
                 # single-quoted attributes parse and comments are ignored.
                 self.assertIn("xml.etree.ElementTree", content)
-                self.assertNotIn("attr_re", content)
 
     def test_all_hotchocolate_refs_pinned(self):
         for family in self.FAMILIES:

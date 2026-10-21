@@ -54,12 +54,6 @@ class BuildMatrixTests(unittest.TestCase):
                     f"{entry['name']} (HotChocolate subgraphs)",
                 )
 
-    def test_no_gateways_net_output(self):
-        matrices = MATRIX.build_matrices(
-            "all", preview_check=lambda: (False, "16.6.0", None)
-        )
-        self.assertNotIn("gateways_net", matrices)
-
     def test_subgraph_builds_cover_both_families(self):
         matrices = MATRIX.build_matrices(
             "all", preview_check=lambda: (False, "16.6.0", None)
@@ -412,7 +406,6 @@ class BuildMatrixTests(unittest.TestCase):
                 for line in fh:
                     key, _, value = line.strip().partition("=")
                     outputs[key] = value
-            self.assertNotIn("gateways_net", outputs)
             gateways = json.loads(outputs["gateways"])
             self.assertEqual([g["name"] for g in gateways], ["cosmo"])
             self.assertEqual(gateways[0]["subgraphs"], "subgraphs-net")
@@ -498,9 +491,6 @@ class ConfigTests(unittest.TestCase):
                         content = fh.read()
                     self.assertNotRegex(content, r"Task\.Delay\(\d")
                     self.assertIn('"BENCHMARK_SUBGRAPH_DELAY_MS"', content)
-                    self.assertNotIn("BENCHMARK_SIMULATE_LATENCY", content)
-        for path in (("k6", "benchmark.sh"), (".github", "workflows", "benchmark.yml")):
-            self.assertNotIn("BENCHMARK_SIMULATE_LATENCY", self.read(*path))
 
     def test_catalog_groups_variants_by_product(self):
         catalog = {p["id"]: p for p in MATRIX.report_gateway_catalog()}

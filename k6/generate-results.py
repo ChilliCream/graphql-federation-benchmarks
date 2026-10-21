@@ -516,19 +516,8 @@ def generate_markdown(mode, results, expected_by_mode, not_run_by_mode=None):
 
     lines = []
 
-    # The setup sentence describes the current HotChocolate-only configuration. When
-    # the input still contains historical non-HotChocolate measurements (preserved,
-    # never relabeled), qualify the claim and call out the historical rows
-    # instead of describing every benchmark as a HotChocolate run.
-    techs_present = {e.get("subgraph_tech") for e in entries}
-    historical_kinds = sorted(t for t in techs_present if t and t != ".net")
-    setup_subject = (
-        "Current benchmarks run" if historical_kinds else "Each benchmark runs"
-    )
-
     SCENARIO_DESCRIPTION = (
-        f"{setup_subject} a GraphQL gateway with 4 HotChocolate subgraphs "
-        "([HotChocolate](https://github.com/ChilliCream/graphql-platform)) and executes "
+        "Each benchmark runs a GraphQL gateway with 4 subgraphs and executes "
         "a heavy nested query that exercises federation/composition capabilities.\n"
         "\n"
         "**Methodology:** Each gateway executes {total_runs} runs of {duration} each. The first run is a "
@@ -536,19 +525,6 @@ def generate_markdown(mode, results, expected_by_mode, not_run_by_mode=None):
         "by **median RPS** across the {measured_runs} measured runs, with best/worst/CV% reported for "
         "transparency."
     ).format(duration=duration, total_runs=total_runs, measured_runs=measured_runs)
-
-    if historical_kinds:
-        historical_labels = []
-        if "rust" in historical_kinds:
-            historical_labels.append("Rust")
-        historical_labels.extend(
-            t for t in historical_kinds if t != "rust"
-        )
-        SCENARIO_DESCRIPTION += (
-            "\n\n> Historical note: this table also preserves earlier measurements taken "
-            f"with {' and '.join(historical_labels)} subgraphs; only the HotChocolate rows "
-            "reflect the current setup."
-        )
 
     name, sentence = SCENARIOS.get(mode, SCENARIOS["burst"])
     lines.append(f"## Overview for: `{name}`")
@@ -566,7 +542,7 @@ def generate_markdown(mode, results, expected_by_mode, not_run_by_mode=None):
     if rust_entries:
         subgraph_groups.append(("Rust Subgraphs", rust_entries))
     if net_entries:
-        subgraph_groups.append(("HotChocolate Subgraphs", net_entries))
+        subgraph_groups.append(("Results", net_entries))
     if other_entries:
         subgraph_groups.append(("Other Subgraphs", other_entries))
 
@@ -577,7 +553,7 @@ def generate_markdown(mode, results, expected_by_mode, not_run_by_mode=None):
         lines.append(f"### {group_title}")
         lines.append("")
 
-        # Table header (no Subgraphs column — implicit from heading)
+        # Table header
         lines.append(
             "| Gateway | Version | Median RPS | Best RPS | Worst RPS | CV% | Notes |"
         )

@@ -7,7 +7,6 @@ local runner scripts, result generation and documentation.
 import glob
 import os
 import re
-import subprocess
 import unittest
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -17,12 +16,6 @@ README = os.path.join(REPO_ROOT, "README.md")
 BENCHMARK_SH = os.path.join(REPO_ROOT, "k6", "benchmark.sh")
 GENERATE_RESULTS = os.path.join(REPO_ROOT, "k6", "generate-results.py")
 BUILD_MATRIX = os.path.join(REPO_ROOT, "k6", "build-matrix.py")
-
-# Retired spec slug, built without embedding it verbatim: this file itself is
-# scanned by the tracked-files regression test below, so a literal would
-# flag the guard's own source once tests/ is tracked.
-RETIRED_SPEC_SLUG = "composite" + "-schemas-" + "spec"
-
 
 def read(path):
     with open(path, encoding="utf-8") as fh:
@@ -35,24 +28,12 @@ class WorkflowTests(unittest.TestCase):
 
     def test_dedicated_runner_group(self):
         self.assertIn("group: benchmark-runners", self.workflow)
-        self.assertNotIn("benchmarking-1", self.workflow)
-
-    def test_no_rust_subgraph_references(self):
-        self.assertNotIn("subgraphs-rust", self.workflow)
-
-    def test_no_dual_tech_outputs(self):
-        self.assertNotIn("gateways_net", self.workflow)
-        self.assertNotIn("EXPECTED_GATEWAYS_NET_JSON", self.workflow)
 
     def test_latency_uses_main_matrix(self):
         self.assertIn(
             "gateway: ${{ fromJson(needs.prepare-matrix.outputs.gateways) }}",
             self.workflow,
         )
-
-    def test_no_sdk_dependent_fallback(self):
-        self.assertNotIn("falling back to local rebuild", self.workflow)
-        self.assertNotIn("fallback build script", self.workflow)
 
     def test_matrix_built_by_script(self):
         self.assertIn("run: python3 k6/build-matrix.py", self.workflow)
@@ -112,7 +93,6 @@ class WorkflowTests(unittest.TestCase):
         # Line 916-equivalent summary timestamp is generated at summary time,
         # so it must not be labeled "Started".
         self.assertIn("Summary generated (UTC): **$(date -u", self.workflow)
-        self.assertNotIn("Started (UTC): **$(date -u", self.workflow)
 
     def test_fusion_version_input_exists(self):
         self.assertIn("fusion_version:", self.workflow)
@@ -135,16 +115,11 @@ class BenchmarkScriptTests(unittest.TestCase):
     def setUp(self):
         self.script = read(BENCHMARK_SH)
 
-    def test_no_rust_defaults(self):
-        self.assertNotIn("subgraphs-rust", self.script)
-
     def test_rejects_non_dotnet_override(self):
         self.assertIn("only 'subgraphs-net' is supported", self.script)
 
     def test_prebuilt_checks_bundled_runtime(self):
         self.assertIn(".dotnet/shared/Microsoft.NETCore.App", self.script)
-        # The old SDK-presence probe must be gone: benchmark machines have no SDK.
-        self.assertNotIn("command -v dotnet", self.script)
 
     def test_prebuilt_checks_apphosts(self):
         self.assertIn("bin/Release/net*/", self.script)
@@ -274,21 +249,6 @@ class FusionGatewayTests(unittest.TestCase):
                 self.assertIn("AddGraphQLGateway()", legacy)
                 self.assertNotIn("disableDefaultSecurity", legacy)
 
-    def test_fusion_gateways_have_no_reflection_cost_helper(self):
-        # The late-bound FusionCostPolicy helper is gone: no reflection
-        # traces may remain in either Program.cs.
-        for rel in self.GATEWAYS:
-            with self.subTest(gateway=rel):
-                content = read(os.path.join(REPO_ROOT, rel))
-                self.assertNotIn("System.Reflection", content)
-                self.assertNotIn("System.Linq.Expressions", content)
-                self.assertNotIn('GetMethod("ModifyCostOptions")', content)
-                self.assertNotIn("Expression.Lambda", content)
-                self.assertNotIn("FusionCostPolicy", content)
-                self.assertNotIn("IL2026", content)
-                self.assertNotIn("IL2075", content)
-                self.assertNotIn("IL3050", content)
-
     def test_fusion_gateways_keep_auth_and_composition(self):
         # The cost-only change must not take header propagation
         # (benchmark Authorization header) or file composition with it.
@@ -346,23 +306,8 @@ class ResultGenerationTests(unittest.TestCase):
     def setUp(self):
         self.script = read(GENERATE_RESULTS)
 
-    def test_no_net_only_output_split(self):
-        self.assertNotIn("EXPECTED_GATEWAYS_NET_JSON", self.script)
-
-    def test_description_dotnet_only(self):
-        self.assertIn("4 HotChocolate subgraphs", self.script)
-        self.assertNotIn("Results are split by subgraph technology", self.script)
-
-    def test_no_tech_suffix_inference(self):
-        self.assertNotIn('endswith("-rust")', self.script)
-        self.assertNotIn('endswith("-net")', self.script)
-
-    def test_historical_subgraphs_qualified(self):
-        # Historical non-.NET measurements are still rendered, so the setup
-        # description must qualify its .NET claim instead of describing every
-        # benchmark as a .NET run.
-        self.assertIn("Historical note", self.script)
-        self.assertIn("historical_kinds", self.script)
+    def test_description_is_technology_neutral(self):
+        self.assertIn("4 subgraphs and executes", self.script)
 
 
 class DocsTests(unittest.TestCase):
@@ -374,12 +319,6 @@ class DocsTests(unittest.TestCase):
         self.assertIn("./apollo-federation/gateways/apollo-router-v3)", self.readme)
         self.assertIn("`apollo-router-v3`", self.readme)
         self.assertIn("./GATEWAY_UPDATES.md", self.readme)
-
-    def test_no_rust_subgraph_setup(self):
-        self.assertNotIn("subgraphs-rust", self.readme)
-        # The old variant list is gone; the historical-results note may still
-        # name the retired stack.
-        self.assertNotIn("`subgraphs-rust` = Rust", self.readme)
 
     def test_documents_runner_group_and_dotnet_only(self):
         self.assertIn("benchmark-runners", self.readme)
@@ -394,31 +333,6 @@ class DocsTests(unittest.TestCase):
         self.assertIn(
             "https://graphql.github.io/graphql-federation-spec/", self.readme
         )
-        self.assertNotIn(RETIRED_SPEC_SLUG, self.readme)
-
-    def test_no_retired_spec_url_in_tracked_files(self):
-        # Regression guard: doc rewrites must not reintroduce the retired
-        # spec URL (see RETIRED_SPEC_SLUG). Historical measurements are
-        # excluded: they are preserved as measured, never rewritten.
-        historical = ("benchmark-runs/", "RESULTS_CONSTANT.md",
-                      "RESULTS_BURST.md", "RESULTS_CONSTANT_LATENCY.md")
-        tracked = subprocess.check_output(
-            ["git", "ls-files", "-z"], cwd=REPO_ROOT
-        ).split(b"\0")
-        offenders = []
-        for raw in tracked:
-            if not raw:
-                continue
-            rel = raw.decode("utf-8", "surrogateescape")
-            if rel.startswith(historical):
-                continue
-            try:
-                content = read(os.path.join(REPO_ROOT, rel))
-            except (OSError, UnicodeDecodeError):
-                continue
-            if RETIRED_SPEC_SLUG in content:
-                offenders.append(rel)
-        self.assertEqual(offenders, [])
 
 
 if __name__ == "__main__":

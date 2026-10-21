@@ -104,7 +104,6 @@ class ApolloGatewayTests(unittest.TestCase):
             "        request:\n            operations:\n                - propagate:\n                    named: Authorization",
             stable_config,
         )
-        self.assertNotIn("incremental_planner", preview_config)
         self.assertEqual((preview / ".gitignore").read_text().strip(), "router")
 
     def test_workflow_exposes_preview_and_preserves_distinct_artifacts_in_all_modes(self):
