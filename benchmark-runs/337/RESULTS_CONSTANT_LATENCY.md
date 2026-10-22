@@ -15,11 +15,11 @@ This scenario executes a constant load of **50 VUs** over **120s** with a simula
 
 | Gateway | Version | Median RPS | Best RPS | Worst RPS | CV% | Notes |
 | :------ | :------ | ---------: | -------: | --------: | --: | :---- |
-| fusion-nightly-net11 | 16.7.0-p.2 | 1,885 | 1,921 | 1,874 | 0.8% |  |
-| fusion-nightly | 16.7.0-p.2 | 1,879 | 1,925 | 1,868 | 1.0% |  |
-| fusion | 16.6.3 | 1,867 | 1,919 | 1,857 | 1.1% |  |
+| fusion-nightly-net-11 | 16.7.0-p.2 | 1,885 | 1,921 | 1,874 | 0.8% |  |
+| fusion-nightly-net-10 | 16.7.0-p.2 | 1,879 | 1,925 | 1,868 | 1.0% |  |
+| fusion-net-10 | 16.6.3 | 1,867 | 1,919 | 1,857 | 1.1% |  |
 | hive-router | v0.0.84 | 1,850 | 1,917 | 1,831 | 1.4% |  |
-| fusion-nightly-fed | 16.7.0-p.2 | 1,807 | 1,845 | 1,793 | 0.9% |  |
+| fusion-nightly-fed-net-10 | 16.7.0-p.2 | 1,807 | 1,845 | 1,793 | 0.9% |  |
 | grafbase | 0.53.5 | 1,303 | 1,336 | 1,292 | 1.2% |  |
 | cosmo | 0.334.0 | 1,161 | 1,212 | 1,156 | 1.6% |  |
 | hive-gateway-router-runtime | 2.10.8 | 549 | 573 | 546 | 1.6% |  |
@@ -32,7 +32,7 @@ This scenario executes a constant load of **50 VUs** over **120s** with a simula
 ### Details
 
 <details>
-  <summary>Summary for: fusion-nightly-net11 (.net subgraphs) (16.7.0-p.2)</summary>
+  <summary>Summary for: fusion-nightly-net-11 (.net subgraphs) (16.7.0-p.2)</summary>
 
   **K6 Output**
 
@@ -79,7 +79,7 @@ This scenario executes a constant load of **50 VUs** over **120s** with a simula
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly (.net subgraphs) (16.7.0-p.2)</summary>
+  <summary>Summary for: fusion-nightly-net-10 (.net subgraphs) (16.7.0-p.2)</summary>
 
   **K6 Output**
 
@@ -126,7 +126,7 @@ This scenario executes a constant load of **50 VUs** over **120s** with a simula
 </details>
 
 <details>
-  <summary>Summary for: fusion (.net subgraphs) (16.6.3)</summary>
+  <summary>Summary for: fusion-net-10 (.net subgraphs) (16.6.3)</summary>
 
   **K6 Output**
 
@@ -220,7 +220,7 @@ This scenario executes a constant load of **50 VUs** over **120s** with a simula
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly-fed (.net subgraphs) (16.7.0-p.2)</summary>
+  <summary>Summary for: fusion-nightly-fed-net-10 (.net subgraphs) (16.7.0-p.2)</summary>
 
   **K6 Output**
 

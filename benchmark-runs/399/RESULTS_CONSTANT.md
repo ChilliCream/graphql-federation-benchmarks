@@ -12,10 +12,10 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 | Gateway | Version | Median RPS | Best RPS | Worst RPS | CV% | Notes |
 | :------ | :------ | ---------: | -------: | --------: | --: | :---- |
 | hive-router | v0.3.5 | 2,740 | 2,740 | 2,740 | 0.0% |  |
-| fusion-nightly-net11 | 16.7.0-p.27 | 2,643 | 2,643 | 2,643 | 0.0% |  |
-| fusion-nightly | 16.7.0-p.27 | 2,615 | 2,615 | 2,615 | 0.0% |  |
-| fusion | 16.6.8 | 2,575 | 2,575 | 2,575 | 0.0% |  |
-| fusion-nightly-fed | 16.7.0-p.27 | 2,337 | 2,337 | 2,337 | 0.0% |  |
+| fusion-nightly-net-11 | 16.7.0-p.27 | 2,643 | 2,643 | 2,643 | 0.0% |  |
+| fusion-nightly-net-10 | 16.7.0-p.27 | 2,615 | 2,615 | 2,615 | 0.0% |  |
+| fusion-net-10 | 16.6.8 | 2,575 | 2,575 | 2,575 | 0.0% |  |
+| fusion-nightly-fed-net-10 | 16.7.0-p.27 | 2,337 | 2,337 | 2,337 | 0.0% |  |
 | grafbase | 0.53.5 | 1,727 | 1,727 | 1,727 | 0.0% |  |
 | cosmo | 0.359.0 | 1,502 | 1,502 | 1,502 | 0.0% |  |
 | caliban | 3.2.0 | 1,438 | 1,438 | 1,438 | 0.0% |  |
@@ -77,7 +77,7 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly-net11 (HotChocolate subgraphs) (16.7.0-p.27)</summary>
+  <summary>Summary for: fusion-nightly-net-11 (HotChocolate subgraphs) (16.7.0-p.27)</summary>
 
   **K6 Output**
 
@@ -124,7 +124,7 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly (HotChocolate subgraphs) (16.7.0-p.27)</summary>
+  <summary>Summary for: fusion-nightly-net-10 (HotChocolate subgraphs) (16.7.0-p.27)</summary>
 
   **K6 Output**
 
@@ -171,7 +171,7 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion (HotChocolate subgraphs) (16.6.8)</summary>
+  <summary>Summary for: fusion-net-10 (HotChocolate subgraphs) (16.6.8)</summary>
 
   **K6 Output**
 
@@ -218,7 +218,7 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly-fed (HotChocolate subgraphs) (16.7.0-p.27)</summary>
+  <summary>Summary for: fusion-nightly-fed-net-10 (HotChocolate subgraphs) (16.7.0-p.27)</summary>
 
   **K6 Output**
 

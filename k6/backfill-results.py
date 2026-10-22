@@ -100,7 +100,7 @@ def validate_complete_results(generator, results, run_number):
 def fusion_version(document):
     for gateway in document["gateways"]:
         for variant in gateway["variants"]:
-            if variant["id"] == "fusion":
+            if variant["id"] in ("fusion-net-10", "fusion"):
                 return variant.get("version")
     return None
 
@@ -116,7 +116,9 @@ def apply_assumed_runtime_versions(document, baseline):
     """Fill versions absent from artifacts using the current runtime baseline.
 
     The historical commits target net10.0 for subgraphs and every .NET gateway
-    except the explicitly named fusion-nightly-net11 variant. Runtime version
+    except the .NET 11 Fusion variants (fusion-nightly-net-11 historically,
+    fusion-net-11 / fusion-aot-11 / fusion-fed-net-11 / fusion-fed-aot-11 and
+    their nightly counterparts canonically). Runtime version
     capture was added later, so use the current result's version for the same
     target while preserving any version an artifact did capture.
     """
@@ -143,7 +145,7 @@ def apply_assumed_runtime_versions(document, baseline):
                 .get("platform", {})
                 .get("runtime", {})
             )
-            if variant["id"] == "fusion-nightly-net11":
+            if variant["id"] in ("fusion-nightly-net11", "fusion-nightly-net-11"):
                 version = inferred_net11_runtime(
                     document["run"]["number"], baseline_runtime.get("version")
                 )
@@ -151,7 +153,7 @@ def apply_assumed_runtime_versions(document, baseline):
                 version = baseline_runtime.get("version")
             if version:
                 runtime["version"] = version
-            elif "net11" not in variant["id"]:
+            elif "net-11" not in variant["id"] and "net11" not in variant["id"]:
                 runtime["version"] = baseline_subgraphs_runtime["version"]
 
 

@@ -182,7 +182,7 @@
       "repositoryUrl": "https://github.com/ChilliCream/graphql-platform",
       "variants": [
         {
-          "id": "fusion",
+          "id": "fusion-net-10",
           "version": "16.6.9",
           "composition": "composite-schema",
           "platform": {
@@ -196,7 +196,7 @@
           }
         },
         {
-          "id": "fusion-nightly",
+          "id": "fusion-nightly-net-10",
           "version": "16.7.0-p.31",
           "label": "Fusion Nightly",
           "composition": "composite-schema",
@@ -211,7 +211,7 @@
           }
         },
         {
-          "id": "fusion-nightly-net11",
+          "id": "fusion-nightly-net-11",
           "version": "16.7.0-p.31",
           "label": "Fusion Nightly",
           "composition": "composite-schema",
@@ -232,7 +232,7 @@
           }
         },
         {
-          "id": "fusion-nightly-fed",
+          "id": "fusion-nightly-fed-net-10",
           "version": "16.7.0-p.31",
           "label": "Fusion Nightly",
           "composition": "apollo-federation",
@@ -19360,7 +19360,7 @@
           ]
         },
         {
-          "variant": "fusion",
+          "variant": "fusion-net-10",
           "gateway": "fusion",
           "results": [
             {
@@ -22064,7 +22064,7 @@
           ]
         },
         {
-          "variant": "fusion-nightly",
+          "variant": "fusion-nightly-net-10",
           "gateway": "fusion",
           "results": [
             {
@@ -24555,7 +24555,7 @@
           ]
         },
         {
-          "variant": "fusion-nightly-net11",
+          "variant": "fusion-nightly-net-11",
           "gateway": "fusion",
           "results": [
             {
@@ -27256,7 +27256,7 @@
           ]
         },
         {
-          "variant": "fusion-nightly-fed",
+          "variant": "fusion-nightly-fed-net-10",
           "gateway": "fusion",
           "results": [
             {
@@ -49124,7 +49124,7 @@
           ]
         },
         {
-          "variant": "fusion",
+          "variant": "fusion-net-10",
           "gateway": "fusion",
           "results": [
             {
@@ -51828,7 +51828,7 @@
           ]
         },
         {
-          "variant": "fusion-nightly",
+          "variant": "fusion-nightly-net-10",
           "gateway": "fusion",
           "results": [
             {
@@ -54319,7 +54319,7 @@
           ]
         },
         {
-          "variant": "fusion-nightly-net11",
+          "variant": "fusion-nightly-net-11",
           "gateway": "fusion",
           "results": [
             {
@@ -57020,7 +57020,7 @@
           ]
         },
         {
-          "variant": "fusion-nightly-fed",
+          "variant": "fusion-nightly-fed-net-10",
           "gateway": "fusion",
           "results": [
             {
@@ -78959,7 +78959,7 @@
           ]
         },
         {
-          "variant": "fusion",
+          "variant": "fusion-net-10",
           "gateway": "fusion",
           "results": [
             {
@@ -81663,7 +81663,7 @@
           ]
         },
         {
-          "variant": "fusion-nightly",
+          "variant": "fusion-nightly-net-10",
           "gateway": "fusion",
           "results": [
             {
@@ -84154,7 +84154,7 @@
           ]
         },
         {
-          "variant": "fusion-nightly-net11",
+          "variant": "fusion-nightly-net-11",
           "gateway": "fusion",
           "results": [
             {
@@ -86855,7 +86855,7 @@
           ]
         },
         {
-          "variant": "fusion-nightly-fed",
+          "variant": "fusion-nightly-fed-net-10",
           "gateway": "fusion",
           "results": [
             {

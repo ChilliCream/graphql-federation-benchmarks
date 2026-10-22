@@ -15,9 +15,9 @@ This scenario executes a constant load of **50 VUs** over **120s** with a simula
 
 | Gateway | Version | Median RPS | Best RPS | Worst RPS | CV% | Notes |
 | :------ | :------ | ---------: | -------: | --------: | --: | :---- |
-| fusion-nightly | 16.4.0-p.6 | 1,562 | 1,580 | 1,555 | 0.5% |  |
+| fusion-nightly-net-10 | 16.4.0-p.6 | 1,562 | 1,580 | 1,555 | 0.5% |  |
 | hive-router | v0.0.74 | 1,562 | 1,584 | 1,548 | 0.7% |  |
-| fusion | 16.3.0 | 1,552 | 1,571 | 1,545 | 0.5% |  |
+| fusion-net-10 | 16.3.0 | 1,552 | 1,571 | 1,545 | 0.5% |  |
 | grafbase | 0.53.5 | 1,116 | 1,135 | 1,105 | 0.9% |  |
 | cosmo | 0.326.1 | 1,091 | 1,112 | 1,083 | 0.8% |  |
 | hive-gateway-router-runtime | 2.10.0 | 517 | 532 | 514 | 1.2% |  |
@@ -30,7 +30,7 @@ This scenario executes a constant load of **50 VUs** over **120s** with a simula
 ### Details
 
 <details>
-  <summary>Summary for: fusion-nightly (.net subgraphs) (16.4.0-p.6)</summary>
+  <summary>Summary for: fusion-nightly-net-10 (.net subgraphs) (16.4.0-p.6)</summary>
 
   **K6 Output**
 
@@ -124,7 +124,7 @@ This scenario executes a constant load of **50 VUs** over **120s** with a simula
 </details>
 
 <details>
-  <summary>Summary for: fusion (.net subgraphs) (16.3.0)</summary>
+  <summary>Summary for: fusion-net-10 (.net subgraphs) (16.3.0)</summary>
 
   **K6 Output**
 

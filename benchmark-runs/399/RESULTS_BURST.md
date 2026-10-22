@@ -11,11 +11,11 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **120s**.
 
 | Gateway | Version | Median RPS | Best RPS | Worst RPS | CV% | Notes |
 | :------ | :------ | ---------: | -------: | --------: | --: | :---- |
-| fusion | 16.6.8 | 2,546 | 2,546 | 2,546 | 0.0% |  |
-| fusion-nightly-net11 | 16.7.0-p.27 | 2,484 | 2,484 | 2,484 | 0.0% |  |
-| fusion-nightly | 16.7.0-p.27 | 2,443 | 2,443 | 2,443 | 0.0% |  |
+| fusion-net-10 | 16.6.8 | 2,546 | 2,546 | 2,546 | 0.0% |  |
+| fusion-nightly-net-11 | 16.7.0-p.27 | 2,484 | 2,484 | 2,484 | 0.0% |  |
+| fusion-nightly-net-10 | 16.7.0-p.27 | 2,443 | 2,443 | 2,443 | 0.0% |  |
 | hive-router | v0.3.5 | 2,434 | 2,434 | 2,434 | 0.0% |  |
-| fusion-nightly-fed | 16.7.0-p.27 | 2,348 | 2,348 | 2,348 | 0.0% |  |
+| fusion-nightly-fed-net-10 | 16.7.0-p.27 | 2,348 | 2,348 | 2,348 | 0.0% |  |
 | caliban | 3.2.0 | 1,429 | 1,429 | 1,429 | 0.0% |  |
 | cosmo | 0.359.0 | 1,356 | 1,356 | 1,356 | 0.0% |  |
 | hive-gateway-router-runtime | 2.15.2 | 485 | 485 | 485 | 0.0% |  |
@@ -30,7 +30,7 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **120s**.
 ### Details
 
 <details>
-  <summary>Summary for: fusion (HotChocolate subgraphs) (16.6.8)</summary>
+  <summary>Summary for: fusion-net-10 (HotChocolate subgraphs) (16.6.8)</summary>
 
   **K6 Output**
 
@@ -77,7 +77,7 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly-net11 (HotChocolate subgraphs) (16.7.0-p.27)</summary>
+  <summary>Summary for: fusion-nightly-net-11 (HotChocolate subgraphs) (16.7.0-p.27)</summary>
 
   **K6 Output**
 
@@ -124,7 +124,7 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly (HotChocolate subgraphs) (16.7.0-p.27)</summary>
+  <summary>Summary for: fusion-nightly-net-10 (HotChocolate subgraphs) (16.7.0-p.27)</summary>
 
   **K6 Output**
 
@@ -218,7 +218,7 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly-fed (HotChocolate subgraphs) (16.7.0-p.27)</summary>
+  <summary>Summary for: fusion-nightly-fed-net-10 (HotChocolate subgraphs) (16.7.0-p.27)</summary>
 
   **K6 Output**
 

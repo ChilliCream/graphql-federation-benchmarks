@@ -16,9 +16,9 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 | Gateway | Version | Median RPS | Best RPS | Worst RPS | CV% | Notes |
 | :------ | :------ | ---------: | -------: | --------: | --: | :---- |
 | hive-router | v0.0.83 | 3,089 | 3,325 | 3,046 | 3.1% |  |
-| fusion-nightly-net11 | 16.6.0-p.3 | 2,715 | 2,858 | 2,693 | 2.1% |  |
-| fusion-nightly | 16.6.0-p.3 | 2,618 | 2,722 | 2,601 | 1.6% |  |
-| fusion | 16.5.1 | 2,595 | 2,686 | 2,582 | 1.4% |  |
+| fusion-nightly-net-11 | 16.6.0-p.3 | 2,715 | 2,858 | 2,693 | 2.1% |  |
+| fusion-nightly-net-10 | 16.6.0-p.3 | 2,618 | 2,722 | 2,601 | 1.6% |  |
+| fusion-net-10 | 16.5.1 | 2,595 | 2,686 | 2,582 | 1.4% |  |
 | grafbase | 0.53.5 | 2,132 | 2,253 | 2,119 | 2.1% |  |
 | cosmo | 0.331.1 | 1,337 | 1,377 | 1,332 | 1.3% |  |
 | hive-gateway-router-runtime | 2.10.4 | 623 | 641 | 622 | 1.0% |  |
@@ -26,18 +26,18 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 | hive-gateway | 2.10.4 | 286 | 294 | 286 | 1.0% |  |
 | apollo-gateway | 2.14.2 | 285 | 288 | 284 | 0.5% |  |
 | feddi-gateway | 5ff8b6165878 | — | — | — | — | non-compatible response (1274 across 9/9 runs) |
-| fusion-nightly-fed | — | — | — | — | — | not run |
+| fusion-nightly-fed-net-10 | — | — | — | — | — | not run |
 
 
 ### .NET Subgraphs
 
 | Gateway | Version | Median RPS | Best RPS | Worst RPS | CV% | Notes |
 | :------ | :------ | ---------: | -------: | --------: | --: | :---- |
-| fusion-nightly-net11 | 16.6.0-p.3 | 2,533 | 2,634 | 2,522 | 1.5% |  |
-| fusion-nightly | 16.6.0-p.3 | 2,486 | 2,600 | 2,479 | 1.8% |  |
+| fusion-nightly-net-11 | 16.6.0-p.3 | 2,533 | 2,634 | 2,522 | 1.5% |  |
+| fusion-nightly-net-10 | 16.6.0-p.3 | 2,486 | 2,600 | 2,479 | 1.8% |  |
 | hive-router | v0.0.83 | 2,432 | 2,600 | 2,394 | 2.8% |  |
-| fusion | 16.5.1 | 2,397 | 2,496 | 2,389 | 1.6% |  |
-| fusion-nightly-fed | 16.6.0-p.3 | 2,191 | 2,272 | 2,167 | 1.6% |  |
+| fusion-net-10 | 16.5.1 | 2,397 | 2,496 | 2,389 | 1.6% |  |
+| fusion-nightly-fed-net-10 | 16.6.0-p.3 | 2,191 | 2,272 | 2,167 | 1.6% |  |
 | grafbase | 0.53.5 | 1,628 | 1,686 | 1,623 | 1.4% |  |
 | cosmo | 0.331.1 | 1,234 | 1,273 | 1,230 | 1.3% |  |
 | hive-gateway-router-runtime | 2.10.4 | 572 | 595 | 567 | 1.6% |  |
@@ -97,7 +97,7 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly-net11 (rust subgraphs) (16.6.0-p.3)</summary>
+  <summary>Summary for: fusion-nightly-net-11 (rust subgraphs) (16.6.0-p.3)</summary>
 
   **K6 Output**
 
@@ -144,7 +144,7 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly (rust subgraphs) (16.6.0-p.3)</summary>
+  <summary>Summary for: fusion-nightly-net-10 (rust subgraphs) (16.6.0-p.3)</summary>
 
   **K6 Output**
 
@@ -191,7 +191,7 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion (rust subgraphs) (16.5.1)</summary>
+  <summary>Summary for: fusion-net-10 (rust subgraphs) (16.5.1)</summary>
 
   **K6 Output**
 
@@ -520,7 +520,7 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly-net11 (.net subgraphs) (16.6.0-p.3)</summary>
+  <summary>Summary for: fusion-nightly-net-11 (.net subgraphs) (16.6.0-p.3)</summary>
 
   **K6 Output**
 
@@ -567,7 +567,7 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly (.net subgraphs) (16.6.0-p.3)</summary>
+  <summary>Summary for: fusion-nightly-net-10 (.net subgraphs) (16.6.0-p.3)</summary>
 
   **K6 Output**
 
@@ -661,7 +661,7 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion (.net subgraphs) (16.5.1)</summary>
+  <summary>Summary for: fusion-net-10 (.net subgraphs) (16.5.1)</summary>
 
   **K6 Output**
 
@@ -708,7 +708,7 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly-fed (.net subgraphs) (16.6.0-p.3)</summary>
+  <summary>Summary for: fusion-nightly-fed-net-10 (.net subgraphs) (16.6.0-p.3)</summary>
 
   **K6 Output**
 

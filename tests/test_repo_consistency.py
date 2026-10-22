@@ -110,6 +110,11 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("matrix.gateway.version", self.workflow)
         self.assertIn("BENCH_GATEWAY_VERSION", self.workflow)
 
+    def test_fusion_aot_plumbing(self):
+        # Matrix aot field -> build-gateways env -> install.sh axis.
+        self.assertIn("matrix.gateway.aot", self.workflow)
+        self.assertIn("BENCH_GATEWAY_AOT", self.workflow)
+
 
 class BenchmarkScriptTests(unittest.TestCase):
     def setUp(self):
@@ -218,14 +223,14 @@ class FusionGatewayTests(unittest.TestCase):
             "eShop.Gateway", "Program.cs",
         ),
         os.path.join(
-            "apollo-federation", "gateways", "fusion-nightly-fed",
+            "apollo-federation", "gateways", "fusion-fed",
             "eShop.Gateway", "Program.cs",
         ),
     )
     INSTALL_SCRIPTS = (
         os.path.join("composite-schema", "gateways", "fusion", "install.sh"),
         os.path.join(
-            "apollo-federation", "gateways", "fusion-nightly-fed", "install.sh"
+            "apollo-federation", "gateways", "fusion-fed", "install.sh"
         ),
     )
     GATEWAY_CSPROJS = (
@@ -234,7 +239,7 @@ class FusionGatewayTests(unittest.TestCase):
             "eShop.Gateway", "eShop.Gateway.csproj",
         ),
         os.path.join(
-            "apollo-federation", "gateways", "fusion-nightly-fed",
+            "apollo-federation", "gateways", "fusion-fed",
             "eShop.Gateway", "eShop.Gateway.csproj",
         ),
     )
@@ -300,6 +305,31 @@ class FusionGatewayTests(unittest.TestCase):
                     "^[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$", content
                 )
                 self.assertIn('SELECTED_VERSION="$PINNED_VERSION"', content)
+
+    def test_install_scripts_support_aot_axis(self):
+        # Both fusion install.sh scripts honor BENCH_GATEWAY_AOT: AOT is
+        # .NET 11 only, sets PublishAot in bench.props, and publishes the
+        # native binary alongside the JIT build.
+        for rel in self.INSTALL_SCRIPTS:
+            with self.subTest(script=rel):
+                content = read(os.path.join(REPO_ROOT, rel))
+                self.assertIn("BENCH_GATEWAY_AOT", content)
+                self.assertIn("unknown BENCH_GATEWAY_AOT", content)
+                self.assertIn("BENCH_GATEWAY_AOT=1 requires BENCH_GATEWAY_DOTNET=11", content)
+                self.assertIn("<PublishAot>true</PublishAot>", content)
+                self.assertIn("dotnet publish", content)
+
+    def test_start_scripts_prefer_aot_binary(self):
+        # Both fusion start.sh scripts exec the Native AOT publish output
+        # when present and fall back to the JIT apphost otherwise.
+        for gateway_dir in (
+            os.path.join("composite-schema", "gateways", "fusion"),
+            os.path.join("apollo-federation", "gateways", "fusion-fed"),
+        ):
+            with self.subTest(gateway=gateway_dir):
+                content = read(os.path.join(REPO_ROOT, gateway_dir, "start.sh"))
+                self.assertIn("bin/Release/net11.0/publish/eShop.Gateway", content)
+                self.assertIn("dotnet run -c Release --no-build", content)
 
 
 class ResultGenerationTests(unittest.TestCase):

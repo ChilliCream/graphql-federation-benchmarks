@@ -11,11 +11,11 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **60s**.
 
 | Gateway | Version | Median RPS | Best RPS | Worst RPS | CV% | Notes |
 | :------ | :------ | ---------: | -------: | --------: | --: | :---- |
-| fusion-nightly | 16.7.0-p.31 | 3,072 | 3,158 | 3,040 | 1.3% |  |
+| fusion-nightly-net-10 | 16.7.0-p.31 | 3,072 | 3,158 | 3,040 | 1.3% |  |
 | feddi-gateway | 3c75a7db8876 | 3,061 | 3,184 | 3,051 | 1.5% |  |
-| fusion-nightly-net11 | 16.7.0-p.31 | 2,999 | 3,082 | 2,971 | 1.1% |  |
-| fusion-nightly-fed | 16.7.0-p.31 | 2,765 | 2,920 | 2,730 | 2.2% |  |
-| fusion | 16.6.9 | 2,385 | 2,482 | 2,373 | 1.6% |  |
+| fusion-nightly-net-11 | 16.7.0-p.31 | 2,999 | 3,082 | 2,971 | 1.1% |  |
+| fusion-nightly-fed-net-10 | 16.7.0-p.31 | 2,765 | 2,920 | 2,730 | 2.2% |  |
+| fusion-net-10 | 16.6.9 | 2,385 | 2,482 | 2,373 | 1.6% |  |
 | hive-router | v0.3.5 | 2,290 | 2,421 | 2,261 | 2.5% |  |
 | caliban | 3.2.0 | 1,306 | 1,371 | 1,298 | 1.9% |  |
 | cosmo | 0.359.0 | 1,296 | 1,347 | 1,291 | 1.6% |  |
@@ -30,7 +30,7 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **60s**.
 ### Details
 
 <details>
-  <summary>Summary for: fusion-nightly (HotChocolate subgraphs) (16.7.0-p.31)</summary>
+  <summary>Summary for: fusion-nightly-net-10 (HotChocolate subgraphs) (16.7.0-p.31)</summary>
 
   **K6 Output**
 
@@ -124,7 +124,7 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **60s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly-net11 (HotChocolate subgraphs) (16.7.0-p.31)</summary>
+  <summary>Summary for: fusion-nightly-net-11 (HotChocolate subgraphs) (16.7.0-p.31)</summary>
 
   **K6 Output**
 
@@ -171,7 +171,7 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **60s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly-fed (HotChocolate subgraphs) (16.7.0-p.31)</summary>
+  <summary>Summary for: fusion-nightly-fed-net-10 (HotChocolate subgraphs) (16.7.0-p.31)</summary>
 
   **K6 Output**
 
@@ -218,7 +218,7 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **60s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion (HotChocolate subgraphs) (16.6.9)</summary>
+  <summary>Summary for: fusion-net-10 (HotChocolate subgraphs) (16.6.9)</summary>
 
   **K6 Output**
 

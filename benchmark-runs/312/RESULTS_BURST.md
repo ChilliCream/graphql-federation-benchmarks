@@ -16,7 +16,7 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **120s**.
 | Gateway | Version | Median RPS | Best RPS | Worst RPS | CV% | Notes |
 | :------ | :------ | ---------: | -------: | --------: | --: | :---- |
 | hive-router | v0.0.84 | 2,737 | 2,915 | 2,708 | 2.4% |  |
-| fusion | 16.6.0 | 2,445 | 2,570 | 2,426 | 2.0% |  |
+| fusion-net-10 | 16.6.0 | 2,445 | 2,570 | 2,426 | 2.0% |  |
 | cosmo | 0.334.0 | 1,225 | 1,262 | 1,221 | 1.2% |  |
 | hive-gateway-router-runtime | 2.10.8 | 564 | 576 | 562 | 0.8% |  |
 | hive-gateway | 2.10.8 | 260 | 266 | 258 | 1.0% |  |
@@ -30,7 +30,7 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **120s**.
 
 | Gateway | Version | Median RPS | Best RPS | Worst RPS | CV% | Notes |
 | :------ | :------ | ---------: | -------: | --------: | --: | :---- |
-| fusion | 16.6.0 | 2,389 | 2,488 | 2,375 | 1.6% |  |
+| fusion-net-10 | 16.6.0 | 2,389 | 2,488 | 2,375 | 1.6% |  |
 | hive-router | v0.0.84 | 2,376 | 2,506 | 2,357 | 2.1% |  |
 | cosmo | 0.334.0 | 1,169 | 1,209 | 1,160 | 1.3% |  |
 | hive-gateway-router-runtime | 2.10.8 | 536 | 551 | 532 | 1.2% |  |
@@ -91,7 +91,7 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion (rust subgraphs) (16.6.0)</summary>
+  <summary>Summary for: fusion-net-10 (rust subgraphs) (16.6.0)</summary>
 
   **K6 Output**
 
@@ -326,7 +326,7 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion (.net subgraphs) (16.6.0)</summary>
+  <summary>Summary for: fusion-net-10 (.net subgraphs) (16.6.0)</summary>
 
   **K6 Output**
 

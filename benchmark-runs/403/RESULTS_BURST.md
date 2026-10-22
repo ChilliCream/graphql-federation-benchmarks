@@ -12,11 +12,11 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **60s**.
 | Gateway | Version | Median RPS | Best RPS | Worst RPS | CV% | Notes |
 | :------ | :------ | ---------: | -------: | --------: | --: | :---- |
 | feddi-gateway | 3c75a7db8876 | 3,119 | 3,227 | 3,093 | 1.5% |  |
-| fusion-nightly-net11 | 16.7.0-p.28 | 2,617 | 2,735 | 2,598 | 1.8% |  |
-| fusion-nightly | 16.7.0-p.28 | 2,582 | 2,712 | 2,573 | 1.8% |  |
+| fusion-nightly-net-11 | 16.7.0-p.28 | 2,617 | 2,735 | 2,598 | 1.8% |  |
+| fusion-nightly-net-10 | 16.7.0-p.28 | 2,582 | 2,712 | 2,573 | 1.8% |  |
 | hive-router | v0.3.5 | 2,454 | 2,582 | 2,424 | 2.4% |  |
-| fusion | 16.6.8 | 2,406 | 2,511 | 2,400 | 1.6% |  |
-| fusion-nightly-fed | 16.7.0-p.28 | 2,364 | 2,474 | 2,355 | 1.7% |  |
+| fusion-net-10 | 16.6.8 | 2,406 | 2,511 | 2,400 | 1.6% |  |
+| fusion-nightly-fed-net-10 | 16.7.0-p.28 | 2,364 | 2,474 | 2,355 | 1.7% |  |
 | cosmo | 0.359.0 | 1,289 | 1,351 | 1,277 | 1.9% |  |
 | caliban | 3.2.0 | 1,281 | 1,343 | 1,273 | 2.0% |  |
 | hive-gateway-router-runtime | 2.15.2 | 478 | 489 | 476 | 1.0% |  |
@@ -77,7 +77,7 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **60s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly-net11 (HotChocolate subgraphs) (16.7.0-p.28)</summary>
+  <summary>Summary for: fusion-nightly-net-11 (HotChocolate subgraphs) (16.7.0-p.28)</summary>
 
   **K6 Output**
 
@@ -124,7 +124,7 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **60s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly (HotChocolate subgraphs) (16.7.0-p.28)</summary>
+  <summary>Summary for: fusion-nightly-net-10 (HotChocolate subgraphs) (16.7.0-p.28)</summary>
 
   **K6 Output**
 
@@ -218,7 +218,7 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **60s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion (HotChocolate subgraphs) (16.6.8)</summary>
+  <summary>Summary for: fusion-net-10 (HotChocolate subgraphs) (16.6.8)</summary>
 
   **K6 Output**
 
@@ -265,7 +265,7 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **60s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly-fed (HotChocolate subgraphs) (16.7.0-p.28)</summary>
+  <summary>Summary for: fusion-nightly-fed-net-10 (HotChocolate subgraphs) (16.7.0-p.28)</summary>
 
   **K6 Output**
 

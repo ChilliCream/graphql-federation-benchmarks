@@ -16,16 +16,16 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **120s**.
 | Gateway | Version | Median RPS | Best RPS | Worst RPS | CV% | Notes |
 | :------ | :------ | ---------: | -------: | --------: | --: | :---- |
 | hive-router | v0.0.84 | 2,735 | 2,859 | 2,713 | 2.1% |  |
-| fusion-nightly | 16.6.0-p.6 | 2,526 | 2,628 | 2,515 | 1.5% |  |
-| fusion-nightly-net11 | 16.6.0-p.6 | 2,495 | 2,572 | 2,455 | 1.5% |  |
-| fusion | 16.5.1 | 2,474 | 2,550 | 2,462 | 1.1% |  |
+| fusion-nightly-net-10 | 16.6.0-p.6 | 2,526 | 2,628 | 2,515 | 1.5% |  |
+| fusion-nightly-net-11 | 16.6.0-p.6 | 2,495 | 2,572 | 2,455 | 1.5% |  |
+| fusion-net-10 | 16.5.1 | 2,474 | 2,550 | 2,462 | 1.1% |  |
 | cosmo | 0.334.0 | 1,214 | 1,242 | 1,192 | 1.4% |  |
 | hive-gateway-router-runtime | 2.10.8 | 575 | 585 | 572 | 0.7% |  |
 | hive-gateway | 2.10.8 | 248 | 255 | 246 | 1.0% |  |
 | apollo-gateway | 2.14.3 | 237 | 243 | 235 | 1.0% |  |
 | apollo-router | v2.16.1 | — | — | — | — | non-compatible response (10391 across 9/9 runs) |
 | feddi-gateway | — | — | — | — | — | not run |
-| fusion-nightly-fed | — | — | — | — | — | not run |
+| fusion-nightly-fed-net-10 | — | — | — | — | — | not run |
 | grafbase | 0.53.5 | — | — | — | — | non-compatible response (511706 across 9/9 runs) |
 
 
@@ -33,11 +33,11 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **120s**.
 
 | Gateway | Version | Median RPS | Best RPS | Worst RPS | CV% | Notes |
 | :------ | :------ | ---------: | -------: | --------: | --: | :---- |
-| fusion-nightly-net11 | 16.6.0-p.6 | 2,450 | 2,544 | 2,439 | 1.4% |  |
-| fusion-nightly | 16.6.0-p.6 | 2,396 | 2,478 | 2,392 | 1.3% |  |
-| fusion | 16.5.1 | 2,367 | 2,437 | 2,353 | 1.2% |  |
+| fusion-nightly-net-11 | 16.6.0-p.6 | 2,450 | 2,544 | 2,439 | 1.4% |  |
+| fusion-nightly-net-10 | 16.6.0-p.6 | 2,396 | 2,478 | 2,392 | 1.3% |  |
+| fusion-net-10 | 16.5.1 | 2,367 | 2,437 | 2,353 | 1.2% |  |
 | hive-router | v0.0.84 | 2,231 | 2,395 | 2,215 | 3.0% |  |
-| fusion-nightly-fed | 16.6.0-p.6 | 2,196 | 2,247 | 2,149 | 1.2% |  |
+| fusion-nightly-fed-net-10 | 16.6.0-p.6 | 2,196 | 2,247 | 2,149 | 1.2% |  |
 | cosmo | 0.334.0 | 1,124 | 1,164 | 1,117 | 1.5% |  |
 | hive-gateway-router-runtime | 2.10.8 | 528 | 539 | 526 | 0.8% |  |
 | hive-gateway | 2.10.8 | 240 | 251 | 239 | 1.6% |  |
@@ -97,7 +97,7 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly (rust subgraphs) (16.6.0-p.6)</summary>
+  <summary>Summary for: fusion-nightly-net-10 (rust subgraphs) (16.6.0-p.6)</summary>
 
   **K6 Output**
 
@@ -144,7 +144,7 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly-net11 (rust subgraphs) (16.6.0-p.6)</summary>
+  <summary>Summary for: fusion-nightly-net-11 (rust subgraphs) (16.6.0-p.6)</summary>
 
   **K6 Output**
 
@@ -191,7 +191,7 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion (rust subgraphs) (16.5.1)</summary>
+  <summary>Summary for: fusion-net-10 (rust subgraphs) (16.5.1)</summary>
 
   **K6 Output**
 
@@ -426,7 +426,7 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly-net11 (.net subgraphs) (16.6.0-p.6)</summary>
+  <summary>Summary for: fusion-nightly-net-11 (.net subgraphs) (16.6.0-p.6)</summary>
 
   **K6 Output**
 
@@ -473,7 +473,7 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly (.net subgraphs) (16.6.0-p.6)</summary>
+  <summary>Summary for: fusion-nightly-net-10 (.net subgraphs) (16.6.0-p.6)</summary>
 
   **K6 Output**
 
@@ -520,7 +520,7 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion (.net subgraphs) (16.5.1)</summary>
+  <summary>Summary for: fusion-net-10 (.net subgraphs) (16.5.1)</summary>
 
   **K6 Output**
 
@@ -614,7 +614,7 @@ This scenario is a burst stress test with peaks up to **500 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly-fed (.net subgraphs) (16.6.0-p.6)</summary>
+  <summary>Summary for: fusion-nightly-fed-net-10 (.net subgraphs) (16.6.0-p.6)</summary>
 
   **K6 Output**
 

@@ -16,7 +16,7 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 | Gateway | Version | Median RPS | Best RPS | Worst RPS | CV% | Notes |
 | :------ | :------ | ---------: | -------: | --------: | --: | :---- |
 | hive-router | v0.0.83 | 2,992 | 3,218 | 2,940 | 3.0% |  |
-| fusion | 16.5.1 | 2,536 | 2,666 | 2,506 | 2.0% |  |
+| fusion-net-10 | 16.5.1 | 2,536 | 2,666 | 2,506 | 2.0% |  |
 | grafbase | 0.53.5 | 2,173 | 2,294 | 2,157 | 2.1% |  |
 | cosmo | 0.331.1 | 1,273 | 1,326 | 1,263 | 1.9% |  |
 | hive-gateway-router-runtime | 2.10.4 | 629 | 647 | 628 | 1.0% |  |
@@ -31,7 +31,7 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 | Gateway | Version | Median RPS | Best RPS | Worst RPS | CV% | Notes |
 | :------ | :------ | ---------: | -------: | --------: | --: | :---- |
 | hive-router | v0.0.83 | 2,463 | 2,724 | 2,430 | 3.8% |  |
-| fusion | 16.5.1 | 2,443 | 2,535 | 2,391 | 2.0% |  |
+| fusion-net-10 | 16.5.1 | 2,443 | 2,535 | 2,391 | 2.0% |  |
 | grafbase | 0.53.5 | 1,666 | 1,723 | 1,657 | 1.3% |  |
 | cosmo | 0.331.1 | 1,187 | 1,230 | 1,180 | 1.6% |  |
 | hive-gateway-router-runtime | 2.10.4 | 580 | 599 | 574 | 1.3% |  |
@@ -91,7 +91,7 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion (rust subgraphs) (16.5.1)</summary>
+  <summary>Summary for: fusion-net-10 (rust subgraphs) (16.5.1)</summary>
 
   **K6 Output**
 
@@ -467,7 +467,7 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion (.net subgraphs) (16.5.1)</summary>
+  <summary>Summary for: fusion-net-10 (.net subgraphs) (16.5.1)</summary>
 
   **K6 Output**
 

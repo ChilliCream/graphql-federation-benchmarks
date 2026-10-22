@@ -244,7 +244,7 @@
       "repositoryUrl": "https://github.com/ChilliCream/graphql-platform",
       "variants": [
         {
-          "id": "fusion",
+          "id": "fusion-net-10",
           "version": "16.6.8",
           "composition": "composite-schema",
           "platform": {
@@ -258,7 +258,7 @@
           }
         },
         {
-          "id": "fusion-nightly",
+          "id": "fusion-nightly-net-10",
           "version": "16.7.0-p.28",
           "label": "Fusion Nightly",
           "composition": "composite-schema",
@@ -273,7 +273,7 @@
           }
         },
         {
-          "id": "fusion-nightly-net11",
+          "id": "fusion-nightly-net-11",
           "version": "16.7.0-p.28",
           "label": "Fusion Nightly",
           "composition": "composite-schema",
@@ -294,7 +294,7 @@
           }
         },
         {
-          "id": "fusion-nightly-fed",
+          "id": "fusion-nightly-fed-net-10",
           "version": "16.7.0-p.28",
           "label": "Fusion Nightly",
           "composition": "apollo-federation",
@@ -806,7 +806,7 @@
           "gateway": "fusion",
           "variants": [
             {
-              "variant": "fusion",
+              "variant": "fusion-net-10",
               "status": "complete",
               "throughput": {
                 "medianRps": 2530,
@@ -848,7 +848,7 @@
               }
             },
             {
-              "variant": "fusion-nightly",
+              "variant": "fusion-nightly-net-10",
               "status": "complete",
               "throughput": {
                 "medianRps": 2756,
@@ -890,7 +890,7 @@
               }
             },
             {
-              "variant": "fusion-nightly-net11",
+              "variant": "fusion-nightly-net-11",
               "status": "complete",
               "throughput": {
                 "medianRps": 2675,
@@ -932,7 +932,7 @@
               }
             },
             {
-              "variant": "fusion-nightly-fed",
+              "variant": "fusion-nightly-fed-net-10",
               "status": "complete",
               "throughput": {
                 "medianRps": 2432,
@@ -1495,7 +1495,7 @@
           "gateway": "fusion",
           "variants": [
             {
-              "variant": "fusion",
+              "variant": "fusion-net-10",
               "status": "complete",
               "throughput": {
                 "medianRps": 1880,
@@ -1537,7 +1537,7 @@
               }
             },
             {
-              "variant": "fusion-nightly",
+              "variant": "fusion-nightly-net-10",
               "status": "complete",
               "throughput": {
                 "medianRps": 1928,
@@ -1579,7 +1579,7 @@
               }
             },
             {
-              "variant": "fusion-nightly-net11",
+              "variant": "fusion-nightly-net-11",
               "status": "complete",
               "throughput": {
                 "medianRps": 1951,
@@ -1621,7 +1621,7 @@
               }
             },
             {
-              "variant": "fusion-nightly-fed",
+              "variant": "fusion-nightly-fed-net-10",
               "status": "complete",
               "throughput": {
                 "medianRps": 1837,
@@ -2184,7 +2184,7 @@
           "gateway": "fusion",
           "variants": [
             {
-              "variant": "fusion",
+              "variant": "fusion-net-10",
               "status": "complete",
               "throughput": {
                 "medianRps": 2406,
@@ -2226,7 +2226,7 @@
               }
             },
             {
-              "variant": "fusion-nightly",
+              "variant": "fusion-nightly-net-10",
               "status": "complete",
               "throughput": {
                 "medianRps": 2582,
@@ -2268,7 +2268,7 @@
               }
             },
             {
-              "variant": "fusion-nightly-net11",
+              "variant": "fusion-nightly-net-11",
               "status": "complete",
               "throughput": {
                 "medianRps": 2617,
@@ -2310,7 +2310,7 @@
               }
             },
             {
-              "variant": "fusion-nightly-fed",
+              "variant": "fusion-nightly-fed-net-10",
               "status": "complete",
               "throughput": {
                 "medianRps": 2364,

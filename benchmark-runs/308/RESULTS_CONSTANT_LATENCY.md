@@ -15,10 +15,10 @@ This scenario executes a constant load of **50 VUs** over **120s** with a simula
 
 | Gateway | Version | Median RPS | Best RPS | Worst RPS | CV% | Notes |
 | :------ | :------ | ---------: | -------: | --------: | --: | :---- |
-| fusion-nightly | 16.6.0-p.15 | 1,872 | 1,925 | 1,865 | 1.0% |  |
-| fusion-nightly-net11 | 16.6.0-p.15 | 1,872 | 1,919 | 1,860 | 1.0% |  |
-| fusion | 16.5.1 | 1,862 | 1,917 | 1,853 | 1.1% |  |
-| fusion-nightly-fed | 16.6.0-p.15 | 1,808 | 1,853 | 1,795 | 1.1% |  |
+| fusion-nightly-net-10 | 16.6.0-p.15 | 1,872 | 1,925 | 1,865 | 1.0% |  |
+| fusion-nightly-net-11 | 16.6.0-p.15 | 1,872 | 1,919 | 1,860 | 1.0% |  |
+| fusion-net-10 | 16.5.1 | 1,862 | 1,917 | 1,853 | 1.1% |  |
+| fusion-nightly-fed-net-10 | 16.6.0-p.15 | 1,808 | 1,853 | 1,795 | 1.1% |  |
 | hive-router | v0.0.84 | 1,808 | 1,889 | 1,796 | 1.7% |  |
 | grafbase | 0.53.5 | 1,276 | 1,310 | 1,274 | 1.1% |  |
 | cosmo | 0.334.0 | 1,229 | 1,267 | 1,224 | 1.2% |  |
@@ -32,7 +32,7 @@ This scenario executes a constant load of **50 VUs** over **120s** with a simula
 ### Details
 
 <details>
-  <summary>Summary for: fusion-nightly (.net subgraphs) (16.6.0-p.15)</summary>
+  <summary>Summary for: fusion-nightly-net-10 (.net subgraphs) (16.6.0-p.15)</summary>
 
   **K6 Output**
 
@@ -79,7 +79,7 @@ This scenario executes a constant load of **50 VUs** over **120s** with a simula
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly-net11 (.net subgraphs) (16.6.0-p.15)</summary>
+  <summary>Summary for: fusion-nightly-net-11 (.net subgraphs) (16.6.0-p.15)</summary>
 
   **K6 Output**
 
@@ -126,7 +126,7 @@ This scenario executes a constant load of **50 VUs** over **120s** with a simula
 </details>
 
 <details>
-  <summary>Summary for: fusion (.net subgraphs) (16.5.1)</summary>
+  <summary>Summary for: fusion-net-10 (.net subgraphs) (16.5.1)</summary>
 
   **K6 Output**
 
@@ -173,7 +173,7 @@ This scenario executes a constant load of **50 VUs** over **120s** with a simula
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly-fed (.net subgraphs) (16.6.0-p.15)</summary>
+  <summary>Summary for: fusion-nightly-fed-net-10 (.net subgraphs) (16.6.0-p.15)</summary>
 
   **K6 Output**
 

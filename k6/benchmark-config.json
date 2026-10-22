@@ -127,22 +127,98 @@
       "repositoryUrl": "https://github.com/ChilliCream/graphql-platform",
       "variants": [
         {
-          "id": "fusion",
+          "id": "fusion-net-10",
           "path": "composite-schema/gateways/fusion",
           "language": "C#",
           "runtime": ".NET",
-          "channel": "stable"
+          "channel": "stable",
+          "dotnet": "10"
         },
         {
-          "id": "fusion-nightly",
+          "id": "fusion-net-11",
+          "path": "composite-schema/gateways/fusion",
+          "language": "C#",
+          "runtime": ".NET",
+          "channel": "stable",
+          "dotnet": "11",
+          "platformFeatures": [
+            {
+              "id": "runtime-async",
+              "description": "C# async methods compiled to runtime-async (.NET 11 opt-in)."
+            }
+          ]
+        },
+        {
+          "id": "fusion-aot-11",
+          "path": "composite-schema/gateways/fusion",
+          "language": "C#",
+          "runtime": ".NET",
+          "channel": "stable",
+          "dotnet": "11",
+          "aot": true,
+          "platformFeatures": [
+            {
+              "id": "runtime-async",
+              "description": "C# async methods compiled to runtime-async (.NET 11 opt-in)."
+            },
+            {
+              "id": "aot",
+              "description": "Native AOT publish (.NET 11)."
+            }
+          ]
+        },
+        {
+          "id": "fusion-fed-net-10",
+          "path": "apollo-federation/gateways/fusion-fed",
+          "language": "C#",
+          "runtime": ".NET",
+          "channel": "stable",
+          "dotnet": "10"
+        },
+        {
+          "id": "fusion-fed-net-11",
+          "path": "apollo-federation/gateways/fusion-fed",
+          "language": "C#",
+          "runtime": ".NET",
+          "channel": "stable",
+          "dotnet": "11",
+          "platformFeatures": [
+            {
+              "id": "runtime-async",
+              "description": "C# async methods compiled to runtime-async (.NET 11 opt-in)."
+            }
+          ]
+        },
+        {
+          "id": "fusion-fed-aot-11",
+          "path": "apollo-federation/gateways/fusion-fed",
+          "language": "C#",
+          "runtime": ".NET",
+          "channel": "stable",
+          "dotnet": "11",
+          "aot": true,
+          "platformFeatures": [
+            {
+              "id": "runtime-async",
+              "description": "C# async methods compiled to runtime-async (.NET 11 opt-in)."
+            },
+            {
+              "id": "aot",
+              "description": "Native AOT publish (.NET 11)."
+            }
+          ]
+        },
+        {
+          "id": "fusion-nightly-net-10",
           "label": "Fusion Nightly",
           "path": "composite-schema/gateways/fusion",
           "language": "C#",
           "runtime": ".NET",
-          "channel": "preview"
+          "channel": "preview",
+          "dotnet": "10"
         },
         {
-          "id": "fusion-nightly-net11",
+          "id": "fusion-nightly-net-11",
           "label": "Fusion Nightly",
           "path": "composite-schema/gateways/fusion",
           "language": "C#",
@@ -157,12 +233,68 @@
           ]
         },
         {
-          "id": "fusion-nightly-fed",
+          "id": "fusion-nightly-aot-11",
           "label": "Fusion Nightly",
-          "path": "apollo-federation/gateways/fusion-nightly-fed",
+          "path": "composite-schema/gateways/fusion",
           "language": "C#",
           "runtime": ".NET",
-          "channel": "preview"
+          "channel": "preview",
+          "dotnet": "11",
+          "aot": true,
+          "platformFeatures": [
+            {
+              "id": "runtime-async",
+              "description": "C# async methods compiled to runtime-async (.NET 11 opt-in)."
+            },
+            {
+              "id": "aot",
+              "description": "Native AOT publish (.NET 11)."
+            }
+          ]
+        },
+        {
+          "id": "fusion-nightly-fed-net-10",
+          "label": "Fusion Nightly",
+          "path": "apollo-federation/gateways/fusion-fed",
+          "language": "C#",
+          "runtime": ".NET",
+          "channel": "preview",
+          "dotnet": "10"
+        },
+        {
+          "id": "fusion-nightly-fed-net-11",
+          "label": "Fusion Nightly",
+          "path": "apollo-federation/gateways/fusion-fed",
+          "language": "C#",
+          "runtime": ".NET",
+          "channel": "preview",
+          "dotnet": "11",
+          "platformFeatures": [
+            {
+              "id": "runtime-async",
+              "description": "C# async methods compiled to runtime-async (.NET 11 opt-in)."
+            }
+          ]
+        },
+        {
+          "id": "fusion-nightly-fed-aot-11",
+          "label": "Fusion Nightly",
+          "path": "apollo-federation/gateways/fusion-fed",
+          "language": "C#",
+          "runtime": ".NET",
+          "channel": "preview",
+          "dotnet": "11",
+          "aot": true,
+          "platformFeatures": [
+            {
+              "id": "runtime-async",
+              "description": "C# async methods compiled to runtime-async (.NET 11 opt-in)."
+            },
+            {
+              "id": "aot",
+              "description": "Native AOT publish (.NET 11)."
+            }
+          ]
         }
       ]
     },

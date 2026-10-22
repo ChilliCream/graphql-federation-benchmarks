@@ -16,10 +16,10 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 | Gateway | Version | Median RPS | Best RPS | Worst RPS | CV% | Notes |
 | :------ | :------ | ---------: | -------: | --------: | --: | :---- |
 | hive-router | v0.0.84 | 2,901 | 3,203 | 2,870 | 3.9% |  |
-| fusion-nightly-net11 | 16.7.0-p.2 | 2,776 | 2,884 | 2,748 | 1.6% |  |
-| fusion | 16.6.3 | 2,606 | 2,746 | 2,587 | 2.2% |  |
-| fusion-nightly | 16.7.0-p.2 | 2,592 | 2,730 | 2,585 | 2.0% |  |
-| fusion-nightly-fed | 16.7.0-p.2 | 2,394 | 2,494 | 2,381 | 1.6% |  |
+| fusion-nightly-net-11 | 16.7.0-p.2 | 2,776 | 2,884 | 2,748 | 1.6% |  |
+| fusion-net-10 | 16.6.3 | 2,606 | 2,746 | 2,587 | 2.2% |  |
+| fusion-nightly-net-10 | 16.7.0-p.2 | 2,592 | 2,730 | 2,585 | 2.0% |  |
+| fusion-nightly-fed-net-10 | 16.7.0-p.2 | 2,394 | 2,494 | 2,381 | 1.6% |  |
 | grafbase | 0.53.5 | 2,155 | 2,256 | 2,126 | 2.0% |  |
 | cosmo | 0.334.0 | 1,301 | 1,349 | 1,293 | 1.6% |  |
 | hive-gateway-router-runtime | 2.10.8 | 625 | 642 | 623 | 1.2% |  |
@@ -34,10 +34,10 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 | Gateway | Version | Median RPS | Best RPS | Worst RPS | CV% | Notes |
 | :------ | :------ | ---------: | -------: | --------: | --: | :---- |
 | hive-router | v0.0.84 | 2,534 | 2,676 | 2,476 | 2.5% |  |
-| fusion | 16.6.3 | 2,502 | 2,619 | 2,495 | 1.7% |  |
-| fusion-nightly-net11 | 16.7.0-p.2 | 2,466 | 2,584 | 2,461 | 1.8% |  |
-| fusion-nightly | 16.7.0-p.2 | 2,463 | 2,592 | 2,399 | 2.4% |  |
-| fusion-nightly-fed | 16.7.0-p.2 | 2,248 | 2,433 | 2,233 | 3.3% |  |
+| fusion-net-10 | 16.6.3 | 2,502 | 2,619 | 2,495 | 1.7% |  |
+| fusion-nightly-net-11 | 16.7.0-p.2 | 2,466 | 2,584 | 2,461 | 1.8% |  |
+| fusion-nightly-net-10 | 16.7.0-p.2 | 2,463 | 2,592 | 2,399 | 2.4% |  |
+| fusion-nightly-fed-net-10 | 16.7.0-p.2 | 2,248 | 2,433 | 2,233 | 3.3% |  |
 | grafbase | 0.53.5 | 1,647 | 1,704 | 1,644 | 1.2% |  |
 | cosmo | 0.334.0 | 1,231 | 1,277 | 1,222 | 1.5% |  |
 | hive-gateway-router-runtime | 2.10.8 | 593 | 613 | 590 | 1.3% |  |
@@ -97,7 +97,7 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly-net11 (rust subgraphs) (16.7.0-p.2)</summary>
+  <summary>Summary for: fusion-nightly-net-11 (rust subgraphs) (16.7.0-p.2)</summary>
 
   **K6 Output**
 
@@ -144,7 +144,7 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion (rust subgraphs) (16.6.3)</summary>
+  <summary>Summary for: fusion-net-10 (rust subgraphs) (16.6.3)</summary>
 
   **K6 Output**
 
@@ -191,7 +191,7 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly (rust subgraphs) (16.7.0-p.2)</summary>
+  <summary>Summary for: fusion-nightly-net-10 (rust subgraphs) (16.7.0-p.2)</summary>
 
   **K6 Output**
 
@@ -238,7 +238,7 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly-fed (rust subgraphs) (16.7.0-p.2)</summary>
+  <summary>Summary for: fusion-nightly-fed-net-10 (rust subgraphs) (16.7.0-p.2)</summary>
 
   **K6 Output**
 
@@ -614,7 +614,7 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion (.net subgraphs) (16.6.3)</summary>
+  <summary>Summary for: fusion-net-10 (.net subgraphs) (16.6.3)</summary>
 
   **K6 Output**
 
@@ -661,7 +661,7 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly-net11 (.net subgraphs) (16.7.0-p.2)</summary>
+  <summary>Summary for: fusion-nightly-net-11 (.net subgraphs) (16.7.0-p.2)</summary>
 
   **K6 Output**
 
@@ -708,7 +708,7 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly (.net subgraphs) (16.7.0-p.2)</summary>
+  <summary>Summary for: fusion-nightly-net-10 (.net subgraphs) (16.7.0-p.2)</summary>
 
   **K6 Output**
 
@@ -755,7 +755,7 @@ This scenario executes a constant load of **50 VUs** over **120s**.
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly-fed (.net subgraphs) (16.7.0-p.2)</summary>
+  <summary>Summary for: fusion-nightly-fed-net-10 (.net subgraphs) (16.7.0-p.2)</summary>
 
   **K6 Output**
 

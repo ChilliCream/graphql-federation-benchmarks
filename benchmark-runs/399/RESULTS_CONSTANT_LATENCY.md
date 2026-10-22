@@ -11,11 +11,11 @@ This scenario executes a constant load of **50 VUs** over **120s** with a simula
 
 | Gateway | Version | Median RPS | Best RPS | Worst RPS | CV% | Notes |
 | :------ | :------ | ---------: | -------: | --------: | --: | :---- |
-| fusion-nightly-net11 | 16.7.0-p.27 | 1,945 | 1,945 | 1,945 | 0.0% |  |
-| fusion-nightly | 16.7.0-p.27 | 1,941 | 1,941 | 1,941 | 0.0% |  |
-| fusion | 16.6.8 | 1,940 | 1,940 | 1,940 | 0.0% |  |
+| fusion-nightly-net-11 | 16.7.0-p.27 | 1,945 | 1,945 | 1,945 | 0.0% |  |
+| fusion-nightly-net-10 | 16.7.0-p.27 | 1,941 | 1,941 | 1,941 | 0.0% |  |
+| fusion-net-10 | 16.6.8 | 1,940 | 1,940 | 1,940 | 0.0% |  |
 | hive-router | v0.3.5 | 1,931 | 1,931 | 1,931 | 0.0% |  |
-| fusion-nightly-fed | 16.7.0-p.27 | 1,872 | 1,872 | 1,872 | 0.0% |  |
+| fusion-nightly-fed-net-10 | 16.7.0-p.27 | 1,872 | 1,872 | 1,872 | 0.0% |  |
 | cosmo | 0.359.0 | 1,376 | 1,376 | 1,376 | 0.0% |  |
 | caliban | 3.2.0 | 1,374 | 1,374 | 1,374 | 0.0% |  |
 | grafbase | 0.53.5 | 1,337 | 1,337 | 1,337 | 0.0% |  |
@@ -30,7 +30,7 @@ This scenario executes a constant load of **50 VUs** over **120s** with a simula
 ### Details
 
 <details>
-  <summary>Summary for: fusion-nightly-net11 (HotChocolate subgraphs) (16.7.0-p.27)</summary>
+  <summary>Summary for: fusion-nightly-net-11 (HotChocolate subgraphs) (16.7.0-p.27)</summary>
 
   **K6 Output**
 
@@ -77,7 +77,7 @@ This scenario executes a constant load of **50 VUs** over **120s** with a simula
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly (HotChocolate subgraphs) (16.7.0-p.27)</summary>
+  <summary>Summary for: fusion-nightly-net-10 (HotChocolate subgraphs) (16.7.0-p.27)</summary>
 
   **K6 Output**
 
@@ -124,7 +124,7 @@ This scenario executes a constant load of **50 VUs** over **120s** with a simula
 </details>
 
 <details>
-  <summary>Summary for: fusion (HotChocolate subgraphs) (16.6.8)</summary>
+  <summary>Summary for: fusion-net-10 (HotChocolate subgraphs) (16.6.8)</summary>
 
   **K6 Output**
 
@@ -218,7 +218,7 @@ This scenario executes a constant load of **50 VUs** over **120s** with a simula
 </details>
 
 <details>
-  <summary>Summary for: fusion-nightly-fed (HotChocolate subgraphs) (16.7.0-p.27)</summary>
+  <summary>Summary for: fusion-nightly-fed-net-10 (HotChocolate subgraphs) (16.7.0-p.27)</summary>
 
   **K6 Output**
 

@@ -19,10 +19,10 @@ This scenario executes a constant load of **50 VUs** over **120s** with a simula
 | apollo-router | — | — | — | — | — | benchmark run failed |
 | cosmo | — | — | — | — | — | benchmark run failed |
 | feddi-gateway | — | — | — | — | — | benchmark run failed |
-| fusion | — | — | — | — | — | benchmark run failed |
-| fusion-nightly | — | — | — | — | — | benchmark run failed |
-| fusion-nightly-fed | — | — | — | — | — | benchmark run failed |
-| fusion-nightly-net11 | — | — | — | — | — | benchmark run failed |
+| fusion-net-10 | — | — | — | — | — | benchmark run failed |
+| fusion-nightly-net-10 | — | — | — | — | — | benchmark run failed |
+| fusion-nightly-fed-net-10 | — | — | — | — | — | benchmark run failed |
+| fusion-nightly-net-11 | — | — | — | — | — | benchmark run failed |
 | grafbase | — | — | — | — | — | benchmark run failed |
 | hive-gateway | — | — | — | — | — | benchmark run failed |
 | hive-gateway-router-runtime | — | — | — | — | — | benchmark run failed |

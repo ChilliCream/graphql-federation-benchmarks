@@ -26,10 +26,10 @@ CATALOG = [
     ("apollo-router", [("apollo-router", "2.18.0", "Rust"), ("apollo-router-v3", "3.0.0-preview.0", "Rust")]),
     ("caliban", [("caliban", "3.2.0", "Scala")]),
     ("fusion", [
-        ("fusion", "16.6.8", "C#"),
-        ("fusion-nightly", "16.7.0-p.27", "C#"),
-        ("fusion-nightly-net11", "16.7.0-p.27", "C#"),
-        ("fusion-nightly-fed", "16.7.0-p.27", "C#"),
+        ("fusion-net-10", "16.6.8", "C#"),
+        ("fusion-nightly-net-10", "16.7.0-p.27", "C#"),
+        ("fusion-nightly-net-11", "16.7.0-p.27", "C#"),
+        ("fusion-nightly-fed-net-10", "16.7.0-p.27", "C#"),
     ]),
     ("feddi-gateway", [("feddi-gateway", "e91d605ed222", "Go")]),
 ]
@@ -102,7 +102,7 @@ def results_doc():
                 {"id": vid, "version": version, "composition": "apollo-federation",
                  "platform": {"language": {"name": language}},
                  **({"label": "Fusion Nightly"} if vid in (
-                     "fusion-nightly", "fusion-nightly-net11", "fusion-nightly-fed"
+                     "fusion-nightly-net-10", "fusion-nightly-net-11", "fusion-nightly-fed-net-10"
                  ) else {}),
                  **({"preview": True} if vid == "feddi-gateway" else {})}
                 for vid, version, language in variants
@@ -222,9 +222,9 @@ class BuildHistoryTests(unittest.TestCase):
             for gateway in history["gateways"]
             for variant in gateway["variants"]
         }
-        self.assertEqual(variants["fusion-nightly"]["label"], "Fusion Nightly")
-        self.assertEqual(variants["fusion-nightly-net11"]["label"], "Fusion Nightly")
-        self.assertEqual(variants["fusion-nightly-fed"]["label"], "Fusion Nightly")
+        self.assertEqual(variants["fusion-nightly-net-10"]["label"], "Fusion Nightly")
+        self.assertEqual(variants["fusion-nightly-net-11"]["label"], "Fusion Nightly")
+        self.assertEqual(variants["fusion-nightly-fed-net-10"]["label"], "Fusion Nightly")
         self.assertIs(variants["feddi-gateway"]["preview"], True)
         self.assertEqual([s["id"] for s in history["scenarios"]], ["constant", "constant-latency", "burst"])
         self.assertEqual(scenario(history, "constant")["config"], scenario(EXAMPLE, "constant")["config"])
@@ -262,37 +262,37 @@ class BuildHistoryTests(unittest.TestCase):
             make_doc(400, versions={"feddi-gateway": "e91d605ed222"}),
         )
         self.assertEqual(results_of(history, "feddi-gateway"), [("e91d605ed222", 400)])
-        self.assertEqual(results_of(history, "fusion"), [("16.6.8", 399), ("16.6.8", 400)])
+        self.assertEqual(results_of(history, "fusion-net-10"), [("16.6.8", 399), ("16.6.8", 400)])
 
     def test_workflow_dispatch_runs_ignored(self):
         history = self.build(
-            make_doc(1, versions={"fusion": "16.0.0"}),
-            make_doc(2, event="workflow_dispatch", versions={"fusion": "16.1.0"}),
+            make_doc(1, versions={"fusion-net-10": "16.0.0"}),
+            make_doc(2, event="workflow_dispatch", versions={"fusion-net-10": "16.1.0"}),
         )
         self.assertEqual(history["latestRun"]["number"], 1)
-        self.assertEqual(results_of(history, "fusion"), [("16.0.0", 1)])
+        self.assertEqual(results_of(history, "fusion-net-10"), [("16.0.0", 1)])
 
     def test_legacy_runs_inferred_from_inputs(self):
-        legacy = make_doc(1, versions={"fusion": "16.0.0"})
+        legacy = make_doc(1, versions={"fusion-net-10": "16.0.0"})
         del legacy["run"]["event"]
-        dispatched = make_doc(2, versions={"fusion": "16.1.0"})
+        dispatched = make_doc(2, versions={"fusion-net-10": "16.1.0"})
         del dispatched["run"]["event"]
-        dispatched["run"]["inputs"] = {"gateway": "fusion"}
-        history = self.build(legacy, dispatched, make_doc(3, versions={"fusion": "16.2.0"}))
-        self.assertEqual(results_of(history, "fusion"), [("16.0.0", 1), ("16.2.0", 3)])
+        dispatched["run"]["inputs"] = {"gateway": "fusion-net-10"}
+        history = self.build(legacy, dispatched, make_doc(3, versions={"fusion-net-10": "16.2.0"}))
+        self.assertEqual(results_of(history, "fusion-net-10"), [("16.0.0", 1), ("16.2.0", 3)])
 
     def test_failed_scenario_kept_and_missing_variant_excluded(self):
-        old = make_doc(1, versions={"fusion": "16.0.0"})
-        latest = make_doc(2, versions={"fusion": "16.1.0"})
+        old = make_doc(1, versions={"fusion-net-10": "16.0.0"})
+        latest = make_doc(2, versions={"fusion-net-10": "16.1.0"})
         scenario(latest, "constant-latency")["status"] = "failed"
-        remove_result(latest, "constant-latency", "fusion")
+        remove_result(latest, "constant-latency", "fusion-net-10")
         history = self.build(old, latest)
         self.assertEqual(
             [s["id"] for s in history["scenarios"]],
             ["constant", "constant-latency", "burst"],
         )
         self.assertEqual(
-            results_of(history, "fusion", "constant-latency"),
+            results_of(history, "fusion-net-10", "constant-latency"),
             [("16.0.0", 1)],
         )
         self.assertEqual(
@@ -300,22 +300,22 @@ class BuildHistoryTests(unittest.TestCase):
             [("3.2.0", 1), ("3.2.0", 2)],
         )
         self.assertEqual(
-            results_of(history, "fusion"),
+            results_of(history, "fusion-net-10"),
             [("16.0.0", 1), ("16.1.0", 2)],
         )
 
     def test_failed_variant_excluded_without_dropping_scenario(self):
-        old = make_doc(1, versions={"fusion": "16.0.0"})
-        latest = make_doc(2, versions={"fusion": "16.1.0"})
+        old = make_doc(1, versions={"fusion-net-10": "16.0.0"})
+        latest = make_doc(2, versions={"fusion-net-10": "16.1.0"})
         del scenario(latest, "constant-latency")["status"]
-        mark_result_failed(latest, "constant-latency", "fusion")
+        mark_result_failed(latest, "constant-latency", "fusion-net-10")
         history = self.build(old, latest)
         self.assertEqual(
             [s["id"] for s in history["scenarios"]],
             ["constant", "constant-latency", "burst"],
         )
         self.assertEqual(
-            results_of(history, "fusion", "constant-latency"),
+            results_of(history, "fusion-net-10", "constant-latency"),
             [("16.0.0", 1)],
         )
         self.assertEqual(
@@ -333,33 +333,33 @@ class BuildHistoryTests(unittest.TestCase):
         )
 
     def test_non_default_run_counts_skipped(self):
-        old = make_doc(1, versions={"fusion": "16.0.0"})
+        old = make_doc(1, versions={"fusion-net-10": "16.0.0"})
         scenario(old, "constant")["config"]["measuredRuns"] = 3
-        warm = make_doc(2, versions={"fusion": "16.1.0"})
+        warm = make_doc(2, versions={"fusion-net-10": "16.1.0"})
         scenario(warm, "constant")["config"]["warmupRuns"] = 0
-        history = self.build(old, warm, make_doc(3, versions={"fusion": "16.2.0"}))
-        self.assertEqual(results_of(history, "fusion"), [("16.2.0", 3)])
+        history = self.build(old, warm, make_doc(3, versions={"fusion-net-10": "16.2.0"}))
+        self.assertEqual(results_of(history, "fusion-net-10"), [("16.2.0", 3)])
 
     def test_null_version_skipped(self):
         history = self.build(
-            make_doc(1, versions={"fusion": "16.0.0", "caliban": None}),
-            make_doc(2, versions={"fusion": None, "caliban": None}),
+            make_doc(1, versions={"fusion-net-10": "16.0.0", "caliban": None}),
+            make_doc(2, versions={"fusion-net-10": None, "caliban": None}),
         )
-        self.assertEqual(results_of(history, "fusion"), [("16.0.0", 1)])
+        self.assertEqual(results_of(history, "fusion-net-10"), [("16.0.0", 1)])
         self.assertEqual(results_of(history, "caliban"), [])
 
     def test_same_version_keeps_every_run(self):
         history = self.build(
-            make_doc(1, versions={"fusion": "16.0.0"}),
-            make_doc(2, versions={"fusion": "16.1.0"}),
-            make_doc(3, versions={"fusion": "16.0.0"}),
-            make_doc(4, versions={"fusion": "16.1.0"}),
+            make_doc(1, versions={"fusion-net-10": "16.0.0"}),
+            make_doc(2, versions={"fusion-net-10": "16.1.0"}),
+            make_doc(3, versions={"fusion-net-10": "16.0.0"}),
+            make_doc(4, versions={"fusion-net-10": "16.1.0"}),
         )
         self.assertEqual(
-            results_of(history, "fusion"),
+            results_of(history, "fusion-net-10"),
             [("16.0.0", 1), ("16.1.0", 2), ("16.0.0", 3), ("16.1.0", 4)],
         )
-        entry = next(v for v in scenario(history, "constant")["variants"] if v["variant"] == "fusion")
+        entry = next(v for v in scenario(history, "constant")["variants"] if v["variant"] == "fusion-net-10")
         self.assertEqual(
             [v["throughput"]["medianRps"] for v in entry["results"]],
             [1, 2, 3, 4],
@@ -367,60 +367,60 @@ class BuildHistoryTests(unittest.TestCase):
 
     def test_keeps_every_run_in_the_last_six_months(self):
         history = self.build(*(
-            make_doc(n, versions={"fusion": f"16.{n}.0"}) for n in range(1, 6)
+            make_doc(n, versions={"fusion-net-10": f"16.{n}.0"}) for n in range(1, 6)
         ))
-        self.assertEqual(results_of(history, "fusion"), [
+        self.assertEqual(results_of(history, "fusion-net-10"), [
             ("16.1.0", 1), ("16.2.0", 2), ("16.3.0", 3),
             ("16.4.0", 4), ("16.5.0", 5),
         ])
 
     def test_runs_older_than_six_calendar_months_are_excluded(self):
-        before_window = make_doc(1, versions={"fusion": "16.0.0"})
+        before_window = make_doc(1, versions={"fusion-net-10": "16.0.0"})
         before_window["run"]["startedAt"] = "2026-04-14T21:04:03Z"
-        first_in_window = make_doc(2, versions={"fusion": "16.1.0"})
+        first_in_window = make_doc(2, versions={"fusion-net-10": "16.1.0"})
         first_in_window["run"]["startedAt"] = "2026-04-15T21:04:03Z"
-        latest = make_doc(3, versions={"fusion": "16.2.0"})
+        latest = make_doc(3, versions={"fusion-net-10": "16.2.0"})
         history = self.build(before_window, first_in_window, latest)
         self.assertEqual(
-            results_of(history, "fusion"),
+            results_of(history, "fusion-net-10"),
             [("16.1.0", 2), ("16.2.0", 3)],
         )
 
     def test_config_change_resets_scenario(self):
-        old = make_doc(1, versions={"fusion": "16.0.0"})
-        latest = make_doc(2, versions={"fusion": "16.1.0"})
+        old = make_doc(1, versions={"fusion-net-10": "16.0.0"})
+        latest = make_doc(2, versions={"fusion-net-10": "16.1.0"})
         scenario(latest, "constant")["config"]["virtualUsers"] = 100
         history = self.build(old, latest)
-        self.assertEqual(results_of(history, "fusion"), [("16.1.0", 2)])
-        self.assertEqual(results_of(history, "fusion", "burst"), [("16.0.0", 1), ("16.1.0", 2)])
+        self.assertEqual(results_of(history, "fusion-net-10"), [("16.1.0", 2)])
+        self.assertEqual(results_of(history, "fusion-net-10", "burst"), [("16.0.0", 1), ("16.1.0", 2)])
 
     def test_cpu_model_change_resets_history(self):
-        cpu = make_doc(1, versions={"fusion": "16.0.0"})
+        cpu = make_doc(1, versions={"fusion-net-10": "16.0.0"})
         cpu["hardware"]["cpuModel"] = "Other CPU"
-        subgraphs = make_doc(2, versions={"fusion": "16.1.0"})
+        subgraphs = make_doc(2, versions={"fusion-net-10": "16.1.0"})
         subgraphs["subgraphs"]["framework"]["version"] = "16.0.0"
-        host = make_doc(3, versions={"fusion": "16.2.0"})
+        host = make_doc(3, versions={"fusion-net-10": "16.2.0"})
         host["hardware"]["host"] = "bench-002"
-        history = self.build(cpu, subgraphs, host, make_doc(4, versions={"fusion": "16.3.0"}))
+        history = self.build(cpu, subgraphs, host, make_doc(4, versions={"fusion-net-10": "16.3.0"}))
         self.assertEqual(
-            results_of(history, "fusion"),
+            results_of(history, "fusion-net-10"),
             [("16.1.0", 2), ("16.2.0", 3), ("16.3.0", 4)],
         )
 
     def test_subgraph_runtime_patch_keeps_history(self):
-        old = make_doc(1, versions={"fusion": "16.0.0"})
+        old = make_doc(1, versions={"fusion-net-10": "16.0.0"})
         old["subgraphs"]["platform"]["runtime"]["version"] = "10.0.12"
-        history = self.build(old, make_doc(2, versions={"fusion": "16.1.0"}))
-        self.assertEqual(results_of(history, "fusion"), [("16.0.0", 1), ("16.1.0", 2)])
+        history = self.build(old, make_doc(2, versions={"fusion-net-10": "16.1.0"}))
+        self.assertEqual(results_of(history, "fusion-net-10"), [("16.0.0", 1), ("16.1.0", 2)])
 
     def test_subgraph_runtime_major_is_recorded_per_run(self):
-        old = make_doc(1, versions={"fusion": "16.0.0"})
+        old = make_doc(1, versions={"fusion-net-10": "16.0.0"})
         old["subgraphs"]["platform"]["runtime"]["version"] = "9.0.13"
-        history = self.build(old, make_doc(2, versions={"fusion": "16.1.0"}))
-        self.assertEqual(results_of(history, "fusion"), [("16.0.0", 1), ("16.1.0", 2)])
+        history = self.build(old, make_doc(2, versions={"fusion-net-10": "16.1.0"}))
+        self.assertEqual(results_of(history, "fusion-net-10"), [("16.0.0", 1), ("16.1.0", 2)])
         entry = next(
             v for v in scenario(history, "constant")["variants"]
-            if v["variant"] == "fusion"
+            if v["variant"] == "fusion-net-10"
         )
         self.assertEqual(
             [r["subgraphs"]["platform"]["runtime"]["version"] for r in entry["results"]],
@@ -428,12 +428,12 @@ class BuildHistoryTests(unittest.TestCase):
         )
 
     def test_gateway_runtime_is_recorded_per_run(self):
-        old = make_doc(1, versions={"fusion": "16.0.0"})
-        latest = make_doc(2, versions={"fusion": "16.1.0"})
+        old = make_doc(1, versions={"fusion-net-10": "16.0.0"})
+        latest = make_doc(2, versions={"fusion-net-10": "16.1.0"})
         for doc, runtime_version in ((old, "10.0.13"), (latest, "11.0.0")):
             for gateway in doc["gateways"]:
                 for variant in gateway["variants"]:
-                    if variant["id"] == "fusion":
+                    if variant["id"] == "fusion-net-10":
                         variant["platform"]["runtime"] = {
                             "name": ".NET",
                             "version": runtime_version,
@@ -441,7 +441,7 @@ class BuildHistoryTests(unittest.TestCase):
         history = self.build(old, latest)
         entry = next(
             v for v in scenario(history, "constant")["variants"]
-            if v["variant"] == "fusion"
+            if v["variant"] == "fusion-net-10"
         )
         self.assertEqual(
             [r["platform"]["runtime"]["version"] for r in entry["results"]],
@@ -449,23 +449,23 @@ class BuildHistoryTests(unittest.TestCase):
         )
 
     def test_new_scenario_in_latest_run(self):
-        old = make_doc(1, versions={"fusion": "16.0.0"})
+        old = make_doc(1, versions={"fusion-net-10": "16.0.0"})
         old["scenarios"] = [s for s in old["scenarios"] if s["id"] != "burst"]
-        history = self.build(old, make_doc(2, versions={"fusion": "16.1.0"}))
-        self.assertEqual(results_of(history, "fusion", "burst"), [("16.1.0", 2)])
-        self.assertEqual(results_of(history, "fusion"), [("16.0.0", 1), ("16.1.0", 2)])
+        history = self.build(old, make_doc(2, versions={"fusion-net-10": "16.1.0"}))
+        self.assertEqual(results_of(history, "fusion-net-10", "burst"), [("16.1.0", 2)])
+        self.assertEqual(results_of(history, "fusion-net-10"), [("16.0.0", 1), ("16.1.0", 2)])
 
     def test_variant_absent_from_latest_catalog_dropped(self):
         latest = make_doc(2)
         for gateway in latest["gateways"]:
-            gateway["variants"] = [v for v in gateway["variants"] if v["id"] != "fusion-nightly-fed"]
+            gateway["variants"] = [v for v in gateway["variants"] if v["id"] != "fusion-nightly-fed-net-10"]
         for s in latest["scenarios"]:
             for result in s["results"]:
-                result["variants"] = [v for v in result["variants"] if v["variant"] != "fusion-nightly-fed"]
+                result["variants"] = [v for v in result["variants"] if v["variant"] != "fusion-nightly-fed-net-10"]
             s["results"] = [r for r in s["results"] if r["variants"]]
         history = self.build(make_doc(1), latest)
-        self.assertIsNone(results_of(history, "fusion-nightly-fed"))
-        self.assertEqual(results_of(history, "fusion"), [("16.6.8", 1), ("16.6.8", 2)])
+        self.assertIsNone(results_of(history, "fusion-nightly-fed-net-10"))
+        self.assertEqual(results_of(history, "fusion-net-10"), [("16.6.8", 1), ("16.6.8", 2)])
 
     def test_non_numeric_and_empty_dirs_ignored(self):
         os.makedirs(os.path.join(self.runs_dir, "5"))
@@ -477,7 +477,7 @@ class BuildHistoryTests(unittest.TestCase):
         self.assertEqual(history["latestRun"]["number"], 1)
 
     def test_output_is_deterministic(self):
-        self.build(make_doc(1, versions={"fusion": "16.0.0"}), make_doc(2))
+        self.build(make_doc(1, versions={"fusion-net-10": "16.0.0"}), make_doc(2))
         output = os.path.join(self.runs_dir, "history.json")
         with open(output, "rb") as f:
             first = f.read()

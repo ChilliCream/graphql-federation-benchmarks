@@ -7,7 +7,7 @@ have no .NET installed, so the subgraphs-net prebuilt artifacts carry their
 own bundled runtime (see each subgraphs-net/build.sh).
 
 Reads the gateway selection from the SELECTED_GATEWAY environment variable
-("all" or a gateway base name such as "fusion" or "fusion-nightly-net11") and
+("all" or a gateway base name such as "fusion-net-10" or "fusion-nightly-net-11") and
 an optional exact HotChocolate pin from FUSION_VERSION (empty means resolve
 the latest per channel; applies to fusion-family gateways only) and writes
 the matrices to the file named by GITHUB_OUTPUT (or stdout when
@@ -40,6 +40,41 @@ FUSION_BASE_NAMES = tuple(v["id"] for v in VARIANTS if PRODUCT_BY_VARIANT[v["id"
 
 # Fusion variants running preview HotChocolate packages.
 NIGHTLY_BASE_NAMES = tuple(v for v in FUSION_BASE_NAMES if VARIANTS_BY_ID[v].get("channel") == "preview")
+
+# Historical Fusion variant ids renamed to the explicit
+# fusion[-fed]-{net-10,net-11,aot-11} scheme (with a -nightly- infix for
+# preview builds). Old runs measured exactly what the new ids describe:
+#   fusion                  -> fusion-net-10              (stable, composite, .NET 10 JIT)
+#   fusion-nightly          -> fusion-nightly-net-10      (preview, composite, .NET 10 JIT)
+#   fusion-nightly-net11    -> fusion-nightly-net-11      (preview, composite, .NET 11 JIT + runtime-async)
+#   fusion-nightly-fed      -> fusion-nightly-fed-net-10  (preview, federation, .NET 10 JIT)
+# No old run measured a stable fed, stable .NET 11, or any AOT build, so those
+# new ids have no historical mapping by construction.
+FUSION_VARIANT_MIGRATION = {
+    "fusion": "fusion-net-10",
+    "fusion-nightly": "fusion-nightly-net-10",
+    "fusion-nightly-net11": "fusion-nightly-net-11",
+    "fusion-nightly-fed": "fusion-nightly-fed-net-10",
+}
+
+
+def migrate_fusion_variant(variant_id):
+    """Map a historical Fusion variant id to its current canonical id."""
+    return FUSION_VARIANT_MIGRATION.get(variant_id, variant_id)
+
+
+# Historical Feddi product/variant id renamed to feddi-gateway (commit
+# a9becec): the gateway directory, product id/name, variant id, and every
+# scenario gateway/variant reference changed from "feddi" to "feddi-gateway".
+# Measured values are unaffected; only the tag changed.
+FEDDI_VARIANT_MIGRATION = {
+    "feddi": "feddi-gateway",
+}
+
+
+def migrate_feddi_variant(variant_id):
+    """Map a historical Feddi variant id to its current canonical id."""
+    return FEDDI_VARIANT_MIGRATION.get(variant_id, variant_id)
 
 
 def report_platform(language, runtime=None, features=()):
@@ -161,7 +196,7 @@ def resolve_hotchocolate_channels(versions):
 
 def hotchocolate_preview_is_ahead():
     # Query NuGet for the HotChocolate version feed. On any failure return
-    # (False, None, None) so fusion-nightly is skipped unless explicitly asked for.
+    # (False, None, None) so fusion-nightly-* is skipped unless explicitly asked for.
     url = "https://api.nuget.org/v3-flatcontainer/hotchocolate.aspnetcore/index.json"
     try:
         with urllib.request.urlopen(url, timeout=30) as resp:
@@ -170,7 +205,7 @@ def hotchocolate_preview_is_ahead():
     except Exception as exc:  # noqa: BLE001
         print(
             f"Warning: could not query NuGet for HotChocolate preview status ({exc}); "
-            "fusion-nightly will be skipped unless explicitly selected."
+            "fusion-nightly variants will be skipped unless explicitly selected."
         )
         return False, None, None
 
@@ -192,6 +227,7 @@ def build_gateway_entries(fusion_version=""):
             "base_name": name,
             "channel": variant.get("channel", "stable"),
             "dotnet": variant.get("dotnet", "10"),
+            "aot": "1" if variant.get("aot") else "0",
             "subgraphs": SUBGRAPHS_DIR,
             "subgraph_tech": SUBGRAPH_TECH,
             "display_name": f"{name} (HotChocolate subgraphs)",
@@ -232,11 +268,11 @@ def select_gateways(selected, preview_check=hotchocolate_preview_is_ahead,
     else:
         chosen = [entry for entry in gateways if entry["base_name"] == selected]
 
-    # Skip the fusion-nightly (preview) variants — both the .NET 10 and the
-    # .NET 11 build — unless a HotChocolate prerelease newer than the latest
-    # stable exists; otherwise "nightly" would benchmark a build older than (or
-    # equal to) the stable run. An explicit fusion-nightly* selection — or an
-    # explicit FUSION_VERSION pin — is always honored.
+    # Skip the fusion-nightly-* (preview) variants unless a HotChocolate
+    # prerelease newer than the latest stable exists; otherwise "nightly"
+    # would benchmark a build older than (or equal to) the stable run. An
+    # explicit fusion-nightly-* selection — or an explicit FUSION_VERSION
+    # pin — is always honored.
     nightly_in_chosen = any(e["base_name"] in NIGHTLY_BASE_NAMES for e in chosen)
     nightly_explicit = selected in NIGHTLY_BASE_NAMES
     if nightly_in_chosen and not nightly_explicit and not fusion_version:
@@ -285,6 +321,7 @@ def build_matrices(selected, preview_check=hotchocolate_preview_is_ahead,
             "artifact": artifact,
             "channel": entry["channel"],
             "dotnet": entry["dotnet"],
+            "aot": entry.get("aot", "0"),
         }
         if entry.get("version"):
             build["version"] = entry["version"]

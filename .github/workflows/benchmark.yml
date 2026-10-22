@@ -23,10 +23,18 @@ on:
           - hive-gateway
           - hive-gateway-router-runtime
           - hive-router
-          - fusion
-          - fusion-nightly
-          - fusion-nightly-net11
-          - fusion-nightly-fed
+          - fusion-net-10
+          - fusion-net-11
+          - fusion-aot-11
+          - fusion-fed-net-10
+          - fusion-fed-net-11
+          - fusion-fed-aot-11
+          - fusion-nightly-net-10
+          - fusion-nightly-net-11
+          - fusion-nightly-aot-11
+          - fusion-nightly-fed-net-10
+          - fusion-nightly-fed-net-11
+          - fusion-nightly-fed-aot-11
           - feddi-gateway
       fusion_version:
         description: 'Fusion-family gateway version pin (e.g. 16.6.8). Non-fusion gateways ignore this input.'
@@ -181,6 +189,7 @@ jobs:
         env:
           BENCH_GATEWAY_CHANNEL: ${{ matrix.gateway.channel || 'stable' }}
           BENCH_GATEWAY_DOTNET: ${{ matrix.gateway.dotnet || '10' }}
+          BENCH_GATEWAY_AOT: ${{ matrix.gateway.aot || '0' }}
           BENCH_GATEWAY_VERSION: ${{ matrix.gateway.version || '' }}
         run: |
           chmod +x "${{ matrix.gateway.path }}/install.sh"

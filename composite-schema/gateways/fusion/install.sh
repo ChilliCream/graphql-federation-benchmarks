@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# The Fusion gateway is benchmarked along two independent axes:
+# The Fusion gateway is benchmarked along three independent axes:
 #
 #   BENCH_GATEWAY_CHANNEL  which HotChocolate NuGet packages to build against
 #                          stable  = latest non-prerelease (default)
@@ -19,14 +19,28 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 #                          11 = bundled latest .NET 11 preview SDK, targets net11.0
 #                               with runtime-async opted in
 #
+#   BENCH_GATEWAY_AOT      0 = framework-dependent JIT build (default)
+#                          1 = Native AOT publish on the selected .NET target
+#                              (only supported with BENCH_GATEWAY_DOTNET=11;
+#                              bench.props sets PublishAot and install.sh runs
+#                              dotnet publish in addition to the JIT build so
+#                              the artifact carries both outputs and start.sh
+#                              prefers the native binary when present)
+#
 # Both targets bundle their own SDK inside the gateway directory, so the runtime
 # is a property of the prebuilt artifact rather than of the machine running it.
 #
-# The two axes are orthogonal, which is what lets the matrix run the preview
-# packages on BOTH runtimes to isolate framework effects (e.g. runtime-async):
-#   fusion               = stable  packages on .NET 10
-#   fusion-nightly       = preview packages on .NET 10
-#   fusion-nightly-net11 = preview packages on .NET 11
+# Channel and runtime are orthogonal, which is what lets the matrix run the same
+# packages on both runtimes to isolate framework effects (e.g. runtime-async).
+# This directory hosts the composite-schema (non-fed) variants; the federation
+# (fed) variants share the same axes from apollo-federation/gateways/fusion-fed:
+#   fusion-net-10            = stable  packages on .NET 10 JIT
+#   fusion-net-11            = stable  packages on .NET 11 JIT + runtime-async
+#   fusion-aot-11            = stable  packages on .NET 11 Native AOT
+#   fusion-nightly-net-10    = preview packages on .NET 10 JIT
+#   fusion-nightly-net-11    = preview packages on .NET 11 JIT + runtime-async
+#   fusion-nightly-aot-11    = preview packages on .NET 11 Native AOT
+# (plus the six fusion-fed-* / fusion-nightly-fed-* counterparts).
 
 # --- Resolve the HotChocolate package channel --------------------------------
 CHANNEL="${BENCH_GATEWAY_CHANNEL:-stable}"
@@ -65,6 +79,20 @@ case "$DOTNET_TARGET" in
     ;;
 esac
 
+# --- Resolve Native AOT publish ------------------------------------------------
+AOT="${BENCH_GATEWAY_AOT:-0}"
+case "$AOT" in
+  0|1) ;;
+  *)
+    echo "ERROR: unknown BENCH_GATEWAY_AOT='$AOT' (expected '0' or '1')"
+    exit 1
+    ;;
+esac
+if [[ "$AOT" == "1" && "$DOTNET_TARGET" != "11" ]]; then
+  echo "ERROR: BENCH_GATEWAY_AOT=1 requires BENCH_GATEWAY_DOTNET=11 (AOT variants are .NET 11 only)"
+  exit 1
+fi
+
 # --- Target-specific build inputs --------------------------------------------
 # The benchmark machine runs the *prebuilt* artifact and never executes this
 # script, so the artifact itself must carry the runtime it is meant to be
@@ -80,7 +108,8 @@ esac
 #                                    global.json, which pins .NET 10 / latestMinor)
 #   - eShop.Gateway/bench.props      generated only when needed (imported by the
 #                                    csproj only when present): net11 retarget +
-#                                    runtime-async for the .NET 11 target, and
+#                                    runtime-async for the .NET 11 target,
+#                                    PublishAot for BENCH_GATEWAY_AOT=1, and
 #                                    FUSION_16_7_OR_GREATER when the resolved
 #                                    HotChocolate version is 16.7 or greater
 BUNDLED_DOTNET_DIR="$SCRIPT_DIR/.dotnet"
@@ -219,7 +248,7 @@ done
 # Imported by eShop.Gateway.csproj only when present, so a plain `dotnet build`
 # without install.sh (stable pins below 16.7) compiles with no extra settings
 # and the ModifyCostOptions call in Program.cs compiled out. Contents depend on
-# both benchmark axes:
+# the benchmark axes:
 #   - .NET 11 target: retarget the gateway to net11.0 and opt into .NET 11
 #     runtime-async. runtime-async replaces compiler-generated async state
 #     machines with the runtime-provided async feature. Since .NET 11 Preview 3
@@ -230,12 +259,16 @@ done
 #     project (eShop.Gateway); the prebuilt HotChocolate packages must be
 #     compiled with runtime-async=on upstream to exercise it through
 #     HotChocolate's execution pipeline.
+#   - BENCH_GATEWAY_AOT=1: set PublishAot so `dotnet publish` emits a native
+#     binary (the csproj already sets IsAotCompatible). The JIT build is still
+#     produced first so the artifact carries the single TFM dir benchmark.sh
+#     expects; start.sh prefers the native publish output when present.
 #   - HotChocolate 16.7 or greater: define FUSION_16_7_OR_GREATER so Program.cs
 #     compiles in the ModifyCostOptions call that disables gateway-side cost
 #     enforcement. The major.minor comparison is numeric, so 16.7 previews
 #     count and so does 16.10+.
-# A .NET 10 build against HotChocolate below 16.7 needs neither, so no file is
-# written and the csproj import stays dormant.
+# A .NET 10 JIT build against HotChocolate below 16.7 needs none of these, so
+# no file is written and the csproj import stays dormant.
 VERSION_CORE="${SELECTED_VERSION%%-*}"
 VERSION_MAJOR="${VERSION_CORE%%.*}"
 VERSION_TAIL="${VERSION_CORE#*.}"
@@ -246,7 +279,7 @@ if [[ "$VERSION_MAJOR" =~ ^[0-9]+$ && "$VERSION_MINOR" =~ ^[0-9]+$ ]] \
   FUSION_COST_DEFINE="FUSION_16_7_OR_GREATER"
 fi
 
-if [[ "$DOTNET_TARGET" == "11" || -n "$FUSION_COST_DEFINE" ]]; then
+if [[ "$DOTNET_TARGET" == "11" || "$AOT" == "1" || -n "$FUSION_COST_DEFINE" ]]; then
   {
     echo '<Project>'
     echo '  <PropertyGroup>'
@@ -255,13 +288,16 @@ if [[ "$DOTNET_TARGET" == "11" || -n "$FUSION_COST_DEFINE" ]]; then
       echo '    <TargetFrameworks>net11.0</TargetFrameworks>'
       echo '    <Features>$(Features);runtime-async=on</Features>'
     fi
+    if [[ "$AOT" == "1" ]]; then
+      echo '    <PublishAot>true</PublishAot>'
+    fi
     if [[ -n "$FUSION_COST_DEFINE" ]]; then
       echo "    <DefineConstants>\$(DefineConstants);${FUSION_COST_DEFINE}</DefineConstants>"
     fi
     echo '  </PropertyGroup>'
     echo '</Project>'
   } > "$BENCH_PROPS"
-  echo "Generated bench.props (dotnet: $DOTNET_TARGET, cost define: ${FUSION_COST_DEFINE:-none})."
+  echo "Generated bench.props (dotnet: $DOTNET_TARGET, aot: $AOT, cost define: ${FUSION_COST_DEFINE:-none})."
 fi
 
 # --- Build ---
@@ -275,8 +311,13 @@ if [[ -d "$GATEWAY_BIN_DIR" ]]; then
     ! -name "net${DOTNET_TARGET}.0" -exec rm -rf {} +
 fi
 
-echo "Building Fusion gateway ($CHANNEL channel, .NET $DOTNET_TARGET)..."
+echo "Building Fusion gateway ($CHANNEL channel, .NET $DOTNET_TARGET, AOT=$AOT)..."
 cd "$SCRIPT_DIR/eShop.Gateway" && "$DOTNET" build -c Release --nologo -v quiet
 
+if [[ "$AOT" == "1" ]]; then
+  echo "Publishing Fusion gateway as Native AOT (.NET $DOTNET_TARGET)..."
+  cd "$SCRIPT_DIR/eShop.Gateway" && "$DOTNET" publish -c Release --nologo -v quiet
+fi
+
 echo "$SELECTED_VERSION" > "$SCRIPT_DIR/version.txt"
-echo "Fusion gateway build complete (channel: $CHANNEL, dotnet: $DOTNET_TARGET, version: $SELECTED_VERSION)."
+echo "Fusion gateway build complete (channel: $CHANNEL, dotnet: $DOTNET_TARGET, aot: $AOT, version: $SELECTED_VERSION)."

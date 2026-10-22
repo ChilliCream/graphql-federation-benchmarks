@@ -209,7 +209,7 @@
       "repositoryUrl": "https://github.com/ChilliCream/graphql-platform",
       "variants": [
         {
-          "id": "fusion",
+          "id": "fusion-net-10",
           "version": "16.5.1",
           "composition": "composite-schema",
           "platform": {
@@ -630,7 +630,7 @@
           "gateway": "fusion",
           "variants": [
             {
-              "variant": "fusion",
+              "variant": "fusion-net-10",
               "status": "complete",
               "throughput": {
                 "medianRps": 2443,
@@ -1104,7 +1104,7 @@
           "gateway": "fusion",
           "variants": [
             {
-              "variant": "fusion",
+              "variant": "fusion-net-10",
               "status": "complete",
               "throughput": {
                 "medianRps": 1859,
@@ -1577,7 +1577,7 @@
           "gateway": "fusion",
           "variants": [
             {
-              "variant": "fusion",
+              "variant": "fusion-net-10",
               "status": "complete",
               "throughput": {
                 "medianRps": 2355,

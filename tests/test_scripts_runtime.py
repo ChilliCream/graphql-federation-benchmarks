@@ -361,11 +361,11 @@ class GenerateResultsTests(unittest.TestCase):
     def test_dotnet_only_table(self):
         for mode in ("constant", "constant-latency", "burst"):
             with self.subTest(mode=mode):
-                md = self.run_generator(["fusion", "cosmo"], mode=mode)
+                md = self.run_generator(["fusion-net-10", "cosmo"], mode=mode)
                 self.assertIn("### Results\n", md)
                 self.assertNotIn("Rust Subgraphs", md)
                 self.assertIn("Each benchmark runs a GraphQL gateway with 4 subgraphs and executes", md)
-                self.assertIn("| fusion |", md)
+                self.assertIn("| fusion-net-10 |", md)
                 self.assertIn("| cosmo |", md)
 
     def test_apollo_router_generations_have_separate_rows(self):
@@ -390,12 +390,12 @@ class GenerateResultsTests(unittest.TestCase):
         self.assertIn("benchmark run failed", preview)
 
     def test_missing_gateway_marked_failed(self):
-        md = self.run_generator(["fusion", "grafbase"], with_runs=["fusion"])
+        md = self.run_generator(["fusion-net-10", "grafbase"], with_runs=["fusion-net-10"])
         self.assertIn("| grafbase |", md)
         self.assertIn("benchmark run failed", md)
 
     def test_excluded_gateway_marked_not_run(self):
-        md = self.run_generator(["fusion", "feddi-gateway"], with_runs=["fusion"], not_run=("feddi-gateway",))
+        md = self.run_generator(["fusion-net-10", "feddi-gateway"], with_runs=["fusion-net-10"], not_run=("feddi-gateway",))
         feddi_rows = [line for line in md.splitlines() if line.startswith("| feddi-gateway |")]
         self.assertEqual(len(feddi_rows), 1)
         self.assertIn("not run", feddi_rows[0])
@@ -407,7 +407,7 @@ class GenerateResultsTests(unittest.TestCase):
         self.addCleanup(shutil.rmtree, workdir, True)
         artifacts = os.path.join(workdir, "artifacts")
         os.makedirs(artifacts)
-        make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)")
+        make_run(artifacts, "fusion-net-10", "fusion-net-10 (HotChocolate subgraphs)")
         make_tech_run(
             artifacts,
             "cosmo",
@@ -418,7 +418,7 @@ class GenerateResultsTests(unittest.TestCase):
         outdir = os.path.join(workdir, "out")
         env = dict(os.environ)
         env["EXPECTED_GATEWAYS_JSON"] = json.dumps(
-            [expected_entry("fusion"), expected_entry("cosmo")]
+            [expected_entry("fusion-net-10"), expected_entry("cosmo")]
         )
         env["RESULT_MODES"] = "constant"
         proc = subprocess.run(
@@ -448,14 +448,14 @@ class GenerateResultsTests(unittest.TestCase):
         os.makedirs(artifacts)
         make_tech_run(
             artifacts,
-            "fusion",
-            "fusion (.NET subgraphs)",
+            "fusion-net-10",
+            "fusion-net-10 (.NET subgraphs)",
             subgraph_tech=".net",
             subgraphs="subgraphs-net",
         )
         outdir = os.path.join(workdir, "out")
         env = dict(os.environ)
-        env["EXPECTED_GATEWAYS_JSON"] = json.dumps([expected_entry("fusion")])
+        env["EXPECTED_GATEWAYS_JSON"] = json.dumps([expected_entry("fusion-net-10")])
         env["RESULT_MODES"] = "constant"
         proc = subprocess.run(
             ["python3", os.path.join(REPO_ROOT, "k6", "generate-results.py"), artifacts, outdir],
@@ -469,7 +469,7 @@ class GenerateResultsTests(unittest.TestCase):
         with open(os.path.join(outdir, "RESULTS_CONSTANT.md")) as fh:
             md = fh.read()
         self.assertIn("### Results\n", md)
-        self.assertIn("| fusion |", md)
+        self.assertIn("| fusion-net-10 |", md)
 
     def test_new_hotchocolate_display_name_parses_without_tech(self):
         # The new "(HotChocolate subgraphs)" label must resolve to the .net
@@ -550,11 +550,11 @@ class GenerateResultsJsonTests(unittest.TestCase):
 
     def test_scenarios_and_variant_statuses_follow_job_results_and_matrix(self):
         artifacts = self.make_artifacts()
-        make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)", mode="constant")
-        make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)", mode="burst")
+        make_run(artifacts, "fusion-net-10", "fusion-net-10 (HotChocolate subgraphs)", mode="constant")
+        make_run(artifacts, "fusion-net-10", "fusion-net-10 (HotChocolate subgraphs)", mode="burst")
         doc = self.run_json_generator(artifacts, {
             "EXPECTED_GATEWAYS_JSON": json.dumps(
-                [expected_entry(g) for g in ("fusion", "grafbase", "feddi-gateway")]
+                [expected_entry(g) for g in ("fusion-net-10", "grafbase", "feddi-gateway")]
             ),
             "SCENARIO_RESULTS_JSON": json.dumps(
                 {"constant": "success", "burst": "failure", "constant-latency": "skipped"}
@@ -572,21 +572,21 @@ class GenerateResultsJsonTests(unittest.TestCase):
         self.assertEqual(doc["hardware"]["memoryGb"], 32)
 
         versions = {v["id"]: v["version"] for g in doc["gateways"] for v in g["variants"]}
-        self.assertEqual(versions, {"fusion": "16.6.0", "grafbase": None, "feddi-gateway": None})
+        self.assertEqual(versions, {"fusion-net-10": "16.6.0", "grafbase": None, "feddi-gateway": None})
 
         constant, results = self.results_by_variant(doc, "constant")
         self.assertNotIn("status", constant)
-        self.assertEqual(results["fusion"]["throughput"]["medianRps"], 1000)
-        self.assertEqual(results["fusion"]["throughput"]["runsRps"], [1000])
-        self.assertEqual(results["fusion"]["requests"], {"total": 120000, "successful": 120000, "failed": 0})
-        self.assertEqual(results["fusion"]["status"], "complete")
+        self.assertEqual(results["fusion-net-10"]["throughput"]["medianRps"], 1000)
+        self.assertEqual(results["fusion-net-10"]["throughput"]["runsRps"], [1000])
+        self.assertEqual(results["fusion-net-10"]["requests"], {"total": 120000, "successful": 120000, "failed": 0})
+        self.assertEqual(results["fusion-net-10"]["status"], "complete")
         self.assertEqual(results["grafbase"], {"variant": "grafbase", "status": "failed"})
         self.assertEqual(results["feddi-gateway"], {"variant": "feddi-gateway", "status": "failed"})
-        self.assertEqual(set(results), {"fusion", "grafbase", "feddi-gateway"})
+        self.assertEqual(set(results), {"fusion-net-10", "grafbase", "feddi-gateway"})
 
         burst, results = self.results_by_variant(doc, "burst")
         self.assertNotIn("status", burst)
-        self.assertEqual(results["fusion"]["status"], "complete")
+        self.assertEqual(results["fusion-net-10"]["status"], "complete")
         self.assertEqual(results["grafbase"]["status"], "failed")
         self.assertEqual(results["feddi-gateway"]["status"], "failed")
 
@@ -641,16 +641,16 @@ class GenerateResultsJsonTests(unittest.TestCase):
         artifacts = self.make_artifacts()
         make_run(
             artifacts,
-            "fusion",
-            "fusion (HotChocolate subgraphs)",
+            "fusion-net-10",
+            "fusion-net-10 (HotChocolate subgraphs)",
             extra_metadata={"total_runs": 3},
         )
         doc = self.run_json_generator(artifacts, {
-            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion")]),
+            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion-net-10")]),
         })
         _, results = self.results_by_variant(doc, "constant")
-        self.assertEqual(results["fusion"]["status"], "failed")
-        self.assertEqual(results["fusion"]["throughput"]["runsRps"], [1000])
+        self.assertEqual(results["fusion-net-10"]["status"], "failed")
+        self.assertEqual(results["fusion-net-10"]["throughput"]["runsRps"], [1000])
 
     def test_cpuset_parsing_and_cpu_utilization(self):
         gen = load_generator()
@@ -684,16 +684,16 @@ class GenerateResultsJsonTests(unittest.TestCase):
         artifacts = self.make_artifacts()
         header = "Seconds,VUs,RPS,P95_ms,Req_success_rate,Total_CPU,K6_Core_CPU,Subgraph_Core_CPU,Gateway_Core_CPU,Total_RSS_KB\n"
         make_run(
-            artifacts, "fusion", "fusion (HotChocolate subgraphs)", mode="constant-latency",
+            artifacts, "fusion-net-10", "fusion-net-10 (HotChocolate subgraphs)", mode="constant-latency",
             extra_metadata={"gateway_cpuset": "2-3", "subgraph_delay_ms": 7},
             data_csv=header + "1,50,1,1,1,400,10,10,25.00,1\n2,50,1,1,1,400,10,10,75.00,1\n",
         )
         doc = self.run_json_generator(artifacts, {
-            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion")]),
+            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion-net-10")]),
         })
         scenario, results = self.results_by_variant(doc, "constant-latency")
         self.assertEqual(
-            results["fusion"]["cpu"],
+            results["fusion-net-10"]["cpu"],
             {"avgUtilizationPercent": 50.0, "maxUtilizationPercent": 75.0},
         )
         self.assertEqual(
@@ -714,12 +714,12 @@ class GenerateResultsJsonTests(unittest.TestCase):
         artifacts = self.make_artifacts()
         make_run(
             artifacts,
-            "fusion",
-            "fusion (HotChocolate subgraphs)",
+            "fusion-net-10",
+            "fusion-net-10 (HotChocolate subgraphs)",
             extra_metadata={"subgraph_delay_ms": 0},
         )
         doc = self.run_json_generator(artifacts, {
-            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion")]),
+            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion-net-10")]),
         })
         constant, _ = self.results_by_variant(doc, "constant")
         self.assertEqual(constant["config"]["subgraphDelayMs"], 0)
@@ -732,15 +732,15 @@ class GenerateResultsJsonTests(unittest.TestCase):
             "gateway_cpuset": "2",
             "subgraphs_cpuset": "3-5",
         }
-        make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)", run_index=1, extra_metadata=pins)
-        make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)", run_index=2, extra_metadata=pins)
-        make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)", run_index=3,
+        make_run(artifacts, "fusion-net-10", "fusion-net-10 (HotChocolate subgraphs)", run_index=1, extra_metadata=pins)
+        make_run(artifacts, "fusion-net-10", "fusion-net-10 (HotChocolate subgraphs)", run_index=2, extra_metadata=pins)
+        make_run(artifacts, "fusion-net-10", "fusion-net-10 (HotChocolate subgraphs)", run_index=3,
                  extra_metadata={
                      "system_cpuset": "6", "k6_cpuset": "9",
                      "gateway_cpuset": "7", "subgraphs_cpuset": "8",
                  })
         doc = self.run_json_generator(artifacts, {
-            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion")]),
+            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion-net-10")]),
         })
         constant, _ = self.results_by_variant(doc, "constant")
         self.assertEqual(constant["config"]["cpuAllocation"], {
@@ -750,22 +750,22 @@ class GenerateResultsJsonTests(unittest.TestCase):
             "subgraphs": {"threadIds": [3, 4, 5], "hardwareThreads": 3},
         })
         artifacts = self.make_artifacts()
-        make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)",
+        make_run(artifacts, "fusion-net-10", "fusion-net-10 (HotChocolate subgraphs)",
                  extra_metadata={
                      "system_cpuset": "", "k6_cpuset": "",
                      "gateway_cpuset": "", "subgraphs_cpuset": "",
                  })
         doc = self.run_json_generator(artifacts, {
-            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion")]),
+            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion-net-10")]),
         })
         constant, _ = self.results_by_variant(doc, "constant")
         self.assertNotIn("cpuAllocation", constant["config"])
 
     def test_cpu_allocation_falls_back_to_profiles(self):
         artifacts = self.make_artifacts()
-        make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)", mode="burst")
+        make_run(artifacts, "fusion-net-10", "fusion-net-10 (HotChocolate subgraphs)", mode="burst")
         doc = self.run_json_generator(artifacts, {
-            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion")]),
+            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion-net-10")]),
         })
         burst, _ = self.results_by_variant(doc, "burst")
         with open(os.path.join(REPO_ROOT, "profiles.json")) as fh:
@@ -784,8 +784,8 @@ class GenerateResultsJsonTests(unittest.TestCase):
         topology = [[thread, thread % 8] for thread in range(16)]
         make_run(
             artifacts,
-            "fusion",
-            "fusion (HotChocolate subgraphs)",
+            "fusion-net-10",
+            "fusion-net-10 (HotChocolate subgraphs)",
             extra_metadata={
                 "cpu_topology": topology,
                 "system_cpuset": "0,8",
@@ -795,7 +795,7 @@ class GenerateResultsJsonTests(unittest.TestCase):
             },
         )
         doc = self.run_json_generator(artifacts, {
-            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion")]),
+            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion-net-10")]),
         })
         self.assertEqual(doc["hardware"], {
             "host": "test-host",
@@ -828,9 +828,9 @@ class GenerateResultsJsonTests(unittest.TestCase):
     def test_scenario_config_for_older_artifacts(self):
         artifacts = self.make_artifacts()
         for mode in ("burst", "constant-latency"):
-            make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)", mode=mode)
+            make_run(artifacts, "fusion-net-10", "fusion-net-10 (HotChocolate subgraphs)", mode=mode)
         doc = self.run_json_generator(artifacts, {
-            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion")]),
+            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion-net-10")]),
         })
         configs = {s["id"]: s["config"] for s in doc["scenarios"]}
         self.assertEqual(configs["constant-latency"]["subgraphDelayMs"], 4)
@@ -843,9 +843,9 @@ class GenerateResultsJsonTests(unittest.TestCase):
 
     def test_started_at_null_when_unknown(self):
         artifacts = self.make_artifacts()
-        make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)")
+        make_run(artifacts, "fusion-net-10", "fusion-net-10 (HotChocolate subgraphs)")
         doc = self.run_json_generator(artifacts, {
-            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion")]),
+            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion-net-10")]),
             "RUN_STARTED_AT": "",
         })
         self.assertIsNone(doc["run"]["startedAt"])
@@ -854,9 +854,9 @@ class GenerateResultsJsonTests(unittest.TestCase):
         artifacts = self.make_artifacts()
         summary = json.loads(json.dumps(SUMMARY))
         summary.update({"duration": "60s", "plannedDurationSeconds": 60})
-        make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)", mode="burst", summary=summary)
+        make_run(artifacts, "fusion-net-10", "fusion-net-10 (HotChocolate subgraphs)", mode="burst", summary=summary)
         doc = self.run_json_generator(artifacts, {
-            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion")]),
+            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion-net-10")]),
         })
         burst = next(s for s in doc["scenarios"] if s["id"] == "burst")
         self.assertEqual(burst["config"]["durationSeconds"], 60)
@@ -864,39 +864,39 @@ class GenerateResultsJsonTests(unittest.TestCase):
 
     def test_captured_versions_reported_without_fallbacks(self):
         artifacts = self.make_artifacts()
-        make_run(artifacts, "fusion", "fusion (HotChocolate subgraphs)", extra_metadata={
+        make_run(artifacts, "fusion-net-10", "fusion-net-10 (HotChocolate subgraphs)", extra_metadata={
             "runtime_version": "10.0.13", "subgraphs_runtime_version": "10.0.13",
             "subgraphs_hotchocolate_version": "16.6.8",
         })
         make_run(artifacts, "cosmo", "cosmo (HotChocolate subgraphs)")
         doc = self.run_json_generator(artifacts, {
-            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion"), expected_entry("cosmo")]),
+            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion-net-10"), expected_entry("cosmo")]),
         })
         variants = {v["id"]: v for g in doc["gateways"] for v in g["variants"]}
-        self.assertEqual(variants["fusion"]["platform"]["runtime"], {"name": ".NET", "version": "10.0.13"})
+        self.assertEqual(variants["fusion-net-10"]["platform"]["runtime"], {"name": ".NET", "version": "10.0.13"})
         self.assertEqual(variants["cosmo"]["platform"]["runtime"], {"name": "Go"})
         self.assertEqual(doc["subgraphs"]["framework"], {"name": "Hot Chocolate", "version": "16.6.8"})
         self.assertEqual(doc["subgraphs"]["platform"]["runtime"], {"name": ".NET", "version": "10.0.13"})
 
     def test_variant_display_metadata_passed_through(self):
         artifacts = self.make_artifacts()
-        make_run(artifacts, "fusion-nightly-fed", "fusion-nightly-fed (HotChocolate subgraphs)")
+        make_run(artifacts, "fusion-nightly-fed-net-10", "fusion-nightly-fed-net-10 (HotChocolate subgraphs)")
         doc = self.run_json_generator(artifacts, {
             "EXPECTED_GATEWAYS_JSON": json.dumps([
                 expected_entry(variant_id)
                 for variant_id in (
-                    "fusion", "fusion-nightly", "fusion-nightly-net11",
-                    "fusion-nightly-fed", "feddi-gateway",
+                    "fusion-net-10", "fusion-nightly-net-10", "fusion-nightly-net-11",
+                    "fusion-nightly-fed-net-10", "feddi-gateway",
                 )
             ]),
         })
         variants = {v["id"]: v for g in doc["gateways"] for v in g["variants"]}
-        self.assertEqual(variants["fusion-nightly"]["label"], "Fusion Nightly")
-        self.assertEqual(variants["fusion-nightly-net11"]["label"], "Fusion Nightly")
-        self.assertEqual(variants["fusion-nightly-fed"]["label"], "Fusion Nightly")
+        self.assertEqual(variants["fusion-nightly-net-10"]["label"], "Fusion Nightly")
+        self.assertEqual(variants["fusion-nightly-net-11"]["label"], "Fusion Nightly")
+        self.assertEqual(variants["fusion-nightly-fed-net-10"]["label"], "Fusion Nightly")
         self.assertIs(variants["feddi-gateway"]["preview"], True)
-        self.assertNotIn("label", variants["fusion"])
-        self.assertNotIn("preview", variants["fusion"])
+        self.assertNotIn("label", variants["fusion-net-10"])
+        self.assertNotIn("preview", variants["fusion-net-10"])
 
     def test_median_run_tie_broken_by_execution_order(self):
         artifacts = self.make_artifacts()
@@ -906,14 +906,14 @@ class GenerateResultsJsonTests(unittest.TestCase):
                 stat: float(run_index) for stat in ("avg", "min", "med", "max", "p(90)", "p(95)", "p(99.9)")
             }
             make_run(
-                artifacts, "fusion", "fusion (HotChocolate subgraphs)",
+                artifacts, "fusion-net-10", "fusion-net-10 (HotChocolate subgraphs)",
                 run_index=run_index, summary=summary,
             )
         doc = self.run_json_generator(artifacts, {
-            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion")]),
+            "EXPECTED_GATEWAYS_JSON": json.dumps([expected_entry("fusion-net-10")]),
         })
         _, results = self.results_by_variant(doc, "constant")
-        self.assertEqual(results["fusion"]["latencyMs"]["avg"], 2.0)
+        self.assertEqual(results["fusion-net-10"]["latencyMs"]["avg"], 2.0)
 
 
 class BackfillRuntimeVersionTests(unittest.TestCase):
@@ -929,11 +929,11 @@ class BackfillRuntimeVersionTests(unittest.TestCase):
             "gateways": [{
                 "variants": [
                     {
-                        "id": "fusion",
+                        "id": "fusion-net-10",
                         "platform": {"runtime": {"name": ".NET"}},
                     },
                     {
-                        "id": "fusion-nightly-net11",
+                        "id": "fusion-nightly-net-11",
                         "platform": {"runtime": {"name": ".NET"}},
                     },
                 ],
@@ -948,13 +948,13 @@ class BackfillRuntimeVersionTests(unittest.TestCase):
             "gateways": [{
                 "variants": [
                     {
-                        "id": "fusion",
+                        "id": "fusion-net-10",
                         "platform": {
                             "runtime": {"name": ".NET", "version": "10.0.13"},
                         },
                     },
                     {
-                        "id": "fusion-nightly-net11",
+                        "id": "fusion-nightly-net-11",
                         "platform": {
                             "runtime": {
                                 "name": ".NET",
@@ -1347,7 +1347,7 @@ class FusionVersionOverrideTests(unittest.TestCase):
             REPO_ROOT,
             "apollo-federation",
             "gateways",
-            "fusion-nightly-fed",
+            "fusion-fed",
             "install.sh",
         ),
     )
