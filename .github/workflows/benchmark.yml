@@ -347,6 +347,7 @@ jobs:
         env:
           BENCH_DISPLAY_NAME: ${{ matrix.gateway.display_name || '' }}
           BENCH_GATEWAY_NAME: ${{ matrix.gateway.base_name || '' }}
+          BENCH_GATEWAY_AOT: ${{ matrix.gateway.aot || '0' }}
           BENCH_SUBGRAPH_TECH: ${{ matrix.gateway.subgraph_tech || '' }}
           BENCH_DIAGNOSTIC_RUN: ${{ needs.prepare-matrix.outputs.is_diagnostic == 'true' && '1' || '0' }}
           BENCH_DIAGNOSTICS_DIR: ${{ github.workspace }}/${{ matrix.gateway.path }}/diagnostics
@@ -532,6 +533,7 @@ jobs:
         env:
           BENCH_DISPLAY_NAME: ${{ matrix.gateway.display_name || '' }}
           BENCH_GATEWAY_NAME: ${{ matrix.gateway.base_name || '' }}
+          BENCH_GATEWAY_AOT: ${{ matrix.gateway.aot || '0' }}
           BENCH_SUBGRAPH_TECH: ${{ matrix.gateway.subgraph_tech || '' }}
           BENCH_DIAGNOSTIC_RUN: ${{ needs.prepare-matrix.outputs.is_diagnostic == 'true' && '1' || '0' }}
           BENCH_DIAGNOSTICS_DIR: ${{ github.workspace }}/${{ matrix.gateway.path }}/diagnostics
@@ -708,6 +710,7 @@ jobs:
         env:
           BENCH_DISPLAY_NAME: ${{ matrix.gateway.display_name || '' }}
           BENCH_GATEWAY_NAME: ${{ matrix.gateway.base_name || '' }}
+          BENCH_GATEWAY_AOT: ${{ matrix.gateway.aot || '0' }}
           BENCH_SUBGRAPH_TECH: ${{ matrix.gateway.subgraph_tech || '' }}
           BENCH_DIAGNOSTIC_RUN: ${{ needs.prepare-matrix.outputs.is_diagnostic == 'true' && '1' || '0' }}
           BENCH_DIAGNOSTICS_DIR: ${{ github.workspace }}/${{ matrix.gateway.path }}/diagnostics

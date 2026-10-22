@@ -115,6 +115,21 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("matrix.gateway.aot", self.workflow)
         self.assertIn("BENCH_GATEWAY_AOT", self.workflow)
 
+    def test_runtime_benchmark_steps_forward_aot_flag(self):
+        # start.sh defaults a missing BENCH_GATEWAY_AOT to JIT ("0"), so
+        # every runtime "Run benchmark" step must forward matrix.gateway.aot;
+        # otherwise a built AOT artifact would be launched (or fail to
+        # launch) as JIT at measure time.
+        blocks = self.workflow.split("- name: Run benchmark")
+        # Exactly the constant, burst and constant-latency runtime steps.
+        self.assertEqual(len(blocks), 4)
+        for block in blocks[1:]:
+            env_block = block.split("run: ./k6/benchmark.sh", 1)[1].split(
+                "USE_PREBUILT_GATEWAY:", 1
+            )[0]
+            self.assertIn("BENCH_GATEWAY_AOT", env_block)
+            self.assertIn("matrix.gateway.aot", env_block)
+
 
 class BenchmarkScriptTests(unittest.TestCase):
     def setUp(self):
