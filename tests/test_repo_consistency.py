@@ -135,6 +135,14 @@ class BenchmarkScriptTests(unittest.TestCase):
             'BENCH_GATEWAY_VERSION="${BENCH_GATEWAY_VERSION:-}"', self.script
         )
 
+    def test_forwards_gateway_aot(self):
+        # Local AOT installs/launches get the same flag install.sh and
+        # start.sh honor in CI; without it a local AOT run would silently
+        # build and measure the JIT gateway.
+        self.assertIn(
+            'BENCH_GATEWAY_AOT="${BENCH_GATEWAY_AOT:-}"', self.script
+        )
+
 
 class SubgraphScriptTests(unittest.TestCase):
     FAMILIES = ("apollo-federation", "composite-schema")
@@ -233,6 +241,12 @@ class FusionGatewayTests(unittest.TestCase):
             "apollo-federation", "gateways", "fusion-fed", "install.sh"
         ),
     )
+    START_SCRIPTS = (
+        os.path.join("composite-schema", "gateways", "fusion", "start.sh"),
+        os.path.join(
+            "apollo-federation", "gateways", "fusion-fed", "start.sh"
+        ),
+    )
     GATEWAY_CSPROJS = (
         os.path.join(
             "composite-schema", "gateways", "fusion",
@@ -318,6 +332,17 @@ class FusionGatewayTests(unittest.TestCase):
                 self.assertIn("BENCH_GATEWAY_AOT=1 requires BENCH_GATEWAY_DOTNET=11", content)
                 self.assertIn("<PublishAot>true</PublishAot>", content)
                 self.assertIn("dotnet publish", content)
+                # The publish target is a controlled `-o` dir: publish's
+                # default output is RID-qualified and start.sh must not guess
+                # it, and a stale native binary must not survive a JIT rebuild.
+                self.assertIn("AOT_PUBLISH_DIR", content)
+                self.assertIn('-o "$AOT_PUBLISH_DIR"', content)
+                self.assertIn('rm -rf "$AOT_PUBLISH_DIR"', content)
+                # The .NET 11 retarget must clear the plural TargetFrameworks:
+                # a multi-targeted build never engages the Native AOT compiler
+                # on publish, silently yielding a JIT-only artifact.
+                self.assertIn("<TargetFrameworks></TargetFrameworks>", content)
+                self.assertNotIn("<TargetFrameworks>net", content)
 
     def test_start_scripts_prefer_aot_binary(self):
         # Both fusion start.sh scripts exec the Native AOT publish output
@@ -330,6 +355,39 @@ class FusionGatewayTests(unittest.TestCase):
                 content = read(os.path.join(REPO_ROOT, gateway_dir, "start.sh"))
                 self.assertIn("bin/Release/net11.0/publish/eShop.Gateway", content)
                 self.assertIn("dotnet run -c Release --no-build", content)
+
+    def test_start_scripts_fail_closed_for_aot(self):
+        # AOT=1 without a native binary must fail instead of silently
+        # measuring the JIT build; a garbage flag must fail as well.
+        for rel in self.START_SCRIPTS:
+            with self.subTest(script=rel):
+                content = read(os.path.join(REPO_ROOT, rel))
+                self.assertIn("BENCH_GATEWAY_AOT", content)
+                self.assertIn("unknown BENCH_GATEWAY_AOT", content)
+                self.assertIn("BENCH_GATEWAY_AOT=1 but no Native AOT binary", content)
+
+    def test_start_scripts_pin_launch_url(self):
+        # A directly executed binary ignores launchSettings.json, so start.sh
+        # must replicate the http profile's applicationUrl via ASPNETCORE_URLS
+        # (the benchmark polls localhost:5220) and fail when it is missing.
+        for rel in self.START_SCRIPTS:
+            with self.subTest(script=rel):
+                content = read(os.path.join(REPO_ROOT, rel))
+                self.assertIn("ASPNETCORE_URLS", content)
+                self.assertIn("launchSettings.json", content)
+                self.assertIn("no http applicationUrl", content)
+
+    def test_generated_gateway_inputs_gitignored(self):
+        gitignore = read(os.path.join(REPO_ROOT, ".gitignore"))
+        for gateway_dir in (
+            "composite-schema/gateways/fusion",
+            "apollo-federation/gateways/fusion-fed",
+        ):
+            with self.subTest(gateway=gateway_dir):
+                self.assertIn(f"{gateway_dir}/.dotnet/", gitignore)
+                self.assertIn(f"{gateway_dir}/global.json", gitignore)
+                self.assertIn(f"{gateway_dir}/eShop.Gateway/bench.props", gitignore)
+        self.assertNotIn("fusion-nightly-fed", gitignore)
 
 
 class ResultGenerationTests(unittest.TestCase):

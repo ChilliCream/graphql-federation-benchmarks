@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -1500,6 +1501,267 @@ class FusionVersionOverrideTests(unittest.TestCase):
                     f"{script} should reach the SDK download once the pin "
                     "check passes",
                 )
+
+
+class FusionBenchPropsTests(unittest.TestCase):
+    """Execute install.sh's bench.props generation for each benchmark axis.
+
+    The .NET 11 retarget must clear the plural TargetFrameworks inherited
+    from Directory.Build.props: a multi-targeted (outer/inner dispatch)
+    build never engages the Native AOT compiler on publish, silently
+    yielding a JIT-only artifact that start.sh (fail-closed for AOT=1)
+    would then refuse to run.
+    """
+
+    INSTALL_SCRIPTS = (
+        os.path.join(
+            REPO_ROOT, "composite-schema", "gateways", "fusion", "install.sh"
+        ),
+        os.path.join(
+            REPO_ROOT,
+            "apollo-federation",
+            "gateways",
+            "fusion-fed",
+            "install.sh",
+        ),
+    )
+    BLOCK_START = "# --- Generate bench.props: begin ---"
+    BLOCK_END = "# --- Generate bench.props: end ---"
+
+    def run_gen_block(self, script, dotnet_target, aot, cost_define=""):
+        with open(script, encoding="utf-8") as fh:
+            content = fh.read()
+        start = content.index(self.BLOCK_START) + len(self.BLOCK_START)
+        end = content.index(self.BLOCK_END)
+        block = content[start:end]
+        workdir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, workdir, True)
+        props = os.path.join(workdir, "bench.props")
+        wrapper = os.path.join(workdir, "gen-bench-props.sh")
+        with open(wrapper, "w", encoding="utf-8") as fh:
+            fh.write("set -u\n")
+            fh.write(f'DOTNET_TARGET="{dotnet_target}"\n')
+            fh.write(f'AOT="{aot}"\n')
+            fh.write(f'FUSION_COST_DEFINE="{cost_define}"\n')
+            fh.write(f'BENCH_PROPS="{props}"\n')
+            fh.write(block + "\n")
+        proc = subprocess.run(
+            ["bash", wrapper],
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        self.assertEqual(proc.returncode, 0, proc.stderr + proc.stdout)
+        if not os.path.exists(props):
+            return None
+        with open(props, encoding="utf-8") as fh:
+            return fh.read()
+
+    def test_net11_is_singular_with_cleared_plural(self):
+        for script in self.INSTALL_SCRIPTS:
+            with self.subTest(script=script):
+                props = self.run_gen_block(script, "11", "0")
+                self.assertIsNotNone(props)
+                self.assertIn("<TargetFramework>net11.0</TargetFramework>", props)
+                self.assertIn("<TargetFrameworks></TargetFrameworks>", props)
+                self.assertNotRegex(props, r"<TargetFrameworks>net")
+                self.assertIn("runtime-async=on", props)
+                self.assertNotIn("PublishAot", props)
+                ET.fromstring(props)
+
+    def test_aot_adds_publish_aot_without_plural_frameworks(self):
+        for script in self.INSTALL_SCRIPTS:
+            with self.subTest(script=script):
+                props = self.run_gen_block(script, "11", "1")
+                self.assertIsNotNone(props)
+                self.assertIn("<PublishAot>true</PublishAot>", props)
+                self.assertIn("<TargetFrameworks></TargetFrameworks>", props)
+                self.assertNotRegex(props, r"<TargetFrameworks>net")
+
+    def test_net10_jit_writes_no_file(self):
+        for script in self.INSTALL_SCRIPTS:
+            with self.subTest(script=script):
+                self.assertIsNone(self.run_gen_block(script, "10", "0"))
+
+    def test_net10_with_cost_define_writes_no_target(self):
+        for script in self.INSTALL_SCRIPTS:
+            with self.subTest(script=script):
+                props = self.run_gen_block(
+                    script, "10", "0", "FUSION_16_7_OR_GREATER")
+                self.assertIsNotNone(props)
+                self.assertNotIn("TargetFramework", props)
+                self.assertIn("FUSION_16_7_OR_GREATER", props)
+
+
+class FusionGatewayStartScriptTests(unittest.TestCase):
+    """Execute both fusion start.sh scripts against fixture artifacts.
+
+    Guards the Native AOT launch path: the controlled publish dir is used
+    (RID-qualified publish output is ignored), AOT=1 fails closed when the
+    native binary is absent, and the launchSettings applicationUrl is
+    preserved explicitly (a directly executed binary never reads
+    launchSettings.json, unlike `dotnet run`).
+    """
+
+    GATEWAY_DIRS = (
+        os.path.join("composite-schema", "gateways", "fusion"),
+        os.path.join("apollo-federation", "gateways", "fusion-fed"),
+    )
+    GATEWAY_URL = "http://localhost:5299"
+    # A distinctive port proves the URL is derived from launchSettings.json
+    # rather than hardcoded to the benchmark default.
+
+    def make_fixture(self, gateway_dir, native=False, rid_only=False,
+                     launch_url=GATEWAY_URL, dotnet=True):
+        workdir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, workdir, True)
+        shutil.copy(
+            os.path.join(REPO_ROOT, gateway_dir, "start.sh"),
+            os.path.join(workdir, "start.sh"),
+        )
+        project = os.path.join(workdir, "eShop.Gateway")
+        os.makedirs(os.path.join(project, "Properties"))
+        if launch_url is None:
+            settings = {"profiles": {"http": {}}}
+        else:
+            settings = {
+                "profiles": {
+                    "http": {
+                        "commandName": "Project",
+                        "applicationUrl": launch_url,
+                    }
+                }
+            }
+        with open(
+            os.path.join(project, "Properties", "launchSettings.json"),
+            "w",
+            encoding="utf-8",
+        ) as fh:
+            json.dump(settings, fh)
+        marker = os.path.join(workdir, "exec-marker.txt")
+        native_stub = (
+            "#!/usr/bin/env bash\n"
+            f'echo "native ASPNETCORE_URLS=$ASPNETCORE_URLS" >> "{marker}"\n'
+            "exit 0\n"
+        )
+        if native:
+            publish = os.path.join(
+                project, "bin", "Release", "net11.0", "publish")
+            os.makedirs(publish)
+            binary = os.path.join(publish, "eShop.Gateway")
+            with open(binary, "w", encoding="utf-8") as fh:
+                fh.write(native_stub)
+            os.chmod(binary, 0o755)
+        if rid_only:
+            # publish's default output qualifies the path with the build RID;
+            # start.sh must not resolve the native binary from here.
+            publish = os.path.join(
+                project, "bin", "Release", "net11.0", "linux-x64", "publish")
+            os.makedirs(publish)
+            binary = os.path.join(publish, "eShop.Gateway")
+            with open(binary, "w", encoding="utf-8") as fh:
+                fh.write(native_stub)
+            os.chmod(binary, 0o755)
+        if dotnet:
+            bundled = os.path.join(workdir, ".dotnet")
+            os.makedirs(bundled)
+            stub = os.path.join(bundled, "dotnet")
+            with open(stub, "w", encoding="utf-8") as fh:
+                fh.write(
+                    "#!/usr/bin/env bash\n"
+                    f'echo "dotnet ASPNETCORE_URLS=$ASPNETCORE_URLS args=$*"'
+                    f' >> "{marker}"\n'
+                    "exit 0\n"
+                )
+            os.chmod(stub, 0o755)
+        return workdir, marker
+
+    def run_start(self, workdir, aot=None):
+        env = dict(os.environ)
+        if aot is None:
+            env.pop("BENCH_GATEWAY_AOT", None)
+        else:
+            env["BENCH_GATEWAY_AOT"] = aot
+        return subprocess.run(
+            ["bash", os.path.join(workdir, "start.sh")],
+            capture_output=True,
+            text=True,
+            timeout=60,
+            cwd=workdir,
+            env=env,
+        )
+
+    def read_marker(self, marker):
+        if not os.path.exists(marker):
+            return ""
+        with open(marker, encoding="utf-8") as fh:
+            return fh.read()
+
+    def test_native_binary_preferred_with_launch_url(self):
+        for gateway_dir in self.GATEWAY_DIRS:
+            with self.subTest(gateway=gateway_dir):
+                workdir, marker = self.make_fixture(gateway_dir, native=True)
+                proc = self.run_start(workdir)
+                self.assertEqual(proc.returncode, 0, proc.stderr)
+                self.assertIn(
+                    f"native ASPNETCORE_URLS={self.GATEWAY_URL}",
+                    self.read_marker(marker),
+                )
+                self.assertNotIn("dotnet ASPNETCORE_URLS", self.read_marker(marker))
+
+    def test_rid_qualified_output_ignored_and_aot_fails_closed(self):
+        # Only a RID-qualified publish dir exists (publish's default layout):
+        # start.sh must not find a native binary there, and AOT=1 must fail
+        # instead of silently running the JIT build.
+        for gateway_dir in self.GATEWAY_DIRS:
+            with self.subTest(gateway=gateway_dir):
+                workdir, marker = self.make_fixture(gateway_dir, rid_only=True)
+                proc = self.run_start(workdir, aot="1")
+                self.assertNotEqual(proc.returncode, 0)
+                self.assertIn("BENCH_GATEWAY_AOT=1", proc.stdout + proc.stderr)
+                self.assertNotIn("native ASPNETCORE_URLS", self.read_marker(marker))
+                self.assertNotIn("dotnet ASPNETCORE_URLS", self.read_marker(marker))
+
+    def test_aot_requires_native_binary(self):
+        for gateway_dir in self.GATEWAY_DIRS:
+            with self.subTest(gateway=gateway_dir):
+                workdir, marker = self.make_fixture(gateway_dir)
+                proc = self.run_start(workdir, aot="1")
+                self.assertNotEqual(proc.returncode, 0)
+                self.assertIn("BENCH_GATEWAY_AOT=1", proc.stdout + proc.stderr)
+                self.assertNotIn("dotnet ASPNETCORE_URLS", self.read_marker(marker))
+
+    def test_jit_fallback_uses_bundled_sdk_with_launch_url(self):
+        for gateway_dir in self.GATEWAY_DIRS:
+            with self.subTest(gateway=gateway_dir):
+                workdir, marker = self.make_fixture(gateway_dir)
+                proc = self.run_start(workdir)
+                self.assertEqual(proc.returncode, 0, proc.stderr)
+                recorded = self.read_marker(marker)
+                self.assertIn(
+                    "dotnet ASPNETCORE_URLS="
+                    f"{self.GATEWAY_URL} args=run -c Release --no-build --no-restore",
+                    recorded,
+                )
+
+    def test_missing_launch_url_fails_closed(self):
+        for gateway_dir in self.GATEWAY_DIRS:
+            with self.subTest(gateway=gateway_dir):
+                workdir, marker = self.make_fixture(
+                    gateway_dir, native=True, launch_url=None)
+                proc = self.run_start(workdir)
+                self.assertNotEqual(proc.returncode, 0)
+                self.assertIn("applicationUrl", proc.stdout + proc.stderr)
+                self.assertNotIn("native ASPNETCORE_URLS", self.read_marker(marker))
+
+    def test_invalid_aot_value_rejected(self):
+        for gateway_dir in self.GATEWAY_DIRS:
+            with self.subTest(gateway=gateway_dir):
+                workdir, _ = self.make_fixture(gateway_dir, native=True)
+                proc = self.run_start(workdir, aot="banana")
+                self.assertNotEqual(proc.returncode, 0)
+                self.assertIn(
+                    "unknown BENCH_GATEWAY_AOT", proc.stdout + proc.stderr)
 
 
 if __name__ == "__main__":

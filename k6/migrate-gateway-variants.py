@@ -15,9 +15,11 @@ Feddi (rename commit a9becec):
 Each Fusion variant is verified against its actual run properties
 (composition, .NET runtime major, HotChocolate channel, runtime-async
 feature) before it is renamed. Each Feddi variant is verified as a
-composite-schema Java/JVM preview variant. Mismatches and collisions
-(a document already containing the target id) are reported and left
-untouched.
+composite-schema Java/JVM preview variant. A document with any mismatch or
+collision (a document already containing the target id) is reported and left
+entirely untouched: verification runs before any rename, so there are no
+partial writes with renamed scenario references pointing at unrenamed
+catalog ids (or vice versa).
 
 Rewrites benchmark-runs/<run>/results.json (structured: gateway catalog
 ids/names, variant ids, scenario gateway/variant ids) and the
@@ -174,6 +176,20 @@ def migrate_results_json(path, migration):
             return 0, ambiguous
 
     for gateway in document.get("gateways", []):
+        for variant in gateway.get("variants", []):
+            old_id = variant.get("id", "")
+            if old_id not in migration:
+                continue
+            ok, reason = verify_variant(variant)
+            if not ok:
+                ambiguous.append(f"{path}:{old_id}: {reason}; document left untouched")
+    if ambiguous:
+        # Atomic rejection: a single unverified entry blocks every rename in
+        # this document, so the catalog and the scenario references can never
+        # disagree and no partial write lands on disk.
+        return 0, ambiguous
+
+    for gateway in document.get("gateways", []):
         if gateway.get("id", "") == "feddi":
             gateway["id"] = migration["feddi"]
             changed += 1
@@ -183,10 +199,6 @@ def migrate_results_json(path, migration):
         for variant in gateway.get("variants", []):
             old_id = variant.get("id", "")
             if old_id not in migration:
-                continue
-            ok, reason = verify_variant(variant)
-            if not ok:
-                ambiguous.append(f"{path}:{old_id}: {reason}")
                 continue
             variant["id"] = migration[old_id]
             changed += 1

@@ -196,12 +196,91 @@ class MigrationMappingTests(unittest.TestCase):
             path = write_doc(tmp, results_doc(variants))
             changed, ambiguous = MIGRATE.migrate_results_json(
                 path, MIGRATE.load_migrations())
+            self.assertEqual(changed, 0)
             self.assertEqual(len(ambiguous), 1)
             self.assertIn("composition", ambiguous[0])
             with open(path, encoding="utf-8") as fh:
                 doc = json.load(fh)
             self.assertEqual(doc["gateways"][0]["variants"][0]["id"],
                              "fusion-nightly-fed")
+            self.assertEqual(
+                doc["scenarios"][0]["results"][0]["variants"][0]["variant"],
+                "fusion-nightly-fed",
+            )
+
+    def test_mismatch_rejects_whole_document_atomically(self):
+        # One unverified entry blocks every rename in the document: verified
+        # catalog entries keep their old ids, scenario references (fusion and
+        # feddi alike) are untouched, and the file on disk is byte-identical
+        # — no partial write with renamed references pointing elsewhere.
+        good = fusion_variant("fusion", "16.6.9", "composite-schema", "10.0.13")
+        bad = fusion_variant(
+            "fusion-nightly-fed", "16.7.0-p.31", "composite-schema", "10.0.13")
+        doc = {
+            "gateways": [
+                {
+                    "id": "fusion",
+                    "name": "fusion",
+                    "variants": copy.deepcopy([good, bad]),
+                },
+                {
+                    "id": "feddi",
+                    "name": "feddi",
+                    "vendor": "feddi",
+                    "variants": [feddi_variant(old=True)],
+                },
+            ],
+            "scenarios": [{
+                "id": "constant",
+                "results": [
+                    {
+                        "gateway": "fusion",
+                        "variants": [
+                            {"variant": "fusion", "status": "complete"},
+                            {"variant": "fusion-nightly-fed", "status": "complete"},
+                        ],
+                    },
+                    {
+                        "gateway": "feddi",
+                        "variants": [{"variant": "feddi", "status": "complete"}],
+                    },
+                ],
+            }],
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            path = write_doc(tmp, doc)
+            with open(path, "rb") as fh:
+                before = fh.read()
+            changed, ambiguous = MIGRATE.migrate_results_json(
+                path, MIGRATE.load_migrations())
+            self.assertEqual(changed, 0)
+            self.assertEqual(len(ambiguous), 1)
+            self.assertIn("composition", ambiguous[0])
+            with open(path, "rb") as fh:
+                self.assertEqual(fh.read(), before)
+            with open(path, encoding="utf-8") as fh:
+                migrated = json.load(fh)
+            fusion_gateway = next(
+                g for g in migrated["gateways"] if g["id"] == "fusion")
+            self.assertEqual(
+                [v["id"] for v in fusion_gateway["variants"]],
+                ["fusion", "fusion-nightly-fed"],
+            )
+            feddi_gateway = next(
+                g for g in migrated["gateways"] if g["id"] == "feddi")
+            self.assertEqual(feddi_gateway["name"], "feddi")
+            self.assertEqual(feddi_gateway["variants"][0]["id"], "feddi")
+            by_gateway = {
+                r["gateway"]: [v["variant"] for v in r["variants"]]
+                for r in migrated["scenarios"][0]["results"]
+            }
+            self.assertEqual(
+                by_gateway,
+                {
+                    "fusion": ["fusion", "fusion-nightly-fed"],
+                    "feddi": ["feddi"],
+                },
+            )
 
     def test_collision_avoids_data_loss(self):
         # A document containing both the old and the new tag must not merge

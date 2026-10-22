@@ -484,6 +484,126 @@ class BuildMatrixTests(unittest.TestCase):
             self.assertEqual(gateways[0]["subgraphs"], "subgraphs-net")
 
 
+class ResolveHotchocolateChannelsTests(unittest.TestCase):
+    """Direct SemVer tests for resolve_hotchocolate_channels.
+
+    The nightly gating tests above mock preview_check; these exercise the real
+    resolver against version feeds so numeric ordering bugs (string
+    comparison of 16.10 vs 16.9, or of p.10 vs p.9) cannot slip through.
+    """
+
+    INSTALL_SCRIPTS = (
+        os.path.join(
+            REPO_ROOT, "composite-schema", "gateways", "fusion", "install.sh"
+        ),
+        os.path.join(
+            REPO_ROOT, "apollo-federation", "gateways", "fusion-fed",
+            "install.sh",
+        ),
+    )
+    RESOLVER_START = (
+        "# --- Resolve latest HotChocolate version for channel: begin ---"
+    )
+    RESOLVER_END = "# --- Resolve latest HotChocolate version for channel: end ---"
+
+    def test_same_core_preview_is_not_ahead(self):
+        # A prerelease on the shipped core line is older than the stable
+        # release itself (SemVer: 16.6.8-p.27 < 16.6.8), so nightly must stay
+        # off even though a "newer-looking" preview tag exists.
+        ahead, stable, preview = MATRIX.resolve_hotchocolate_channels([
+            "16.6.7", "16.6.8", "16.6.8-p.27",
+        ])
+        self.assertFalse(ahead)
+        self.assertEqual(stable, "16.6.8")
+        self.assertEqual(preview, "16.6.8-p.27")
+
+    def test_higher_patch_preview_is_ahead(self):
+        ahead, stable, preview = MATRIX.resolve_hotchocolate_channels([
+            "16.6.8", "16.6.9-p.1",
+        ])
+        self.assertTrue(ahead)
+        self.assertEqual(stable, "16.6.8")
+        self.assertEqual(preview, "16.6.9-p.1")
+
+    def test_minor_version_compares_numerically(self):
+        # 16.10 > 16.9 numerically; a string comparison would rank "16.10.x"
+        # below "16.9.x" and pick the wrong latest on both channels.
+        ahead, stable, preview = MATRIX.resolve_hotchocolate_channels([
+            "16.9.3", "16.10.0", "16.9.4-p.2", "16.10.1-p.5",
+        ])
+        self.assertEqual(stable, "16.10.0")
+        self.assertEqual(preview, "16.10.1-p.5")
+        self.assertTrue(ahead)
+
+    def test_prerelease_number_compares_numerically(self):
+        # p.10 > p.9 numerically; a string comparison would pick p.9.
+        ahead, stable, preview = MATRIX.resolve_hotchocolate_channels([
+            "16.6.8", "16.7.0-p.9", "16.7.0-p.10",
+        ])
+        self.assertEqual(stable, "16.6.8")
+        self.assertEqual(preview, "16.7.0-p.10")
+        self.assertTrue(ahead)
+
+    def test_feed_order_does_not_matter(self):
+        versions = ["16.6.8", "16.7.0-p.9", "16.7.0-p.10", "16.6.9",
+                    "16.10.0-p.1"]
+        expected = (True, "16.6.9", "16.10.0-p.1")
+        self.assertEqual(
+            MATRIX.resolve_hotchocolate_channels(versions), expected)
+        orders = [
+            list(reversed(versions)),
+            versions[2:] + versions[:2],
+            sorted(versions),
+            sorted(versions, reverse=True),
+        ]
+        for order in orders:
+            with self.subTest(order=order):
+                self.assertEqual(
+                    MATRIX.resolve_hotchocolate_channels(order), expected)
+
+    def extract_installer_resolver(self, script):
+        with open(script, encoding="utf-8") as fh:
+            content = fh.read()
+        start = content.index(self.RESOLVER_START) + len(self.RESOLVER_START)
+        end = content.index(self.RESOLVER_END)
+        return content[start:end]
+
+    def run_installer_resolver(self, script, channel, versions):
+        proc = subprocess.run(
+            [sys.executable, "-c", self.extract_installer_resolver(script)],
+            input=json.dumps({"versions": versions}),
+            capture_output=True,
+            text=True,
+            timeout=60,
+            env={**os.environ, "CHANNEL": channel},
+        )
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        return proc.stdout.strip()
+
+    def test_installer_and_matrix_resolvers_agree(self):
+        # Both fusion install.sh scripts embed their own channel resolver for
+        # the build-time version pick; it must select the same latest stable
+        # and latest preview as the matrix resolver, on a feed that stresses
+        # numeric ordering (16.10, p.10).
+        versions = [
+            "16.6.7", "16.6.8", "16.6.8-p.27", "16.6.9-p.1",
+            "16.7.0-p.9", "16.7.0-p.10", "16.9.3", "16.10.0",
+            "16.10.1-p.5",
+        ]
+        _, stable, preview = MATRIX.resolve_hotchocolate_channels(versions)
+        self.assertEqual((stable, preview), ("16.10.0", "16.10.1-p.5"))
+        for script in self.INSTALL_SCRIPTS:
+            with self.subTest(script=script):
+                self.assertEqual(
+                    self.run_installer_resolver(script, "stable", versions),
+                    stable,
+                )
+                self.assertEqual(
+                    self.run_installer_resolver(script, "preview", versions),
+                    preview,
+                )
+
+
 class ConfigTests(unittest.TestCase):
 
     def read(self, *parts):

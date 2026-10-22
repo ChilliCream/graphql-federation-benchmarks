@@ -23,9 +23,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 #                          1 = Native AOT publish on the selected .NET target
 #                              (only supported with BENCH_GATEWAY_DOTNET=11;
 #                              bench.props sets PublishAot and install.sh runs
-#                              dotnet publish in addition to the JIT build so
-#                              the artifact carries both outputs and start.sh
-#                              prefers the native binary when present)
+#                              `dotnet publish -o` to a controlled publish dir
+#                              in addition to the JIT build, so the artifact
+#                              carries both outputs at a RID-independent path
+#                              and start.sh prefers the native binary when
+#                              present — and fails closed for AOT=1 when the
+#                              native binary is absent)
 #
 # Both targets bundle their own SDK inside the gateway directory, so the runtime
 # is a property of the prebuilt artifact rather than of the machine running it.
@@ -177,6 +180,7 @@ else
   echo "Fetching latest $CHANNEL HotChocolate version from NuGet..."
   SELECTED_VERSION=$(curl -s "https://api.nuget.org/v3-flatcontainer/hotchocolate.aspnetcore/index.json" \
     | CHANNEL="$CHANNEL" python3 -c '
+# --- Resolve latest HotChocolate version for channel: begin ---
 import json, os, sys
 
 channel = os.environ["CHANNEL"]
@@ -224,6 +228,7 @@ if not candidates:
 
 candidates.sort(key=lambda item: item[0])
 print(candidates[-1][1])
+# --- Resolve latest HotChocolate version for channel: end ---
 ')
 fi
 
@@ -250,7 +255,13 @@ done
 # and the ModifyCostOptions call in Program.cs compiled out. Contents depend on
 # the benchmark axes:
 #   - .NET 11 target: retarget the gateway to net11.0 and opt into .NET 11
-#     runtime-async. runtime-async replaces compiler-generated async state
+#     runtime-async, clearing the plural TargetFrameworks inherited from
+#     Directory.Build.props. A multi-targeted (outer/inner dispatch) build
+#     never engages the Native AOT compiler on publish, silently yielding a
+#     JIT-only artifact even for BENCH_GATEWAY_AOT=1 (which start.sh then
+#     refuses to run); an empty plural plus the singular TargetFramework
+#     gives a plain single-targeted net11.0 build for both JIT and AOT.
+#     runtime-async replaces compiler-generated async state
 #     machines with the runtime-provided async feature. Since .NET 11 Preview 3
 #     the feature switch alone is enough — the [RequiresPreviewFeatures] gate
 #     was removed, so <EnablePreviewFeatures> is intentionally NOT set (we
@@ -259,10 +270,14 @@ done
 #     project (eShop.Gateway); the prebuilt HotChocolate packages must be
 #     compiled with runtime-async=on upstream to exercise it through
 #     HotChocolate's execution pipeline.
-#   - BENCH_GATEWAY_AOT=1: set PublishAot so `dotnet publish` emits a native
-#     binary (the csproj already sets IsAotCompatible). The JIT build is still
-#     produced first so the artifact carries the single TFM dir benchmark.sh
-#     expects; start.sh prefers the native publish output when present.
+#   - BENCH_GATEWAY_AOT=1: set PublishAot so `dotnet publish -o` emits a native
+#     binary to a controlled publish dir (the csproj already sets
+#     IsAotCompatible). The JIT build is still produced first so the artifact
+#     carries the single TFM dir benchmark.sh expects; start.sh prefers the
+#     native publish output when present and fails closed for AOT=1 when it
+#     is absent. Publishing with `-o` (instead of publish's default output)
+#     keeps the path RID-independent: the default qualifies it with the build
+#     RID (bin/Release/net11.0/<rid>/publish), which start.sh must not guess.
 #   - HotChocolate 16.7 or greater: define FUSION_16_7_OR_GREATER so Program.cs
 #     compiles in the ModifyCostOptions call that disables gateway-side cost
 #     enforcement. The major.minor comparison is numeric, so 16.7 previews
@@ -279,13 +294,20 @@ if [[ "$VERSION_MAJOR" =~ ^[0-9]+$ && "$VERSION_MINOR" =~ ^[0-9]+$ ]] \
   FUSION_COST_DEFINE="FUSION_16_7_OR_GREATER"
 fi
 
+# tests/test_scripts_runtime.py executes this block standalone for each
+# benchmark axis combination; keep it self-contained (inputs: DOTNET_TARGET,
+# AOT, FUSION_COST_DEFINE, BENCH_PROPS).
+# --- Generate bench.props: begin ---
 if [[ "$DOTNET_TARGET" == "11" || "$AOT" == "1" || -n "$FUSION_COST_DEFINE" ]]; then
   {
     echo '<Project>'
     echo '  <PropertyGroup>'
     if [[ "$DOTNET_TARGET" == "11" ]]; then
       echo '    <TargetFramework>net11.0</TargetFramework>'
-      echo '    <TargetFrameworks>net11.0</TargetFrameworks>'
+      echo '    <!-- Clear the plural TargetFrameworks inherited from'
+      echo '         Directory.Build.props (see above): an empty plural plus the'
+      echo '         singular TargetFramework keeps the build single-targeted. -->'
+      echo '    <TargetFrameworks></TargetFrameworks>'
       echo '    <Features>$(Features);runtime-async=on</Features>'
     fi
     if [[ "$AOT" == "1" ]]; then
@@ -299,6 +321,7 @@ if [[ "$DOTNET_TARGET" == "11" || "$AOT" == "1" || -n "$FUSION_COST_DEFINE" ]]; 
   } > "$BENCH_PROPS"
   echo "Generated bench.props (dotnet: $DOTNET_TARGET, aot: $AOT, cost define: ${FUSION_COST_DEFINE:-none})."
 fi
+# --- Generate bench.props: end ---
 
 # --- Build ---
 # `dotnet build` never removes another target framework's output, so a reused
@@ -311,12 +334,21 @@ if [[ -d "$GATEWAY_BIN_DIR" ]]; then
     ! -name "net${DOTNET_TARGET}.0" -exec rm -rf {} +
 fi
 
+# Native AOT publish target: a controlled `-o` dir rather than publish's
+# default, which qualifies the path with the build RID
+# (bin/Release/net11.0/<rid>/publish) so start.sh could never address it
+# directly and would silently fall back to the JIT build. Cleared on every
+# build so a JIT rebuild never inherits a stale native binary; recreated by
+# `dotnet publish` only for BENCH_GATEWAY_AOT=1.
+AOT_PUBLISH_DIR="$SCRIPT_DIR/eShop.Gateway/bin/Release/net${DOTNET_TARGET}.0/publish"
+rm -rf "$AOT_PUBLISH_DIR"
+
 echo "Building Fusion gateway ($CHANNEL channel, .NET $DOTNET_TARGET, AOT=$AOT)..."
 cd "$SCRIPT_DIR/eShop.Gateway" && "$DOTNET" build -c Release --nologo -v quiet
 
 if [[ "$AOT" == "1" ]]; then
   echo "Publishing Fusion gateway as Native AOT (.NET $DOTNET_TARGET)..."
-  cd "$SCRIPT_DIR/eShop.Gateway" && "$DOTNET" publish -c Release --nologo -v quiet
+  cd "$SCRIPT_DIR/eShop.Gateway" && "$DOTNET" publish -c Release --nologo -v quiet -o "$AOT_PUBLISH_DIR"
 fi
 
 echo "$SELECTED_VERSION" > "$SCRIPT_DIR/version.txt"
