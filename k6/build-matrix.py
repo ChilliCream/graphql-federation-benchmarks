@@ -7,7 +7,7 @@ have no .NET installed, so the subgraphs-net prebuilt artifacts carry their
 own bundled runtime (see each subgraphs-net/build.sh).
 
 Reads the gateway selection from the SELECTED_GATEWAY environment variable
-("all" or a gateway base name such as "fusion-net-10" or "fusion-nightly-net-11") and
+("all" or a gateway base name such as "fusion-net-11" or "fusion-nightly-net-11") and
 an optional exact HotChocolate pin from FUSION_VERSION (empty means resolve
 the latest per channel; applies to fusion-family gateways only) and writes
 the matrices to the file named by GITHUB_OUTPUT (or stdout when

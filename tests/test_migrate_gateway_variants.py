@@ -108,7 +108,11 @@ class MigrationMappingTests(unittest.TestCase):
         self.assertEqual(MATRIX.FEDDI_VARIANT_MIGRATION, {"feddi": "feddi-gateway"})
 
     def test_fusion_targets_do_not_collide_with_canonical_ids(self):
-        canonical = set(MATRIX.FUSION_BASE_NAMES) | {"feddi-gateway"}
+        # Retired .NET 10 variants remain canonical historical migration targets.
+        canonical = set(MATRIX.FUSION_BASE_NAMES) | {
+            "feddi-gateway", "fusion-net-10",
+            "fusion-nightly-net-10", "fusion-nightly-fed-net-10",
+        }
         for old, new in MIGRATE.load_migrations().items():
             self.assertIn(new, canonical, new)
             self.assertNotIn(old, canonical, old)

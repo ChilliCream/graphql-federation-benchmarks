@@ -128,14 +128,6 @@
       "repositoryUrl": "https://github.com/ChilliCream/graphql-platform",
       "variants": [
         {
-          "id": "fusion-net-10",
-          "path": "composite-schema/gateways/fusion",
-          "language": "C#",
-          "runtime": ".NET",
-          "channel": "stable",
-          "dotnet": "10"
-        },
-        {
           "id": "fusion-net-11",
           "path": "composite-schema/gateways/fusion",
           "language": "C#",
@@ -170,14 +162,6 @@
               "description": "Native AOT publish."
             }
           ]
-        },
-        {
-          "id": "fusion-fed-net-10",
-          "path": "apollo-federation/gateways/fusion-fed",
-          "language": "C#",
-          "runtime": ".NET",
-          "channel": "stable",
-          "dotnet": "10"
         },
         {
           "id": "fusion-fed-net-11",
@@ -216,15 +200,6 @@
           ]
         },
         {
-          "id": "fusion-nightly-net-10",
-          "label": "Fusion Nightly",
-          "path": "composite-schema/gateways/fusion",
-          "language": "C#",
-          "runtime": ".NET",
-          "channel": "preview",
-          "dotnet": "10"
-        },
-        {
           "id": "fusion-nightly-net-11",
           "label": "Fusion Nightly",
           "path": "composite-schema/gateways/fusion",
@@ -261,15 +236,6 @@
               "description": "Native AOT publish."
             }
           ]
-        },
-        {
-          "id": "fusion-nightly-fed-net-10",
-          "label": "Fusion Nightly",
-          "path": "apollo-federation/gateways/fusion-fed",
-          "language": "C#",
-          "runtime": ".NET",
-          "channel": "preview",
-          "dotnet": "10"
         },
         {
           "id": "fusion-nightly-fed-net-11",

@@ -15,9 +15,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 #                          channel is ignored)
 #
 #   BENCH_GATEWAY_DOTNET   which .NET runtime / target framework to build and run on
-#                          10 = bundled latest GA .NET 10 SDK, targets net10.0 (default)
+#                          10 = bundled latest GA .NET 10 SDK, targets net10.0 (legacy)
 #                          11 = bundled latest .NET 11 preview SDK, targets net11.0
-#                               with runtime-async opted in
+#                               with runtime-async opted in (default)
 #
 #   BENCH_GATEWAY_AOT      0 = framework-dependent JIT build (default)
 #                          1 = Native AOT publish on the selected .NET target
@@ -33,17 +33,14 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Both targets bundle their own SDK inside the gateway directory, so the runtime
 # is a property of the prebuilt artifact rather than of the machine running it.
 #
-# Channel and runtime are orthogonal, which is what lets the matrix run the same
-# packages on both runtimes to isolate framework effects (e.g. runtime-async).
+# Current benchmark variants use .NET 11; .NET 10 remains supported for older builds.
 # This directory hosts the apollo-federation (fed) variants; the composite-schema
 # (non-fed) variants share the same axes from composite-schema/gateways/fusion:
-#   fusion-fed-net-10            = stable  packages on .NET 10 JIT
 #   fusion-fed-net-11            = stable  packages on .NET 11 JIT + runtime-async
 #   fusion-fed-aot-11            = stable  packages on .NET 11 Native AOT
-#   fusion-nightly-fed-net-10    = preview packages on .NET 10 JIT
 #   fusion-nightly-fed-net-11    = preview packages on .NET 11 JIT + runtime-async
 #   fusion-nightly-fed-aot-11    = preview packages on .NET 11 Native AOT
-# (plus the six fusion-net-* / fusion-nightly-* counterparts).
+# (plus the four fusion-net-* / fusion-nightly-* counterparts).
 
 # --- Resolve the HotChocolate package channel --------------------------------
 CHANNEL="${BENCH_GATEWAY_CHANNEL:-stable}"
@@ -73,7 +70,7 @@ fi
 # --- Validate explicit HotChocolate version override: end ---
 
 # --- Resolve the .NET runtime / target framework -----------------------------
-DOTNET_TARGET="${BENCH_GATEWAY_DOTNET:-10}"
+DOTNET_TARGET="${BENCH_GATEWAY_DOTNET:-11}"
 case "$DOTNET_TARGET" in
   10|11) ;;
   *)

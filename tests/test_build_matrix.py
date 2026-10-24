@@ -106,24 +106,21 @@ class BuildMatrixTests(unittest.TestCase):
             "all", preview_check=lambda: (True, "16.6.0", "16.7.0-p.1")
         )
         by_name = {e["name"]: e for e in matrices["gateways"]}
-        self.assertEqual(by_name["fusion-net-10"]["channel"], "stable")
-        self.assertEqual(by_name["fusion-net-10"]["dotnet"], "10")
-        self.assertEqual(by_name["fusion-net-10"]["aot"], "0")
+        self.assertEqual(by_name["fusion-net-11"]["aot"], "0")
         self.assertEqual(by_name["fusion-net-11"]["channel"], "stable")
         self.assertEqual(by_name["fusion-net-11"]["dotnet"], "11")
         self.assertEqual(by_name["fusion-aot-11"]["aot"], "1")
-        self.assertEqual(by_name["fusion-fed-net-10"]["channel"], "stable")
+        self.assertEqual(by_name["fusion-fed-net-11"]["channel"], "stable")
         self.assertEqual(
-            by_name["fusion-fed-net-10"]["path"],
+            by_name["fusion-fed-net-11"]["path"],
             "apollo-federation/gateways/fusion-fed",
         )
-        self.assertEqual(by_name["fusion-nightly-net-10"]["channel"], "preview")
-        self.assertEqual(by_name["fusion-nightly-net-10"]["dotnet"], "10")
+        self.assertEqual(by_name["fusion-nightly-net-11"]["channel"], "preview")
         self.assertEqual(by_name["fusion-nightly-net-11"]["dotnet"], "11")
         self.assertEqual(by_name["fusion-nightly-aot-11"]["aot"], "1")
-        self.assertEqual(by_name["fusion-nightly-fed-net-10"]["channel"], "preview")
+        self.assertEqual(by_name["fusion-nightly-fed-net-11"]["channel"], "preview")
         self.assertEqual(
-            by_name["fusion-nightly-fed-net-10"]["path"],
+            by_name["fusion-nightly-fed-net-11"]["path"],
             "apollo-federation/gateways/fusion-fed",
         )
         self.assertEqual(by_name["fusion-nightly-fed-net-11"]["dotnet"], "11")
@@ -135,24 +132,20 @@ class BuildMatrixTests(unittest.TestCase):
         )
         names = {e["name"] for e in matrices["gateways"]}
         self.assertFalse(names & {
-            "fusion-nightly-net-10",
             "fusion-nightly-net-11",
             "fusion-nightly-aot-11",
-            "fusion-nightly-fed-net-10",
             "fusion-nightly-fed-net-11",
             "fusion-nightly-fed-aot-11",
         })
         # Stable and non-nightly gateways still run.
-        self.assertIn("fusion-net-10", names)
-        self.assertIn("fusion-fed-net-10", names)
+        self.assertIn("fusion-net-11", names)
+        self.assertIn("fusion-fed-net-11", names)
         self.assertIn("cosmo", names)
 
     def test_explicit_nightly_selection_always_honored(self):
         for nightly in (
-            "fusion-nightly-net-10",
             "fusion-nightly-net-11",
             "fusion-nightly-aot-11",
-            "fusion-nightly-fed-net-10",
             "fusion-nightly-fed-net-11",
             "fusion-nightly-fed-aot-11",
         ):
@@ -277,6 +270,16 @@ class BuildMatrixTests(unittest.TestCase):
                 "does-not-exist", preview_check=lambda: (False, "16.6.0", None)
             )
 
+    def test_dotnet_10_fusion_selection_rejected(self):
+        for prefix in ("fusion", "fusion-fed", "fusion-nightly", "fusion-nightly-fed"):
+            for target in ("net-10", "aot-10"):
+                with self.subTest(selection=f"{prefix}-{target}"):
+                    with self.assertRaises(SystemExit):
+                        MATRIX.build_matrices(
+                            f"{prefix}-{target}",
+                            preview_check=lambda: (True, "16.6.0", "16.7.0-p.1"),
+                        )
+
     def test_legacy_tech_suffix_selection_rejected(self):
         # The old "-rust"/"-net" suffixed selections no longer exist, nor do
         # the pre-rename Fusion ids.
@@ -322,16 +325,12 @@ class BuildMatrixTests(unittest.TestCase):
         )
         by_name = {e["name"]: e for e in matrices["gateways"]}
         for nightly in (
-            "fusion-net-10",
             "fusion-net-11",
             "fusion-aot-11",
-            "fusion-fed-net-10",
             "fusion-fed-net-11",
             "fusion-fed-aot-11",
-            "fusion-nightly-net-10",
             "fusion-nightly-net-11",
             "fusion-nightly-aot-11",
-            "fusion-nightly-fed-net-10",
             "fusion-nightly-fed-net-11",
             "fusion-nightly-fed-aot-11",
         ):
@@ -349,7 +348,7 @@ class BuildMatrixTests(unittest.TestCase):
         # Gateway builds carry the pin for fusion artifacts only.
         builds = {b["artifact"]: b for b in matrices["gateway_builds"]}
         self.assertEqual(
-            builds["prebuilt-gateway-fusion-nightly-net-10"]["version"], "16.6.8"
+            builds["prebuilt-gateway-fusion-nightly-net-11"]["version"], "16.6.8"
         )
         self.assertNotIn("version", builds["prebuilt-gateway-cosmo"])
 
@@ -363,10 +362,8 @@ class BuildMatrixTests(unittest.TestCase):
         names = {e["name"] for e in matrices["gateways"]}
         self.assertTrue(
             {
-                "fusion-nightly-net-10",
                 "fusion-nightly-net-11",
                 "fusion-nightly-aot-11",
-                "fusion-nightly-fed-net-10",
                 "fusion-nightly-fed-net-11",
                 "fusion-nightly-fed-aot-11",
             }
@@ -409,7 +406,7 @@ class BuildMatrixTests(unittest.TestCase):
 
     def test_prerelease_version_accepted(self):
         matrices = MATRIX.build_matrices(
-            "fusion-nightly-net-10",
+            "fusion-nightly-net-11",
             preview_check=lambda: (False, "16.6.0", None),
             fusion_version="16.7.0-p.27",
         )
@@ -437,13 +434,13 @@ class BuildMatrixTests(unittest.TestCase):
                     outputs[key] = value
             gateways = json.loads(outputs["gateways"])
             by_name = {g["name"]: g for g in gateways}
-            self.assertEqual(by_name["fusion-net-10"]["version"], "16.6.8")
+            self.assertEqual(by_name["fusion-net-11"]["version"], "16.6.8")
             self.assertNotIn("version", by_name["cosmo"])
             builds = {
                 b["artifact"]: b for b in json.loads(outputs["gateway_builds"])
             }
             self.assertEqual(
-                builds["prebuilt-gateway-fusion-net-10"]["version"], "16.6.8"
+                builds["prebuilt-gateway-fusion-net-11"]["version"], "16.6.8"
             )
 
     def test_main_rejects_invalid_fusion_version_env(self):
@@ -624,10 +621,8 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(
             {v["id"]: v["label"] for v in MATRIX.VARIANTS if "label" in v},
             {
-                "fusion-nightly-net-10": "Fusion Nightly",
                 "fusion-nightly-net-11": "Fusion Nightly",
                 "fusion-nightly-aot-11": "Fusion Nightly",
-                "fusion-nightly-fed-net-10": "Fusion Nightly",
                 "fusion-nightly-fed-net-11": "Fusion Nightly",
                 "fusion-nightly-fed-aot-11": "Fusion Nightly",
             },
@@ -636,6 +631,16 @@ class ConfigTests(unittest.TestCase):
             {v["id"]: v["preview"] for v in MATRIX.VARIANTS if "preview" in v},
             {"feddi-gateway": True},
         )
+
+    def test_fusion_variants_only_target_dotnet_11(self):
+        fusion = next(p for p in MATRIX.GATEWAYS if p["id"] == "fusion")
+        self.assertTrue(fusion["variants"])
+        for variant in fusion["variants"]:
+            with self.subTest(variant=variant["id"]):
+                self.assertEqual(variant["dotnet"], "11")
+        for path in {v["path"] for v in fusion["variants"]}:
+            self.assertIn('DOTNET_TARGET="${BENCH_GATEWAY_DOTNET:-11}"',
+                          self.read(path, "install.sh"))
 
     def test_features_have_names_and_descriptions(self):
         features = {
@@ -673,14 +678,14 @@ class ConfigTests(unittest.TestCase):
         matrices = MATRIX.build_matrices("all", preview_check=lambda: (True, "16.6.0", "16.7.0-p.1"))
         self.assertEqual([e["name"] for e in matrices["gateways"]], [v["id"] for v in MATRIX.VARIANTS])
         self.assertEqual(MATRIX.FUSION_BASE_NAMES,
-                         ("fusion-net-10", "fusion-net-11", "fusion-aot-11",
-                          "fusion-fed-net-10", "fusion-fed-net-11", "fusion-fed-aot-11",
-                          "fusion-nightly-net-10", "fusion-nightly-net-11", "fusion-nightly-aot-11",
-                          "fusion-nightly-fed-net-10", "fusion-nightly-fed-net-11",
+                         ("fusion-net-11", "fusion-aot-11",
+                          "fusion-fed-net-11", "fusion-fed-aot-11",
+                          "fusion-nightly-net-11", "fusion-nightly-aot-11",
+                          "fusion-nightly-fed-net-11",
                           "fusion-nightly-fed-aot-11"))
         self.assertEqual(MATRIX.NIGHTLY_BASE_NAMES,
-                         ("fusion-nightly-net-10", "fusion-nightly-net-11", "fusion-nightly-aot-11",
-                          "fusion-nightly-fed-net-10", "fusion-nightly-fed-net-11",
+                         ("fusion-nightly-net-11", "fusion-nightly-aot-11",
+                          "fusion-nightly-fed-net-11",
                           "fusion-nightly-fed-aot-11"))
         self.assertEqual(MATRIX.FUSION_VARIANT_MIGRATION,
                          {"fusion": "fusion-net-10",
@@ -741,23 +746,21 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual([p["id"] for p in MATRIX.GATEWAYS], list(catalog))
         variants = {v["id"]: v for p in catalog.values() for v in p["variants"]}
         self.assertEqual(list(variants), [v["id"] for v in MATRIX.VARIANTS])
-        self.assertEqual(variants["fusion-nightly-fed-net-10"]["composition"], "apollo-federation")
-        self.assertEqual(variants["fusion-fed-net-10"]["composition"], "apollo-federation")
+        self.assertEqual(variants["fusion-nightly-fed-net-11"]["composition"], "apollo-federation")
+        self.assertEqual(variants["fusion-fed-net-11"]["composition"], "apollo-federation")
         self.assertEqual(variants["feddi-gateway"]["composition"], "composite-schema")
         self.assertTrue(variants["feddi-gateway"]["preview"])
-        self.assertEqual(variants["fusion-nightly-net-10"]["label"], "Fusion Nightly")
         self.assertEqual(variants["fusion-nightly-net-11"]["label"], "Fusion Nightly")
         self.assertEqual(variants["fusion-nightly-aot-11"]["label"], "Fusion Nightly")
-        self.assertEqual(variants["fusion-nightly-fed-net-10"]["label"], "Fusion Nightly")
         self.assertEqual(variants["fusion-nightly-fed-net-11"]["label"], "Fusion Nightly")
         self.assertEqual(variants["fusion-nightly-fed-aot-11"]["label"], "Fusion Nightly")
-        self.assertNotIn("label", variants["fusion-net-10"])
+        self.assertNotIn("label", variants["fusion-net-11"])
         self.assertEqual(
             [f["id"] for f in variants["hive-gateway-router-runtime"]["features"]],
             ["router-runtime"],
         )
         self.assertNotIn("runtime", variants["hive-router"]["platform"])
-        self.assertEqual(variants["fusion-net-10"]["platform"]["runtime"], {"name": ".NET"})
+        self.assertEqual(variants["fusion-net-11"]["platform"]["runtime"], {"name": ".NET"})
 
 
 if __name__ == "__main__":
