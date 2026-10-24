@@ -20,7 +20,7 @@ Also run `bash -n` on changed shell scripts (`sh -n` for `apollo-federation/gate
 
 ## Bump a gateway version
 
-1. Change the pin: `VERSION` / `DOWNLOAD_VERSION` in `install.sh` (apollo-router, apollo-router-v3, hive-router, grafbase, cosmo), `FEDDI_GATEWAY_REF` (feddi-gateway), `Main.scala` (caliban), or `package.json` + `npm i` (apollo-gateway, hive-gateway, hive-gateway-router-runtime).
+1. Change the pin: `VERSION` / `DOWNLOAD_VERSION` in `install.sh` (apollo-router, apollo-router-v3, hive-router, grafbase, cosmo), `FEDDI_GATEWAY_REF` + `FEDDI_GATEWAY_VERSION` (feddi-gateway), `Main.scala` (caliban), or `package.json` + `npm i` (apollo-gateway, hive-gateway, hive-gateway-router-runtime).
 2. Update the version asserted in `tests/test_apollo_gateways.py`, `tests/test_hive_gateways.py` or `tests/test_cosmo_grafbase_install.py`.
 
 Fusion variants resolve the latest HotChocolate for their `channel` (or the `fusion_version` input) and have no pin.
