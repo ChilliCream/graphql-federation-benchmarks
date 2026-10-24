@@ -637,6 +637,30 @@ class ConfigTests(unittest.TestCase):
             {"feddi-gateway": True},
         )
 
+    def test_features_have_names_and_descriptions(self):
+        features = {
+            feature["id"]: feature
+            for variant in MATRIX.VARIANTS
+            for key in ("platformFeatures", "gatewayFeatures")
+            for feature in variant.get(key, [])
+        }
+        self.assertEqual(
+            features,
+            {
+                "router-runtime": {
+                    "id": "router-runtime",
+                    "name": "Router Runtime",
+                    "description": "Rust query planner/executor (@graphql-hive/router-runtime) instead of the JS one.",
+                },
+                "runtime-async": {
+                    "id": "runtime-async",
+                    "name": "Runtime Async",
+                    "description": "C# async methods compiled to runtime-async.",
+                },
+                "aot": {"id": "aot", "name": "AOT", "description": "Native AOT publish."},
+            },
+        )
+
     def test_variant_ids_unique_and_paths_exist(self):
         ids = [v["id"] for v in MATRIX.VARIANTS]
         self.assertEqual(len(ids), len(set(ids)))

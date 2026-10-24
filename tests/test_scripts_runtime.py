@@ -72,8 +72,11 @@ def assert_results_shape(test, doc):
         keys(obj["language"], ["name"], where=where + ".language")
         if "runtime" in obj:
             keys(obj["runtime"], ["name"], ["version"], where + ".runtime")
+        features(obj, where)
+
+    def features(obj, where):
         for feature in obj.get("features", []):
-            keys(feature, ["id"], ["description"], where + ".features")
+            keys(feature, ["id", "name"], ["description"], where + ".features")
 
     keys(doc, ["run", "hardware", "subgraphs", "gateways", "scenarios"])
     keys(doc["run"], ["number", "startedAt", "sourceCommit", "event"], ["url", "completedAt", "inputs"], "run")
@@ -119,6 +122,7 @@ def assert_results_shape(test, doc):
             if variant["version"] is not None:
                 test.assertNotRegex(variant["version"], r"^[vV]", where)
             platform(variant["platform"], where)
+            features(variant, where)
             test.assertNotIn(variant["id"], variants, "variant ids are unique across the run")
             variants[variant["id"]] = gateway["id"]
 

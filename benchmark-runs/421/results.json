@@ -5,14 +5,7 @@
     "startedAt": "2026-10-23T05:04:24Z",
     "completedAt": "2026-10-24T03:07:06Z",
     "sourceCommit": "056eb85426724019b62d5632fa1f737a8a813ef4",
-    "event": "workflow_dispatch",
-    "inputs": {
-      "gateway": "all",
-      "benchmark": "all",
-      "runs": "9",
-      "duration": "120",
-      "diagnostic_run": false
-    }
+    "event": "schedule"
   },
   "hardware": {
     "host": "bench-001",
@@ -220,6 +213,7 @@
           "features": [
             {
               "id": "router-runtime",
+              "name": "Router Runtime",
               "description": "Rust query planner/executor (@graphql-hive/router-runtime) instead of the JS one."
             }
           ]
@@ -279,7 +273,8 @@
             "features": [
               {
                 "id": "runtime-async",
-                "description": "C# async methods compiled to runtime-async (.NET 11 opt-in)."
+                "name": "Runtime Async",
+                "description": "C# async methods compiled to runtime-async."
               }
             ]
           }
@@ -299,11 +294,13 @@
             "features": [
               {
                 "id": "runtime-async",
-                "description": "C# async methods compiled to runtime-async (.NET 11 opt-in)."
+                "name": "Runtime Async",
+                "description": "C# async methods compiled to runtime-async."
               },
               {
                 "id": "aot",
-                "description": "Native AOT publish (.NET 11)."
+                "name": "AOT",
+                "description": "Native AOT publish."
               }
             ]
           }
@@ -337,7 +334,8 @@
             "features": [
               {
                 "id": "runtime-async",
-                "description": "C# async methods compiled to runtime-async (.NET 11 opt-in)."
+                "name": "Runtime Async",
+                "description": "C# async methods compiled to runtime-async."
               }
             ]
           }
@@ -357,11 +355,13 @@
             "features": [
               {
                 "id": "runtime-async",
-                "description": "C# async methods compiled to runtime-async (.NET 11 opt-in)."
+                "name": "Runtime Async",
+                "description": "C# async methods compiled to runtime-async."
               },
               {
                 "id": "aot",
-                "description": "Native AOT publish (.NET 11)."
+                "name": "AOT",
+                "description": "Native AOT publish."
               }
             ]
           }
@@ -397,7 +397,8 @@
             "features": [
               {
                 "id": "runtime-async",
-                "description": "C# async methods compiled to runtime-async (.NET 11 opt-in)."
+                "name": "Runtime Async",
+                "description": "C# async methods compiled to runtime-async."
               }
             ]
           }
@@ -418,11 +419,13 @@
             "features": [
               {
                 "id": "runtime-async",
-                "description": "C# async methods compiled to runtime-async (.NET 11 opt-in)."
+                "name": "Runtime Async",
+                "description": "C# async methods compiled to runtime-async."
               },
               {
                 "id": "aot",
-                "description": "Native AOT publish (.NET 11)."
+                "name": "AOT",
+                "description": "Native AOT publish."
               }
             ]
           }
@@ -458,7 +461,8 @@
             "features": [
               {
                 "id": "runtime-async",
-                "description": "C# async methods compiled to runtime-async (.NET 11 opt-in)."
+                "name": "Runtime Async",
+                "description": "C# async methods compiled to runtime-async."
               }
             ]
           }
@@ -479,11 +483,13 @@
             "features": [
               {
                 "id": "runtime-async",
-                "description": "C# async methods compiled to runtime-async (.NET 11 opt-in)."
+                "name": "Runtime Async",
+                "description": "C# async methods compiled to runtime-async."
               },
               {
                 "id": "aot",
-                "description": "Native AOT publish (.NET 11)."
+                "name": "AOT",
+                "description": "Native AOT publish."
               }
             ]
           }

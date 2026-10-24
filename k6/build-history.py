@@ -3,7 +3,7 @@
 
 Only scheduled runs count. The latest such run defines the emitted scenarios
 that were run, their config and the gateway catalog. Failed gateway executions
-are excluded while successful gateway results from the same scenario remain.
+with measurements are kept with "status": "failed"; those without are excluded.
 Per scenario, every variant in the latest catalog gets a chronological result
 series containing every comparable run in the six calendar months ending at
 the latest run. Comparable runs have matching config and hardware.cpuModel.
@@ -134,7 +134,8 @@ def build_history(runs):
             catalog = catalog_variants(doc)
             for result in scenario["results"]:
                 for variant_result in result["variants"]:
-                    if variant_result.get("status") == "failed":
+                    failed = variant_result.get("status") == "failed"
+                    if failed and "throughput" not in variant_result:
                         continue
                     variant_id = variant_result["variant"]
                     if doc["run"]["number"] < VARIANT_HISTORY_START_RUN.get(variant_id, 0):
@@ -154,6 +155,8 @@ def build_history(runs):
                         for k, v in variant_result.items()
                         if k not in ("variant", "status")
                     )
+                    if failed:
+                        entry["status"] = "failed"
                     by_variant.setdefault(variant_id, []).append(entry)
 
         variants = []
