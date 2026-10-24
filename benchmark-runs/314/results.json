@@ -178,6 +178,7 @@
           "features": [
             {
               "id": "router-runtime",
+              "name": "Router Runtime",
               "description": "Rust query planner/executor (@graphql-hive/router-runtime) instead of the JS one."
             }
           ]

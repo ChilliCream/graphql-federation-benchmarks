@@ -5,14 +5,7 @@
     "startedAt": "2026-10-22T13:41:26Z",
     "completedAt": "2026-10-23T03:20:24Z",
     "sourceCommit": "8c990fd5d8c2070c733268177fce25d3f9c863ec",
-    "event": "workflow_dispatch",
-    "inputs": {
-      "gateway": "all",
-      "benchmark": "all",
-      "runs": "9",
-      "duration": "120",
-      "diagnostic_run": false
-    }
+    "event": "schedule"
   },
   "hardware": {
     "host": "bench-001",
@@ -220,6 +213,7 @@
           "features": [
             {
               "id": "router-runtime",
+              "name": "Router Runtime",
               "description": "Rust query planner/executor (@graphql-hive/router-runtime) instead of the JS one."
             }
           ]
@@ -295,7 +289,8 @@
             "features": [
               {
                 "id": "runtime-async",
-                "description": "C# async methods compiled to runtime-async (.NET 11 opt-in)."
+                "name": "Runtime Async",
+                "description": "C# async methods compiled to runtime-async."
               }
             ]
           }

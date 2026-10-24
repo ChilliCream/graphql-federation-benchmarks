@@ -323,6 +323,23 @@ class BuildHistoryTests(unittest.TestCase):
             [("3.2.0", 1), ("3.2.0", 2)],
         )
 
+    def test_failed_variant_with_measurements_kept_as_failed(self):
+        old = make_doc(1, versions={"fusion-net-10": "16.0.0"})
+        latest = make_doc(2, versions={"fusion-net-10": "16.1.0"})
+        for result in scenario(latest, "constant-latency")["results"]:
+            for variant in result["variants"]:
+                if variant["variant"] == "fusion-net-10":
+                    variant["status"] = "failed"
+        history = self.build(old, latest)
+        entry = next(
+            v for v in scenario(history, "constant-latency")["variants"]
+            if v["variant"] == "fusion-net-10"
+        )
+        self.assertEqual(
+            [(r["run"]["number"], r.get("status")) for r in entry["results"]],
+            [(1, None), (2, "failed")],
+        )
+
     def test_skipped_scenario_omitted(self):
         latest = make_doc(1)
         scenario(latest, "burst")["status"] = "skipped"
