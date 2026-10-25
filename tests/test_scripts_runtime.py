@@ -117,7 +117,7 @@ def assert_results_shape(test, doc):
             if "label" in variant:
                 test.assertTrue(variant["label"], where)
             if "preview" in variant:
-                test.assertIsInstance(variant["preview"], bool, where)
+                test.assertIs(variant["preview"], True, where)
             test.assertIn(variant["composition"], ("composite-schema", "apollo-federation"))
             if variant["version"] is not None:
                 test.assertNotRegex(variant["version"], r"^[vV]", where)
@@ -900,6 +900,7 @@ class GenerateResultsJsonTests(unittest.TestCase):
         self.assertEqual(variants["fusion-nightly-net-11"]["label"], "Fusion Nightly")
         self.assertEqual(variants["fusion-nightly-fed-net-11"]["label"], "Fusion Nightly")
         self.assertIs(variants["feddi-gateway"]["preview"], True)
+        self.assertIs(variants["fusion-nightly-net-11"]["preview"], True)
         self.assertNotIn("label", variants["fusion-net-11"])
         self.assertNotIn("preview", variants["fusion-net-11"])
 
@@ -1087,7 +1088,7 @@ class SubgraphBuildPinTests(unittest.TestCase):
     resolving the latest stable from NuGet and rewriting tracked csproj files."""
 
     FAMILIES = ("apollo-federation", "composite-schema")
-    PINNED_VERSION = "16.6.8"
+    PINNED_VERSION = "16.7.0"
 
     def read_build(self, family):
         with open(
@@ -1231,7 +1232,7 @@ class SubgraphBuildPinTests(unittest.TestCase):
     PINNED_CSPROJ = (
         '<Project Sdk="Microsoft.NET.Sdk.Web">\n'
         '  <ItemGroup>\n'
-        '    <PackageReference Include="HotChocolate.AspNetCore" Version="16.6.8" />\n'
+        '    <PackageReference Include="HotChocolate.AspNetCore" Version="16.7.0" />\n'
         "  </ItemGroup>\n</Project>\n"
     )
     MISMATCHED_VARIANTS = {
@@ -1272,7 +1273,7 @@ class SubgraphBuildPinTests(unittest.TestCase):
         '<Project Sdk="Microsoft.NET.Sdk.Web">\n'
         '  <ItemGroup>\n'
         '    <!-- <PackageReference Include="HotChocolate.AspNetCore" Version="16.5.0-p.1" /> -->\n'
-        '    <PackageReference Include="HotChocolate.AspNetCore" Version="16.6.8" />\n'
+        '    <PackageReference Include="HotChocolate.AspNetCore" Version="16.7.0" />\n'
         "  </ItemGroup>\n</Project>\n"
     )
 

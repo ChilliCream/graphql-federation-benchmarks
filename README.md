@@ -18,7 +18,7 @@ Each benchmark runs a gateway against 4 subgraphs (`Accounts`, `Inventory`, `Pro
 
 All benchmarks run against 4 [HotChocolate](https://github.com/ChilliCream/graphql-platform) subgraphs in both
 benchmark families (`apollo-federation/*` and `composite-schema/*`). The
-subgraphs are pinned to HotChocolate `16.6.8` (each `subgraphs-net/build.sh`
+subgraphs are pinned to HotChocolate `16.7.0` (each `subgraphs-net/build.sh`
 verifies the pin and never rewrites package versions).
 
 The committed result tables under `benchmark-runs/` and the root

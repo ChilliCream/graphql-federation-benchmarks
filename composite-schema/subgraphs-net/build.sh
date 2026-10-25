@@ -25,7 +25,7 @@ fi
 # References are parsed as XML (xml.etree.ElementTree), so attribute order,
 # line breaks, extra attributes, and single- or double-quoted attributes are
 # all handled, while commented-out PackageReferences are ignored.
-PINNED_HOTCHOCOLATE_VERSION="16.6.8"
+PINNED_HOTCHOCOLATE_VERSION="16.7.0"
 echo "Verifying HotChocolate package references are pinned to $PINNED_HOTCHOCOLATE_VERSION..."
 PINNED="$PINNED_HOTCHOCOLATE_VERSION" python3 - "${CSPROJ_FILES[@]}" <<'PYEOF'
 import os

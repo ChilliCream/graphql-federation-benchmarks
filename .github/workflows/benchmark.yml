@@ -757,8 +757,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-        with:
-          ref: ${{ github.ref_name }}
+
+      - name: Check out results branch
+        run: .github/scripts/results-branch.sh checkout results-branch
 
       - uses: actions/download-artifact@v8
         with:
@@ -771,11 +772,11 @@ jobs:
           # Gateways deliberately not run in constant — rendered as "not run".
           NOT_RUN_GATEWAYS_JSON: ${{ needs.prepare-matrix.outputs.not_run_constant }}
           RESULT_MODES: constant
-        run: python3 k6/generate-results.py artifacts/ benchmark-runs/${{ github.run_number }}
+        run: python3 k6/generate-results.py artifacts/ results-branch/benchmark-runs/${{ github.run_number }}
 
       - name: Write constant summary
         run: |
-          RUN_RESULTS_DIR="benchmark-runs/${{ github.run_number }}"
+          RUN_RESULTS_DIR="results-branch/benchmark-runs/${{ github.run_number }}"
           CONSTANT_RESULTS_FILE="$RUN_RESULTS_DIR/RESULTS_CONSTANT.md"
           echo "# Benchmark Results (Constant)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -787,15 +788,8 @@ jobs:
 
       - name: Commit constant results
         run: |
-          RUN_RESULTS_DIR="benchmark-runs/${{ github.run_number }}"
-          CONSTANT_RESULTS_FILE="$RUN_RESULTS_DIR/RESULTS_CONSTANT.md"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          if [[ -f "$CONSTANT_RESULTS_FILE" ]]; then
-            git add "$CONSTANT_RESULTS_FILE"
-          fi
-          git diff --cached --quiet || git commit -m "Add constant benchmark results for run #${{ github.run_number }}"
-          git push
+          .github/scripts/results-branch.sh push results-branch \
+            "Add constant benchmark results for run #${{ github.run_number }}"
 
       - name: Upload combined constant results
         if: always()
@@ -813,8 +807,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-        with:
-          ref: ${{ github.ref_name }}
+
+      - name: Check out results branch
+        run: .github/scripts/results-branch.sh checkout results-branch
 
       - uses: actions/download-artifact@v8
         with:
@@ -827,11 +822,11 @@ jobs:
           # Gateways deliberately not run in burst — rendered as "not run".
           NOT_RUN_GATEWAYS_JSON: ${{ needs.prepare-matrix.outputs.not_run_burst }}
           RESULT_MODES: burst
-        run: python3 k6/generate-results.py artifacts/ benchmark-runs/${{ github.run_number }}
+        run: python3 k6/generate-results.py artifacts/ results-branch/benchmark-runs/${{ github.run_number }}
 
       - name: Write burst summary
         run: |
-          RUN_RESULTS_DIR="benchmark-runs/${{ github.run_number }}"
+          RUN_RESULTS_DIR="results-branch/benchmark-runs/${{ github.run_number }}"
           BURST_RESULTS_FILE="$RUN_RESULTS_DIR/RESULTS_BURST.md"
           echo "# Benchmark Results (Burst)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -843,15 +838,8 @@ jobs:
 
       - name: Commit burst results
         run: |
-          RUN_RESULTS_DIR="benchmark-runs/${{ github.run_number }}"
-          BURST_RESULTS_FILE="$RUN_RESULTS_DIR/RESULTS_BURST.md"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          if [[ -f "$BURST_RESULTS_FILE" ]]; then
-            git add "$BURST_RESULTS_FILE"
-          fi
-          git diff --cached --quiet || git commit -m "Add burst benchmark results for run #${{ github.run_number }}"
-          git push
+          .github/scripts/results-branch.sh push results-branch \
+            "Add burst benchmark results for run #${{ github.run_number }}"
 
       - name: Upload combined burst results
         if: always()
@@ -868,8 +856,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-        with:
-          ref: ${{ github.ref_name }}
+
+      - name: Check out results branch
+        run: .github/scripts/results-branch.sh checkout results-branch
 
       - uses: actions/download-artifact@v8
         with:
@@ -880,11 +869,11 @@ jobs:
         env:
           EXPECTED_GATEWAYS_JSON: ${{ needs.prepare-matrix.outputs.gateways }}
           RESULT_MODES: constant-latency
-        run: python3 k6/generate-results.py artifacts/ benchmark-runs/${{ github.run_number }}
+        run: python3 k6/generate-results.py artifacts/ results-branch/benchmark-runs/${{ github.run_number }}
 
       - name: Write constant-latency summary
         run: |
-          RUN_RESULTS_DIR="benchmark-runs/${{ github.run_number }}"
+          RUN_RESULTS_DIR="results-branch/benchmark-runs/${{ github.run_number }}"
           CONSTANT_LATENCY_RESULTS_FILE="$RUN_RESULTS_DIR/RESULTS_CONSTANT_LATENCY.md"
           echo "# Benchmark Results (Constant Latency)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -896,15 +885,8 @@ jobs:
 
       - name: Commit constant-latency results
         run: |
-          RUN_RESULTS_DIR="benchmark-runs/${{ github.run_number }}"
-          CONSTANT_LATENCY_RESULTS_FILE="$RUN_RESULTS_DIR/RESULTS_CONSTANT_LATENCY.md"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          if [[ -f "$CONSTANT_LATENCY_RESULTS_FILE" ]]; then
-            git add "$CONSTANT_LATENCY_RESULTS_FILE"
-          fi
-          git diff --cached --quiet || git commit -m "Add constant-latency benchmark results for run #${{ github.run_number }}"
-          git push
+          .github/scripts/results-branch.sh push results-branch \
+            "Add constant-latency benchmark results for run #${{ github.run_number }}"
 
       - name: Upload combined constant-latency results
         if: always()
@@ -926,8 +908,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-        with:
-          ref: ${{ github.ref_name }}
+
+      - name: Check out results branch
+        run: .github/scripts/results-branch.sh checkout results-branch
 
       - uses: actions/download-artifact@v8
         with:
@@ -961,19 +944,13 @@ jobs:
           export RUN_STARTED_AT
           # Outside the repo, so a failed generation leaves nothing to commit.
           python3 k6/generate-results.py --json artifacts/ "$RUNNER_TEMP/results-json"
-          mkdir -p "benchmark-runs/${{ github.run_number }}"
-          mv "$RUNNER_TEMP/results-json/results.json" "benchmark-runs/${{ github.run_number }}/results.json"
+          mkdir -p "results-branch/benchmark-runs/${{ github.run_number }}"
+          mv "$RUNNER_TEMP/results-json/results.json" "results-branch/benchmark-runs/${{ github.run_number }}/results.json"
 
       - name: Commit results.json
         run: |
-          RESULTS_JSON_FILE="benchmark-runs/${{ github.run_number }}/results.json"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          if [[ -f "$RESULTS_JSON_FILE" ]]; then
-            git add "$RESULTS_JSON_FILE"
-          fi
-          git diff --cached --quiet || git commit -m "Add benchmark results JSON for run #${{ github.run_number }}"
-          git push
+          .github/scripts/results-branch.sh push results-branch \
+            "Add benchmark results JSON for run #${{ github.run_number }}"
 
   benchmark-summary:
     needs:
@@ -989,12 +966,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-        with:
-          ref: ${{ github.ref_name }}
+
+      - name: Check out results branch
+        run: .github/scripts/results-branch.sh checkout results-branch
 
       - name: Write final benchmark summary
         run: |
-          RUN_RESULTS_DIR="benchmark-runs/${{ github.run_number }}"
+          RUN_RESULTS_DIR="results-branch/benchmark-runs/${{ github.run_number }}"
           CONSTANT_RESULTS_FILE="$RUN_RESULTS_DIR/RESULTS_CONSTANT.md"
           BURST_RESULTS_FILE="$RUN_RESULTS_DIR/RESULTS_BURST.md"
           CONSTANT_LATENCY_RESULTS_FILE="$RUN_RESULTS_DIR/RESULTS_CONSTANT_LATENCY.md"
@@ -1034,7 +1012,7 @@ jobs:
       - name: Publish latest root results
         if: ${{ needs.benchmark-constant.result == 'success' && needs.benchmark-burst.result == 'success' && needs.benchmark-constant-latency.result == 'success' && needs.generate-results-constant.result == 'success' && needs.generate-results-burst.result == 'success' && needs.generate-results-constant-latency.result == 'success' }}
         run: |
-          RUN_RESULTS_DIR="benchmark-runs/${{ github.run_number }}"
+          RUN_RESULTS_DIR="results-branch/benchmark-runs/${{ github.run_number }}"
           CONSTANT_RESULTS_FILE="$RUN_RESULTS_DIR/RESULTS_CONSTANT.md"
           BURST_RESULTS_FILE="$RUN_RESULTS_DIR/RESULTS_BURST.md"
           CONSTANT_LATENCY_RESULTS_FILE="$RUN_RESULTS_DIR/RESULTS_CONSTANT_LATENCY.md"
@@ -1046,15 +1024,12 @@ jobs:
             fi
           done
 
-          cp "$CONSTANT_RESULTS_FILE" RESULTS_CONSTANT.md
-          cp "$BURST_RESULTS_FILE" RESULTS_BURST.md
-          cp "$CONSTANT_LATENCY_RESULTS_FILE" RESULTS_CONSTANT_LATENCY.md
+          cp "$CONSTANT_RESULTS_FILE" results-branch/RESULTS_CONSTANT.md
+          cp "$BURST_RESULTS_FILE" results-branch/RESULTS_BURST.md
+          cp "$CONSTANT_LATENCY_RESULTS_FILE" results-branch/RESULTS_CONSTANT_LATENCY.md
 
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add RESULTS_CONSTANT.md RESULTS_BURST.md RESULTS_CONSTANT_LATENCY.md
-          git diff --cached --quiet || git commit -m "Update latest benchmark results from run #${{ github.run_number }}"
-          git push
+          .github/scripts/results-branch.sh push results-branch \
+            "Update latest benchmark results from run #${{ github.run_number }}"
 
       - name: Report missing results.json
         if: ${{ needs.generate-results-json.result != 'success' }}
@@ -1075,13 +1050,11 @@ jobs:
           # benchmark-runs/ must only contain successful runs. The generate-results
           # jobs commit per-mode files even when benchmarks failed, so a failed run
           # leaves a stale directory behind — remove it here.
-          RUN_RESULTS_DIR="benchmark-runs/${{ github.run_number }}"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          RUN_RESULTS_DIR="results-branch/benchmark-runs/${{ github.run_number }}"
           if [[ -d "$RUN_RESULTS_DIR" ]]; then
-            git rm -r --ignore-unmatch "$RUN_RESULTS_DIR"
-            git diff --cached --quiet || git commit -m "Remove failed benchmark run #${{ github.run_number }} results"
-            git push
+            rm -r "$RUN_RESULTS_DIR"
+            .github/scripts/results-branch.sh push results-branch \
+              "Remove failed benchmark run #${{ github.run_number }} results"
             echo "- Removed \`$RUN_RESULTS_DIR\` because the run failed." >> $GITHUB_STEP_SUMMARY
           else
             echo "- No \`$RUN_RESULTS_DIR\` directory to remove." >> $GITHUB_STEP_SUMMARY
@@ -1101,16 +1074,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-        with:
-          ref: ${{ github.ref_name }}
+
+      - name: Check out results branch
+        run: .github/scripts/results-branch.sh checkout results-branch
 
       - name: Build history.json
-        run: python3 k6/build-history.py benchmark-runs benchmark-runs/history.json
+        run: python3 k6/build-history.py results-branch/benchmark-runs results-branch/benchmark-runs/history.json
 
       - name: Commit history.json
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add benchmark-runs/history.json
-          git diff --cached --quiet || git commit -m "Update benchmark history from run #${{ github.run_number }}"
-          git push
+          .github/scripts/results-branch.sh push results-branch \
+            "Update benchmark history from run #${{ github.run_number }}"

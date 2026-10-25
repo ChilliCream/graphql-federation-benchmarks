@@ -94,8 +94,8 @@ def report_gateway_catalog():
             variant = {"id": gateway["id"]}
             if gateway.get("label"):
                 variant["label"] = gateway["label"]
-            if "preview" in gateway:
-                variant["preview"] = gateway["preview"]
+            if gateway.get("preview", gateway.get("channel") == "preview"):
+                variant["preview"] = True
             variant.update({
                 "composition": gateway["path"].split("/", 1)[0],
                 "platform": report_platform(
