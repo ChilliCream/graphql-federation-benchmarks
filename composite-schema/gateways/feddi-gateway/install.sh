@@ -22,7 +22,9 @@ set -Eeuo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 FEDDI_GATEWAY_REPO="https://github.com/feddi-dev/feddi-gateway.git"
-FEDDI_GATEWAY_REF="3c75a7db8876aa2ee15fe07225452f94c4baadc3"  # pinned for reproducibility (tag bench-2026-10-17)
+# feddi release (calver, YYYY-MM-DD-HHMM) and the feddi-gateway commit it was built from.
+FEDDI_GATEWAY_VERSION="2026-10-25-0247"
+FEDDI_GATEWAY_REF="56ea3bf588419955359c85a0c9439363ba17402b"  # pinned for reproducibility
 
 JDK_DIR="$SCRIPT_DIR/.jdk"
 SOURCE_DIR="$SCRIPT_DIR/source"
@@ -98,6 +100,9 @@ fi
 
 # --- 3. Build + extract the distribution -------------------------------------
 
+# The gateway logs this version at startup (the release build writes it the same way).
+echo "$FEDDI_GATEWAY_VERSION" > "$SOURCE_DIR/gateway/app/src/main/resources/feddi-gateway-version.txt"
+
 echo "Building feddi Gateway distribution (Gradle) ..."
 ( cd "$SOURCE_DIR/gateway" && ./gradlew :app:feddiGatewayDistZip --no-daemon --console=plain )
 
@@ -156,5 +161,5 @@ rm -f "$SCRIPT_DIR/subgraphs.zip"
 
 # --- 6. Record version -------------------------------------------------------
 
-echo "$FEDDI_GATEWAY_REF" | cut -c1-12 > "$SCRIPT_DIR/version.txt"
-echo "feddi Gateway build complete (commit: $(cat "$SCRIPT_DIR/version.txt"))."
+echo "$FEDDI_GATEWAY_VERSION" > "$SCRIPT_DIR/version.txt"
+echo "feddi Gateway build complete (version: $FEDDI_GATEWAY_VERSION, commit: ${FEDDI_GATEWAY_REF:0:12})."
