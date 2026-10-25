@@ -1087,7 +1087,7 @@ class SubgraphBuildPinTests(unittest.TestCase):
     resolving the latest stable from NuGet and rewriting tracked csproj files."""
 
     FAMILIES = ("apollo-federation", "composite-schema")
-    PINNED_VERSION = "16.6.8"
+    PINNED_VERSION = "16.7.0"
 
     def read_build(self, family):
         with open(
@@ -1231,7 +1231,7 @@ class SubgraphBuildPinTests(unittest.TestCase):
     PINNED_CSPROJ = (
         '<Project Sdk="Microsoft.NET.Sdk.Web">\n'
         '  <ItemGroup>\n'
-        '    <PackageReference Include="HotChocolate.AspNetCore" Version="16.6.8" />\n'
+        '    <PackageReference Include="HotChocolate.AspNetCore" Version="16.7.0" />\n'
         "  </ItemGroup>\n</Project>\n"
     )
     MISMATCHED_VARIANTS = {
@@ -1272,7 +1272,7 @@ class SubgraphBuildPinTests(unittest.TestCase):
         '<Project Sdk="Microsoft.NET.Sdk.Web">\n'
         '  <ItemGroup>\n'
         '    <!-- <PackageReference Include="HotChocolate.AspNetCore" Version="16.5.0-p.1" /> -->\n'
-        '    <PackageReference Include="HotChocolate.AspNetCore" Version="16.6.8" />\n'
+        '    <PackageReference Include="HotChocolate.AspNetCore" Version="16.7.0" />\n'
         "  </ItemGroup>\n</Project>\n"
     )
 
