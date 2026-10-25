@@ -8,6 +8,11 @@ Per scenario, every variant in the latest catalog gets a chronological result
 series containing every comparable run in the six calendar months ending at
 the latest run. Comparable runs have matching config and hardware.cpuModel.
 Gateway and subgraph platform/runtime details are recorded on every result.
+A variant that replaced another, which the latest run no longer contains,
+continues its history: the series holds the replaced variant's runs, each
+tagged with the variant that produced it, followed by the replacing variant's
+runs after the replaced variant's last run, and names the replaced variant in
+"continues".
 
 Usage: build-history.py <benchmark-runs-dir> <output-path>
 """
@@ -28,6 +33,10 @@ RAN_SCENARIO_STATUSES = {"complete", "failed"}
 # Earlier measurements (roughly 20 RPS) exercise a different request path and
 # are not comparable with the implementation benchmarked by the current catalog.
 VARIANT_HISTORY_START_RUN = {"feddi-gateway": 400}
+
+# Variants that replaced another variant of the same gateway, mapped to the
+# variant they replaced.
+VARIANT_CONTINUES = {"fusion-aot-11": "fusion-net-10"}
 
 
 def load_runs(runs_dir):
@@ -165,9 +174,20 @@ def build_history(runs):
                 by_variant.get(variant_id, []),
                 key=lambda entry: entry["run"]["number"],
             )
-            variants.append(
-                {"variant": variant_id, "gateway": gateway_id, "results": results}
+            series = {"variant": variant_id, "gateway": gateway_id}
+            replaced = VARIANT_CONTINUES.get(variant_id)
+            earlier = sorted(
+                by_variant.get(replaced, []) if replaced not in latest_catalog else [],
+                key=lambda entry: entry["run"]["number"],
             )
+            if earlier:
+                last_run = earlier[-1]["run"]["number"]
+                results = [{**entry, "variant": replaced} for entry in earlier] + [
+                    entry for entry in results if entry["run"]["number"] > last_run
+                ]
+                series["continues"] = replaced
+            series["results"] = results
+            variants.append(series)
 
         scenarios.append({
             "id": latest_scenario["id"],

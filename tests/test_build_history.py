@@ -172,6 +172,28 @@ def mark_result_failed(doc, scenario_id, variant_id):
     raise AssertionError(f"missing result for {variant_id} in {scenario_id}")
 
 
+def add_variant(doc, source_id, variant_id, version):
+    """Adds a variant to the source variant's gateway, with copies of its results."""
+    for gateway in doc["gateways"]:
+        source = next((v for v in gateway["variants"] if v["id"] == source_id), None)
+        if source:
+            gateway["variants"].append({**copy.deepcopy(source), "id": variant_id, "version": version})
+    for s in doc["scenarios"]:
+        for result in s["results"]:
+            source = next((v for v in result["variants"] if v["variant"] == source_id), None)
+            if source:
+                result["variants"].append({**copy.deepcopy(source), "variant": variant_id})
+    return doc
+
+
+def drop_variant(doc, variant_id):
+    for gateway in doc["gateways"]:
+        gateway["variants"] = [v for v in gateway["variants"] if v["id"] != variant_id]
+    for s in doc["scenarios"]:
+        for result in s["results"]:
+            result["variants"] = [v for v in result["variants"] if v["variant"] != variant_id]
+
+
 def results_of(history, variant_id, scenario_id="constant"):
     entry = next(
         (v for v in scenario(history, scenario_id)["variants"] if v["variant"] == variant_id),
@@ -483,6 +505,48 @@ class BuildHistoryTests(unittest.TestCase):
         history = self.build(make_doc(1), latest)
         self.assertIsNone(results_of(history, "fusion-nightly-fed-net-10"))
         self.assertEqual(results_of(history, "fusion-net-10"), [("16.6.8", 1), ("16.6.8", 2)])
+
+    def test_replacing_variant_continues_the_replaced_history(self):
+        earlier = make_doc(1)
+        overlap = add_variant(make_doc(2), "fusion-net-10", "fusion-aot-11", "16.7.0")
+        latest = add_variant(make_doc(3), "fusion-net-10", "fusion-aot-11", "16.7.0")
+        drop_variant(latest, "fusion-net-10")
+        history = self.build(earlier, overlap, latest)
+        self.assertEqual(
+            results_of(history, "fusion-aot-11"),
+            [("16.6.8", 1), ("16.6.8", 2), ("16.7.0", 3)],
+        )
+        series = next(
+            v for v in scenario(history, "constant")["variants"]
+            if v["variant"] == "fusion-aot-11"
+        )
+        self.assertEqual(series["continues"], "fusion-net-10")
+        self.assertEqual(
+            [entry.get("variant") for entry in series["results"]],
+            ["fusion-net-10", "fusion-net-10", None],
+        )
+
+    def test_replaced_variant_still_in_latest_run_keeps_separate_histories(self):
+        latest = add_variant(make_doc(2), "fusion-net-10", "fusion-aot-11", "16.7.0")
+        history = self.build(make_doc(1), latest)
+        series = next(
+            v for v in scenario(history, "constant")["variants"]
+            if v["variant"] == "fusion-aot-11"
+        )
+        self.assertNotIn("continues", series)
+        self.assertEqual(results_of(history, "fusion-aot-11"), [("16.7.0", 2)])
+        self.assertEqual(results_of(history, "fusion-net-10"), [("16.6.8", 1), ("16.6.8", 2)])
+
+    def test_replacing_variant_without_earlier_runs_has_no_continuation(self):
+        latest = add_variant(make_doc(1), "fusion-net-10", "fusion-aot-11", "16.7.0")
+        drop_variant(latest, "fusion-net-10")
+        history = self.build(latest)
+        series = next(
+            v for v in scenario(history, "constant")["variants"]
+            if v["variant"] == "fusion-aot-11"
+        )
+        self.assertNotIn("continues", series)
+        self.assertEqual(results_of(history, "fusion-aot-11"), [("16.7.0", 1)])
 
     def test_non_numeric_and_empty_dirs_ignored(self):
         os.makedirs(os.path.join(self.runs_dir, "5"))
