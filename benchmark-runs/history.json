@@ -45,6 +45,7 @@
         {
           "id": "apollo-router-v3",
           "version": "3.0.0-preview.0",
+          "preview": true,
           "composition": "apollo-federation",
           "platform": {
             "language": {

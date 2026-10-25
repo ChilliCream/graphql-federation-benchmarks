@@ -227,6 +227,7 @@
           "id": "fusion-nightly-net-10",
           "version": "16.6.2-p.8",
           "label": "Fusion Nightly",
+          "preview": true,
           "composition": "composite-schema",
           "platform": {
             "language": {
@@ -242,6 +243,7 @@
           "id": "fusion-nightly-net-11",
           "version": "16.6.2-p.8",
           "label": "Fusion Nightly",
+          "preview": true,
           "composition": "composite-schema",
           "platform": {
             "language": {
@@ -264,6 +266,7 @@
           "id": "fusion-nightly-fed-net-10",
           "version": "16.6.2-p.8",
           "label": "Fusion Nightly",
+          "preview": true,
           "composition": "apollo-federation",
           "platform": {
             "language": {

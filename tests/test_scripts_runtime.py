@@ -117,7 +117,7 @@ def assert_results_shape(test, doc):
             if "label" in variant:
                 test.assertTrue(variant["label"], where)
             if "preview" in variant:
-                test.assertIsInstance(variant["preview"], bool, where)
+                test.assertIs(variant["preview"], True, where)
             test.assertIn(variant["composition"], ("composite-schema", "apollo-federation"))
             if variant["version"] is not None:
                 test.assertNotRegex(variant["version"], r"^[vV]", where)
@@ -900,6 +900,7 @@ class GenerateResultsJsonTests(unittest.TestCase):
         self.assertEqual(variants["fusion-nightly-net-11"]["label"], "Fusion Nightly")
         self.assertEqual(variants["fusion-nightly-fed-net-11"]["label"], "Fusion Nightly")
         self.assertIs(variants["feddi-gateway"]["preview"], True)
+        self.assertIs(variants["fusion-nightly-net-11"]["preview"], True)
         self.assertNotIn("label", variants["fusion-net-11"])
         self.assertNotIn("preview", variants["fusion-net-11"])
 

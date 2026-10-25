@@ -107,6 +107,7 @@
         {
           "id": "apollo-router-v3",
           "version": "3.0.0-preview.0",
+          "preview": true,
           "composition": "apollo-federation",
           "platform": {
             "language": {
@@ -370,6 +371,7 @@
           "id": "fusion-nightly-net-10",
           "version": "16.7.0-p.39",
           "label": "Fusion Nightly",
+          "preview": true,
           "composition": "composite-schema",
           "platform": {
             "language": {
@@ -385,6 +387,7 @@
           "id": "fusion-nightly-net-11",
           "version": "16.7.0-p.39",
           "label": "Fusion Nightly",
+          "preview": true,
           "composition": "composite-schema",
           "platform": {
             "language": {
@@ -407,6 +410,7 @@
           "id": "fusion-nightly-aot-11",
           "version": "16.7.0-p.39",
           "label": "Fusion Nightly",
+          "preview": true,
           "composition": "composite-schema",
           "platform": {
             "language": {
@@ -434,6 +438,7 @@
           "id": "fusion-nightly-fed-net-10",
           "version": "16.7.0-p.39",
           "label": "Fusion Nightly",
+          "preview": true,
           "composition": "apollo-federation",
           "platform": {
             "language": {
@@ -449,6 +454,7 @@
           "id": "fusion-nightly-fed-net-11",
           "version": "16.7.0-p.39",
           "label": "Fusion Nightly",
+          "preview": true,
           "composition": "apollo-federation",
           "platform": {
             "language": {
@@ -471,6 +477,7 @@
           "id": "fusion-nightly-fed-aot-11",
           "version": "16.7.0-p.39",
           "label": "Fusion Nightly",
+          "preview": true,
           "composition": "apollo-federation",
           "platform": {
             "language": {
