@@ -16,6 +16,10 @@ error.log
 data.csv
 version.txt
 
+## Gateway sources cloned by install.sh
+composite-schema/gateways/*/source/
+apollo-federation/gateways/*/source/
+
 ## Fusion gateway generated build inputs: the bundled SDK and the gateway-local
 ## global.json are generated for every .NET target; bench.props only for net11.
 composite-schema/gateways/fusion/.dotnet/
