@@ -70,7 +70,7 @@ permissions:
 
 jobs:
   prepare-matrix:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       gateways: ${{ steps.build.outputs.gateways }}
       gateways_constant: ${{ steps.build.outputs.gateways_constant }}
@@ -136,7 +136,7 @@ jobs:
 
   build-subgraphs:
     needs: prepare-matrix
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -157,7 +157,17 @@ jobs:
 
       - name: Pack prebuilt subgraphs
         run: |
-          tar -czf "prebuilt-subgraphs-${{ matrix.subgraphs.artifact }}.tar.gz" "${{ matrix.subgraphs.path }}"
+          # start.sh runs the apphosts on the bundled runtime, so the SDK parts
+          # of .dotnet and the obj/ intermediates are dead weight in the artifact.
+          tar -czf "prebuilt-subgraphs-${{ matrix.subgraphs.artifact }}.tar.gz" \
+            --exclude='*/.dotnet/sdk' \
+            --exclude='*/.dotnet/sdk-manifests' \
+            --exclude='*/.dotnet/packs' \
+            --exclude='*/.dotnet/templates' \
+            --exclude='*/.dotnet/library-packs' \
+            --exclude='*/.dotnet/metadata' \
+            --exclude='*/obj' \
+            "${{ matrix.subgraphs.path }}"
 
       - name: Upload prebuilt subgraphs
         uses: actions/upload-artifact@v7
@@ -167,7 +177,7 @@ jobs:
 
   build-gateways:
     needs: prepare-matrix
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -754,7 +764,7 @@ jobs:
       - benchmark-constant
       - generate-results-constant-latency
     if: ${{ always() && !cancelled() && needs.prepare-matrix.outputs.should_publish == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
 
@@ -804,7 +814,7 @@ jobs:
       - benchmark-burst
       - generate-results-constant
     if: ${{ !cancelled() && needs.prepare-matrix.outputs.should_publish == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
 
@@ -853,7 +863,7 @@ jobs:
       - prepare-matrix
       - benchmark-constant-latency
     if: ${{ !cancelled() && needs.prepare-matrix.outputs.should_publish == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
 
@@ -905,7 +915,7 @@ jobs:
       - generate-results-burst
       - generate-results-constant-latency
     if: ${{ !cancelled() && needs.prepare-matrix.outputs.should_publish == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
 
@@ -963,7 +973,7 @@ jobs:
       - generate-results-constant-latency
       - generate-results-json
     if: ${{ !cancelled() && needs.prepare-matrix.outputs.should_publish == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
 
@@ -1071,7 +1081,7 @@ jobs:
       - generate-results-json
       - benchmark-summary
     if: ${{ !cancelled() && github.event_name == 'schedule' && needs.benchmark-constant.result == 'success' && needs.benchmark-burst.result == 'success' && needs.benchmark-constant-latency.result == 'success' && needs.generate-results-constant.result == 'success' && needs.generate-results-burst.result == 'success' && needs.generate-results-constant-latency.result == 'success' && needs.generate-results-json.result == 'success' && needs.benchmark-summary.result == 'success' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
 
