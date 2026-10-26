@@ -403,11 +403,13 @@ class GenerateResultsTests(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, proc.stderr)
         with open(os.path.join(outdir, "RESULTS_CONSTANT.md")) as fh:
             md = fh.read()
-        self.assertIn("| CV% | Peak Memory | Notes |", md)
+        self.assertIn("| CV% | Peak Memory | Memory per Request | Notes |", md)
         fusion = next(line for line in md.splitlines() if line.startswith("| fusion-net-11 |"))
         cosmo = next(line for line in md.splitlines() if line.startswith("| cosmo |"))
         self.assertIn("| 412 MB |", fusion)
+        self.assertIn("| 421.9 KB |", fusion)  # 421888 KB / 1000 req/s
         self.assertEqual(cosmo.split("|")[7].strip(), "—")
+        self.assertEqual(cosmo.split("|")[8].strip(), "—")
 
     def test_apollo_router_generations_have_separate_rows(self):
         gateways = ["apollo-router", "apollo-router-v3"]

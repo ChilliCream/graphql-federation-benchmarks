@@ -1273,6 +1273,7 @@ if cv > 3:
     GATEWAY_CORE_VALUES_CSV="$(IFS=,; echo "${GATEWAY_CORE_VALUES[*]}")"
     PEAK_RSS_VALUES_CSV="$(IFS=,; echo "${PEAK_RSS_VALUES[*]}")"
     END_RSS_VALUES_CSV="$(IFS=,; echo "${END_RSS_VALUES[*]}")"
+    RPS_VALUES_CSV="$(IFS=,; echo "${RPS_VALUES[*]:-}")"
 
     python3 -c "
 import sys, statistics
@@ -1298,7 +1299,13 @@ end_vals = parse_csv(sys.argv[6])
 peak_med = statistics.median(peak_vals) if peak_vals else 0
 end_med = statistics.median(end_vals) if end_vals else 0
 print(f'  Memory: idle={idle_kb // 1024}MB  peak={int(peak_med) // 1024}MB  end={int(end_med) // 1024}MB')
+
+# Peak memory per req/s, as in the results tables: lower is more memory-efficient.
+rps_vals = parse_csv(sys.argv[7])
+rps_med = statistics.median(rps_vals) if rps_vals else 0
+if peak_med and rps_med:
+    print(f'  Memory per request: {peak_med / rps_med:.1f} KB (peak memory / median RPS)')
 " "$K6_CORE_VALUES_CSV" "$SUBGRAPH_CORE_VALUES_CSV" "$GATEWAY_CORE_VALUES_CSV" \
-      "$IDLE_RSS_KB" "$PEAK_RSS_VALUES_CSV" "$END_RSS_VALUES_CSV"
+      "$IDLE_RSS_KB" "$PEAK_RSS_VALUES_CSV" "$END_RSS_VALUES_CSV" "$RPS_VALUES_CSV"
   fi
 fi

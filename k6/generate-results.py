@@ -329,6 +329,13 @@ def format_memory(rss_kb):
     return f"{int(rss_kb) / 1024:,.0f} MB"
 
 
+def format_memory_per_request(rss_kb, rps):
+    """Format peak RSS per req/s (KiB) or emit em dash for unavailable values."""
+    if not rss_kb or not rps:
+        return "—"
+    return f"{int(rss_kb) / float(rps):,.1f} KB"
+
+
 def format_cv(value):
     """Format CV% table cells or emit em dash for unavailable values."""
     if value is None:
@@ -531,7 +538,8 @@ def generate_markdown(mode, results, expected_by_mode, not_run_by_mode=None):
         "**Methodology:** Each gateway executes {total_runs} runs of {duration} each. The first run is a "
         "full-duration warmup (discarded). The remaining {measured_runs} runs are measured. Results are ranked "
         "by **median RPS** across the {measured_runs} measured runs, with best/worst/CV% reported for "
-        "transparency. Peak Memory is the gateway's peak RSS during the median run."
+        "transparency. Peak Memory is the gateway's peak RSS during the median run; Memory per Request "
+        "divides it by the median RPS (lower means less memory for the same throughput)."
     ).format(duration=duration, total_runs=total_runs, measured_runs=measured_runs)
 
     name, sentence = SCENARIOS.get(mode, SCENARIOS["burst"])
@@ -563,10 +571,10 @@ def generate_markdown(mode, results, expected_by_mode, not_run_by_mode=None):
 
         # Table header
         lines.append(
-            "| Gateway | Version | Median RPS | Best RPS | Worst RPS | CV% | Peak Memory | Notes |"
+            "| Gateway | Version | Median RPS | Best RPS | Worst RPS | CV% | Peak Memory | Memory per Request | Notes |"
         )
         lines.append(
-            "| :------ | :------ | ---------: | -------: | --------: | --: | ----------: | :---- |"
+            "| :------ | :------ | ---------: | -------: | --------: | --: | ----------: | -----------------: | :---- |"
         )
 
         for entry in group_entries:
@@ -576,7 +584,8 @@ def generate_markdown(mode, results, expected_by_mode, not_run_by_mode=None):
             lines.append(
                 f"| {gw} | {ver} | {format_metric(entry.get('median_rps'))} | "
                 f"{format_metric(entry.get('best_rps'))} | {format_metric(entry.get('worst_rps'))} | "
-                f"{format_cv(entry.get('cv_pct'))} | {format_memory(entry.get('peak_rss_kb'))} | {notes} |"
+                f"{format_cv(entry.get('cv_pct'))} | {format_memory(entry.get('peak_rss_kb'))} | "
+                f"{format_memory_per_request(entry.get('peak_rss_kb'), entry.get('median_rps'))} | {notes} |"
             )
 
     # Expandable details — all at the bottom, grouped by subgraph tech
