@@ -37,14 +37,14 @@ class HiveGatewayTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)
             curl = directory / "curl"
-            curl.write_text("#!/bin/sh\nprintf '%s\\n' \"$*\" > curl_args\nprintf 'test \"$1\" = v0.3.5\\n'\n")
+            curl.write_text("#!/bin/sh\nprintf '%s\\n' \"$*\" > curl_args\nprintf 'test \"$1\" = v0.3.6\\n'\n")
             curl.chmod(0o755)
             environment = dict(os.environ, PATH=f"{directory}:{os.environ['PATH']}")
             result = subprocess.run(["bash", str(GATEWAYS / "hive-router" / "install.sh")],
                                     cwd=directory, env=environment, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertEqual((directory / "version.txt").read_text(), "v0.3.5\n")
-            self.assertIn("-fsSL https://raw.githubusercontent.com/graphql-hive/router/hive-router/v0.3.5/install.sh",
+            self.assertEqual((directory / "version.txt").read_text(), "v0.3.6\n")
+            self.assertIn("-fsSL https://raw.githubusercontent.com/graphql-hive/router/hive-router/v0.3.6/install.sh",
                           (directory / "curl_args").read_text())
 
     def test_router_installer_does_not_record_failed_download(self):
