@@ -27,7 +27,7 @@ Fusion variants resolve the latest HotChocolate for their `channel` (or the `fus
 
 ## Bump a runtime
 
-- .NET: the `dotnet-install` channel in the fusion `install.sh` scripts and both `subgraphs-net/build.sh`. A new major also needs the TargetFramework (csprojs, `composite-schema/Directory.Build.props`), `REQUIRED_DOTNET_MAJOR`, and the `10|11` cases in the fusion `install.sh`. `runtime-async` must stay on exactly the variants with `"dotnet": "11"` (tested).
+- .NET: the `dotnet-install` channel in the fusion `install.sh` scripts and both `subgraphs-net/build.sh`. A new major also needs the TargetFramework (csprojs, `graphql-federation/Directory.Build.props`), `REQUIRED_DOTNET_MAJOR`, and the `10|11` cases in the fusion `install.sh`. `runtime-async` must stay on exactly the variants with `"dotnet": "11"` (tested).
 - JDK: the Temurin URL in the caliban and feddi-gateway `install.sh`.
 - Node.js: the benchmark machine's `node`; the Node gateways' `install.sh` only installs the latest LTS via nvm when none is present.
 
@@ -37,7 +37,7 @@ Update `PINNED_HOTCHOCOLATE_VERSION` in both `subgraphs-net/build.sh`, every `Ho
 
 ## Add a gateway
 
-1. Create `apollo-federation/gateways/<id>/` or `composite-schema/gateways/<id>/` with `install.sh` (writes `version.txt`) and `start.sh`.
+1. Create `apollo-federation/gateways/<id>/` or `graphql-federation/gateways/<id>/` with `install.sh` (writes `version.txt`) and `start.sh`.
 2. Add the product and its variant to `k6/benchmark-config.json`.
 3. Add the variant id to the workflow_dispatch `gateway` options in `.github/workflows/benchmark.yml`, in config order (tested).
 4. If the artifact contains a binary, add its `chmod +x` to the three "Restore prebuilt gateway" steps.

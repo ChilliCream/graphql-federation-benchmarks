@@ -118,7 +118,7 @@ def assert_results_shape(test, doc):
                 test.assertTrue(variant["label"], where)
             if "preview" in variant:
                 test.assertIs(variant["preview"], True, where)
-            test.assertIn(variant["composition"], ("composite-schema", "apollo-federation"))
+            test.assertIn(variant["composition"], ("graphql-federation", "apollo-federation"))
             if variant["version"] is not None:
                 test.assertNotRegex(variant["version"], r"^[vV]", where)
             platform(variant["platform"], where)
@@ -217,8 +217,8 @@ def make_tech_run(
         json.dump(
             {
                 "gateway": gateway,
-                "gateway_path": "composite-schema/gateways/fusion",
-                "category": "composite-schema",
+                "gateway_path": "graphql-federation/gateways/fusion",
+                "category": "graphql-federation",
                 "mode": mode,
                 "timestamp": f"2024010{run_index}_000000",
                 "run": run_index,
@@ -259,7 +259,7 @@ class StartScriptErrorPathTests(unittest.TestCase):
     or the apphost build output is missing (the no-SDK benchmark machines hit
     exactly these paths on a broken artifact)."""
 
-    FAMILIES = ("apollo-federation", "composite-schema")
+    FAMILIES = ("apollo-federation", "graphql-federation")
 
     def run_copy(self, family):
         workdir = tempfile.mkdtemp()
@@ -322,7 +322,7 @@ class BenchmarkValidationTests(unittest.TestCase):
             [
                 "bash",
                 os.path.join(REPO_ROOT, "k6", "benchmark.sh"),
-                "composite-schema/gateways/fusion",
+                "graphql-federation/gateways/fusion",
                 "subgraphs-rust",
                 "constant",
             ],
@@ -1125,7 +1125,7 @@ class SubgraphBuildPinTests(unittest.TestCase):
     """subgraphs-net/build.sh verifies a pinned HotChocolate release instead of
     resolving the latest stable from NuGet and rewriting tracked csproj files."""
 
-    FAMILIES = ("apollo-federation", "composite-schema")
+    FAMILIES = ("apollo-federation", "graphql-federation")
     PINNED_VERSION = "16.7.0"
 
     def read_build(self, family):
@@ -1385,7 +1385,7 @@ class FusionVersionOverrideTests(unittest.TestCase):
 
     INSTALL_SCRIPTS = (
         os.path.join(
-            REPO_ROOT, "composite-schema", "gateways", "fusion", "install.sh"
+            REPO_ROOT, "graphql-federation", "gateways", "fusion", "install.sh"
         ),
         os.path.join(
             REPO_ROOT,
@@ -1558,7 +1558,7 @@ class FusionBenchPropsTests(unittest.TestCase):
 
     INSTALL_SCRIPTS = (
         os.path.join(
-            REPO_ROOT, "composite-schema", "gateways", "fusion", "install.sh"
+            REPO_ROOT, "graphql-federation", "gateways", "fusion", "install.sh"
         ),
         os.path.join(
             REPO_ROOT,
@@ -1647,7 +1647,7 @@ class FusionGatewayStartScriptTests(unittest.TestCase):
     """
 
     GATEWAY_DIRS = (
-        os.path.join("composite-schema", "gateways", "fusion"),
+        os.path.join("graphql-federation", "gateways", "fusion"),
         os.path.join("apollo-federation", "gateways", "fusion-fed"),
     )
     GATEWAY_URL = "http://localhost:5299"

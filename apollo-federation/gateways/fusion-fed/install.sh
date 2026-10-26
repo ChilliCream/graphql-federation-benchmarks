@@ -34,8 +34,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # is a property of the prebuilt artifact rather than of the machine running it.
 #
 # Current benchmark variants use .NET 11; .NET 10 remains supported for older builds.
-# This directory hosts the apollo-federation (fed) variants; the composite-schema
-# (non-fed) variants share the same axes from composite-schema/gateways/fusion:
+# This directory hosts the apollo-federation (fed) variants; the graphql-federation
+# (non-fed) variants share the same axes from graphql-federation/gateways/fusion:
 #   fusion-fed-net-11            = stable  packages on .NET 11 JIT + runtime-async
 #   fusion-fed-aot-11            = stable  packages on .NET 11 Native AOT
 #   fusion-nightly-fed-net-11    = preview packages on .NET 11 JIT + runtime-async

@@ -5,7 +5,7 @@
        build), and FUSION_16_7_OR_GREATER when the resolved HotChocolate
        version is 16.7 or greater. Absent for plain `dotnet build` on stable
        pins, which stays on net10.0 (TargetFramework from
-       composite-schema/Directory.Build.props) with the ModifyCostOptions
+       graphql-federation/Directory.Build.props) with the ModifyCostOptions
        call in Program.cs compiled out. -->
   <Import Project="bench.props" Condition="Exists('bench.props')" />
 

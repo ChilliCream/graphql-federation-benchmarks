@@ -8,9 +8,9 @@ set -Eeuo pipefail
 #   ./k6/benchmark.sh <gateway-path> [subgraphs-dir] [constant|constant-latency|burst|ramping]
 #
 # Examples:
-#   ./k6/benchmark.sh composite-schema/gateways/fusion
-#   ./k6/benchmark.sh composite-schema/gateways/fusion subgraphs-net
-#   ./k6/benchmark.sh composite-schema/gateways/fusion subgraphs-net burst
+#   ./k6/benchmark.sh graphql-federation/gateways/fusion
+#   ./k6/benchmark.sh graphql-federation/gateways/fusion subgraphs-net
+#   ./k6/benchmark.sh graphql-federation/gateways/fusion subgraphs-net burst
 #   ./k6/benchmark.sh apollo-federation/gateways/cosmo burst
 #
 # Environment variables:
@@ -37,8 +37,8 @@ set -Eeuo pipefail
 
 if [[ $# -lt 1 ]]; then
   echo "Usage: $0 <gateway-path> [subgraphs-dir] [constant|constant-latency|burst|ramping]"
-  echo "  e.g. $0 composite-schema/gateways/fusion"
-  echo "  e.g. $0 composite-schema/gateways/fusion subgraphs-net"
+  echo "  e.g. $0 graphql-federation/gateways/fusion"
+  echo "  e.g. $0 graphql-federation/gateways/fusion subgraphs-net"
   exit 1
 fi
 

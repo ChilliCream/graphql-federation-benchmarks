@@ -17,7 +17,7 @@ Each benchmark runs a gateway against 4 subgraphs (`Accounts`, `Inventory`, `Pro
 ## Benchmark setup
 
 All benchmarks run against 4 [HotChocolate](https://github.com/ChilliCream/graphql-platform) subgraphs in both
-benchmark families (`apollo-federation/*` and `composite-schema/*`). The
+benchmark families (`apollo-federation/*` and `graphql-federation/*`). The
 subgraphs are pinned to HotChocolate `16.7.0` (each `subgraphs-net/build.sh`
 verifies the pin and never rewrites package versions).
 
@@ -46,8 +46,8 @@ not relabeled.
 - [Hive Router](./apollo-federation/gateways/hive-router) (Rust)
 
 ### [GraphQL Federation](https://graphql.github.io/graphql-federation-spec/)
-- [Fusion](./composite-schema/gateways/fusion) (.NET) — benchmarked as four stable variants: `fusion-net-11` (.NET 11 JIT with runtime-async), `fusion-aot-11` (.NET 11 Native AOT), plus the federation-composition counterparts `fusion-fed-net-11`, `fusion-fed-aot-11` (built from [fusion-fed](./apollo-federation/gateways/fusion-fed)). When a HotChocolate preview newer than the latest stable exists, the same four builds also run as `fusion-nightly-net-11`, `fusion-nightly-aot-11`, `fusion-nightly-fed-net-11` and `fusion-nightly-fed-aot-11`.
-- [feddi-gateway](./composite-schema/gateways/feddi-gateway) (JVM) by [feddi](https://feddi.dev) — built from the open-source repository ([feddi-dev/feddi-gateway](https://github.com/feddi-dev/feddi-gateway), Apache 2.0) at a pinned commit. See its [README](./composite-schema/gateways/feddi-gateway/README.md) for setup.
+- [Fusion](./graphql-federation/gateways/fusion) (.NET) — benchmarked as four stable variants: `fusion-net-11` (.NET 11 JIT with runtime-async), `fusion-aot-11` (.NET 11 Native AOT), plus the Apollo Federation counterparts `fusion-fed-net-11`, `fusion-fed-aot-11` (built from [fusion-fed](./apollo-federation/gateways/fusion-fed)). When a HotChocolate preview newer than the latest stable exists, the same four builds also run as `fusion-nightly-net-11`, `fusion-nightly-aot-11`, `fusion-nightly-fed-net-11` and `fusion-nightly-fed-aot-11`.
+- [feddi-gateway](./graphql-federation/gateways/feddi-gateway) (JVM) by [feddi](https://feddi.dev) — built from the open-source repository ([feddi-dev/feddi-gateway](https://github.com/feddi-dev/feddi-gateway), Apache 2.0) at a pinned commit. See its [README](./graphql-federation/gateways/feddi-gateway/README.md) for setup.
 
 Version pins and upstream changes for the latest refresh are listed in [Gateway version updates](./GATEWAY_UPDATES.md). Apollo Router 2 and Router 3 preview have independent installs, artifacts, and result rows; both run when `all` is selected, or select `apollo-router` / `apollo-router-v3` individually.
 
@@ -71,8 +71,8 @@ Version pins and upstream changes for the latest refresh are listed in [Gateway 
 Examples:
 
 ```bash
-# composite-schema + HotChocolate subgraphs (default)
-./k6/benchmark.sh composite-schema/gateways/fusion
+# graphql-federation + HotChocolate subgraphs (default)
+./k6/benchmark.sh graphql-federation/gateways/fusion
 
 # apollo-federation + HotChocolate subgraphs (default)
 ./k6/benchmark.sh apollo-federation/gateways/apollo-router

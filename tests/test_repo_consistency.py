@@ -185,7 +185,7 @@ class BenchmarkScriptTests(unittest.TestCase):
 
 
 class SubgraphScriptTests(unittest.TestCase):
-    FAMILIES = ("apollo-federation", "composite-schema")
+    FAMILIES = ("apollo-federation", "graphql-federation")
 
     def test_build_sh_bundles_sdk(self):
         for family in self.FAMILIES:
@@ -267,7 +267,7 @@ class FusionGatewayTests(unittest.TestCase):
     # 16.7+ only (FUSION_16_7_OR_GREATER is defined by install.sh in bench.props).
     GATEWAYS = (
         os.path.join(
-            "composite-schema", "gateways", "fusion",
+            "graphql-federation", "gateways", "fusion",
             "eShop.Gateway", "Program.cs",
         ),
         os.path.join(
@@ -276,20 +276,20 @@ class FusionGatewayTests(unittest.TestCase):
         ),
     )
     INSTALL_SCRIPTS = (
-        os.path.join("composite-schema", "gateways", "fusion", "install.sh"),
+        os.path.join("graphql-federation", "gateways", "fusion", "install.sh"),
         os.path.join(
             "apollo-federation", "gateways", "fusion-fed", "install.sh"
         ),
     )
     START_SCRIPTS = (
-        os.path.join("composite-schema", "gateways", "fusion", "start.sh"),
+        os.path.join("graphql-federation", "gateways", "fusion", "start.sh"),
         os.path.join(
             "apollo-federation", "gateways", "fusion-fed", "start.sh"
         ),
     )
     GATEWAY_CSPROJS = (
         os.path.join(
-            "composite-schema", "gateways", "fusion",
+            "graphql-federation", "gateways", "fusion",
             "eShop.Gateway", "eShop.Gateway.csproj",
         ),
         os.path.join(
@@ -388,7 +388,7 @@ class FusionGatewayTests(unittest.TestCase):
         # Both fusion start.sh scripts exec the Native AOT publish output
         # when present and fall back to the JIT apphost otherwise.
         for gateway_dir in (
-            os.path.join("composite-schema", "gateways", "fusion"),
+            os.path.join("graphql-federation", "gateways", "fusion"),
             os.path.join("apollo-federation", "gateways", "fusion-fed"),
         ):
             with self.subTest(gateway=gateway_dir):
@@ -420,7 +420,7 @@ class FusionGatewayTests(unittest.TestCase):
     def test_generated_gateway_inputs_gitignored(self):
         gitignore = read(os.path.join(REPO_ROOT, ".gitignore"))
         for gateway_dir in (
-            "composite-schema/gateways/fusion",
+            "graphql-federation/gateways/fusion",
             "apollo-federation/gateways/fusion-fed",
         ):
             with self.subTest(gateway=gateway_dir):

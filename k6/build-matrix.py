@@ -44,10 +44,10 @@ NIGHTLY_BASE_NAMES = tuple(v for v in FUSION_BASE_NAMES if VARIANTS_BY_ID[v].get
 # Historical Fusion variant ids renamed to the explicit
 # fusion[-fed]-{net-10,net-11,aot-11} scheme (with a -nightly- infix for
 # preview builds). Old runs measured exactly what the new ids describe:
-#   fusion                  -> fusion-net-10              (stable, composite, .NET 10 JIT)
-#   fusion-nightly          -> fusion-nightly-net-10      (preview, composite, .NET 10 JIT)
-#   fusion-nightly-net11    -> fusion-nightly-net-11      (preview, composite, .NET 11 JIT + runtime-async)
-#   fusion-nightly-fed      -> fusion-nightly-fed-net-10  (preview, federation, .NET 10 JIT)
+#   fusion                  -> fusion-net-10              (stable, graphql-federation, .NET 10 JIT)
+#   fusion-nightly          -> fusion-nightly-net-10      (preview, graphql-federation, .NET 10 JIT)
+#   fusion-nightly-net11    -> fusion-nightly-net-11      (preview, graphql-federation, .NET 11 JIT + runtime-async)
+#   fusion-nightly-fed      -> fusion-nightly-fed-net-10  (preview, apollo-federation, .NET 10 JIT)
 # No old run measured a stable fed, stable .NET 11, or any AOT build, so those
 # new ids have no historical mapping by construction.
 FUSION_VARIANT_MIGRATION = {
@@ -119,7 +119,7 @@ def report_gateway_catalog():
 
 SUBGRAPH_ARTIFACT_BY_CATEGORY = {
     "apollo-federation": "prebuilt-apollo-federation-subgraphs",
-    "composite-schema": "prebuilt-composite-schema-subgraphs",
+    "graphql-federation": "prebuilt-graphql-federation-subgraphs",
 }
 
 

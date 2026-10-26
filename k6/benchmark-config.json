@@ -129,7 +129,7 @@
       "variants": [
         {
           "id": "fusion-net-11",
-          "path": "composite-schema/gateways/fusion",
+          "path": "graphql-federation/gateways/fusion",
           "language": "C#",
           "runtime": ".NET",
           "channel": "stable",
@@ -144,7 +144,7 @@
         },
         {
           "id": "fusion-aot-11",
-          "path": "composite-schema/gateways/fusion",
+          "path": "graphql-federation/gateways/fusion",
           "language": "C#",
           "runtime": ".NET",
           "channel": "stable",
@@ -202,7 +202,7 @@
         {
           "id": "fusion-nightly-net-11",
           "label": "Fusion Nightly",
-          "path": "composite-schema/gateways/fusion",
+          "path": "graphql-federation/gateways/fusion",
           "language": "C#",
           "runtime": ".NET",
           "channel": "preview",
@@ -218,7 +218,7 @@
         {
           "id": "fusion-nightly-aot-11",
           "label": "Fusion Nightly",
-          "path": "composite-schema/gateways/fusion",
+          "path": "graphql-federation/gateways/fusion",
           "language": "C#",
           "runtime": ".NET",
           "channel": "preview",
@@ -286,7 +286,7 @@
         {
           "id": "feddi-gateway",
           "preview": true,
-          "path": "composite-schema/gateways/feddi-gateway",
+          "path": "graphql-federation/gateways/feddi-gateway",
           "language": "Java",
           "runtime": "JVM"
         }

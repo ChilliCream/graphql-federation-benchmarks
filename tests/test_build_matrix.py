@@ -63,7 +63,7 @@ class BuildMatrixTests(unittest.TestCase):
             by_path,
             {
                 "apollo-federation/subgraphs-net": "prebuilt-apollo-federation-subgraphs",
-                "composite-schema/subgraphs-net": "prebuilt-composite-schema-subgraphs",
+                "graphql-federation/subgraphs-net": "prebuilt-graphql-federation-subgraphs",
             },
         )
 
@@ -78,7 +78,7 @@ class BuildMatrixTests(unittest.TestCase):
         self.assertEqual(entry["dotnet"], "11")
         self.assertEqual(entry["channel"], "preview")
         self.assertEqual(entry["aot"], "0")
-        self.assertEqual(entry["path"], "composite-schema/gateways/fusion")
+        self.assertEqual(entry["path"], "graphql-federation/gateways/fusion")
         self.assertEqual(entry["subgraphs"], "subgraphs-net")
         self.assertEqual(entry["subgraph_tech"], ".net")
         self.assertEqual(
@@ -96,7 +96,7 @@ class BuildMatrixTests(unittest.TestCase):
         self.assertEqual(entry["dotnet"], "11")
         self.assertEqual(entry["channel"], "stable")
         self.assertEqual(entry["aot"], "1")
-        self.assertEqual(entry["path"], "composite-schema/gateways/fusion")
+        self.assertEqual(entry["path"], "graphql-federation/gateways/fusion")
         self.assertEqual(
             entry["gateway_artifact"], "prebuilt-gateway-fusion-aot-11"
         )
@@ -491,7 +491,7 @@ class ResolveHotchocolateChannelsTests(unittest.TestCase):
 
     INSTALL_SCRIPTS = (
         os.path.join(
-            REPO_ROOT, "composite-schema", "gateways", "fusion", "install.sh"
+            REPO_ROOT, "graphql-federation", "gateways", "fusion", "install.sh"
         ),
         os.path.join(
             REPO_ROOT, "apollo-federation", "gateways", "fusion-fed",
@@ -748,7 +748,7 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(list(variants), [v["id"] for v in MATRIX.VARIANTS])
         self.assertEqual(variants["fusion-nightly-fed-net-11"]["composition"], "apollo-federation")
         self.assertEqual(variants["fusion-fed-net-11"]["composition"], "apollo-federation")
-        self.assertEqual(variants["feddi-gateway"]["composition"], "composite-schema")
+        self.assertEqual(variants["feddi-gateway"]["composition"], "graphql-federation")
         self.assertTrue(variants["feddi-gateway"]["preview"])
         self.assertEqual(variants["fusion-nightly-net-11"]["label"], "Fusion Nightly")
         self.assertEqual(variants["fusion-nightly-aot-11"]["label"], "Fusion Nightly")
