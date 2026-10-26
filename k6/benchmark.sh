@@ -17,8 +17,8 @@ set -Eeuo pipefail
 #   MEASURE_SECONDS  Benchmark measurement duration (default: 120)
 #   BENCH_VUS        Virtual users (passed through to k6.js)
 #   BENCH_RUNS       Number of measured iterations per benchmark (default: 9, median used)
-#   BENCH_COOLDOWN_TARGET_C  CPU temperature to cool down to before each run (default: 45)
-#   BENCH_COOLDOWN_MAX_S     Longest cooldown before each run in seconds (default: 180; 0 disables)
+#   BENCH_COOLDOWN_TARGET_C  CPU temperature to cool down to before each measured run (default: 45)
+#   BENCH_COOLDOWN_MAX_S     Longest cooldown before each measured run in seconds (default: 180; 0 disables)
 #   BENCH_GATEWAY_NAME     Override the gateway identity used in result metadata (default: gateway dir name)
 #   BENCH_GATEWAY_CHANNEL  Gateway package channel passed to install.sh (stable | preview; gateway-specific)
 #   BENCH_GATEWAY_DOTNET   .NET runtime/target passed to install.sh (10 | 11; fusion-specific)
@@ -28,7 +28,7 @@ set -Eeuo pipefail
 # Methodology:
 #   10 runs total: 1 full-duration warmup (discarded) + 9 measured runs.
 #   The median of the 9 measured runs is the primary result.
-#   Before the warmup and before every measured run, with the gateway and
+#   Before every measured run (not the warmup), with the gateway and
 #   subgraphs idle, the CPU cools down to BENCH_COOLDOWN_TARGET_C (or for at
 #   most BENCH_COOLDOWN_MAX_S) so each run starts at the same boost clock.
 # =============================================================================
@@ -993,10 +993,6 @@ sample_cpu_freq_mhz() {
 }
 
 # ---- Warmup run (full duration, discarded) ---------------------------------
-
-echo ""
-echo "=== Cooldown before warmup ==="
-wait_for_cooldown
 
 echo ""
 echo "######################################################################"
