@@ -69,11 +69,11 @@ class CosmoGrafbaseInstallTests(unittest.TestCase):
         for platform, target in platforms.items():
             with self.subTest(platform=platform):
                 workdir = self.run_installer("cosmo", platform)
-                self.assertEqual((workdir / "version.txt").read_text(), "0.361.0\n")
+                self.assertEqual((workdir / "version.txt").read_text(), "0.363.0\n")
                 self.assertEqual(
                     (workdir / "download-url.txt").read_text(),
                     "https://github.com/wundergraph/cosmo/releases/download/"
-                    f"router@0.361.0/router-router@0.361.0-{target}.tar.gz",
+                    f"router@0.363.0/router-router@0.363.0-{target}.tar.gz",
                 )
                 self.assertTrue(os.access(workdir / "cosmo", os.X_OK))
 
