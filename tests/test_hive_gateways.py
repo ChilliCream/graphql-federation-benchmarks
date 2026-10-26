@@ -25,13 +25,13 @@ class HiveGatewayTests(unittest.TestCase):
                 directory = GATEWAYS / name
                 package = json.loads((directory / "package.json").read_text())
                 lock = json.loads((directory / "package-lock.json").read_text())
-                self.assertEqual(package["dependencies"]["@graphql-hive/gateway"], "2.15.2")
+                self.assertEqual(package["dependencies"]["@graphql-hive/gateway"], "2.15.3")
                 self.assertEqual(package["dependencies"]["graphql"], "16.13.2")
                 self.assertEqual(lock["packages"][""]["dependencies"], package["dependencies"])
                 for dependency, version in package["dependencies"].items():
                     self.assertEqual(lock["packages"][f"node_modules/{dependency}"]["version"], version)
                 if name == "hive-gateway-router-runtime":
-                    self.assertEqual(package["dependencies"]["@graphql-hive/router-runtime"], "1.6.5")
+                    self.assertEqual(package["dependencies"]["@graphql-hive/router-runtime"], "1.6.6")
 
     def test_router_installer_uses_release_script_and_records_version(self):
         with tempfile.TemporaryDirectory() as temporary:
