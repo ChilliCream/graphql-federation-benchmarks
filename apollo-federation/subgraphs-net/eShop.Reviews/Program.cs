@@ -4,7 +4,7 @@ using HotChocolate.ApolloFederation;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
-    .AddGraphQLServer()
+    .AddGraphQLServer(disableDefaultSecurity: true)
     .AddApolloFederation(FederationVersion.Federation27)
     // Fusion sends transport-level request batches (a JSON array of operations) to
     // subgraphs; HotChocolate 16 rejects those with HC0009 unless batching is enabled.
