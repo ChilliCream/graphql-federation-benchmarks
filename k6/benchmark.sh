@@ -958,7 +958,9 @@ echo "Gateway idle RSS: $((IDLE_RSS_KB / 1024)) MB"
 COOLDOWN_SECONDS=0
 COOLDOWN_RESULT="disabled"
 
+# Waits for the cooldown, then writes what was still running to $1.
 wait_for_cooldown() {
+  local diag_file="$1"
   COOLDOWN_SECONDS=0
   COOLDOWN_RESULT="disabled"
   if [[ "$BENCH_COOLDOWN_MAX_S" -le 0 ]]; then
@@ -976,6 +978,50 @@ wait_for_cooldown() {
   else
     COOLDOWN_RESULT="timeout"
   fi
+  write_cooldown_diag "$diag_file" "$line"
+}
+
+# Snapshot of what keeps the machine busy at the end of a cooldown: leftover
+# helper processes, the top CPU consumers and per-core load over 5 seconds.
+write_cooldown_diag() {
+  local diag_file="$1"
+  local cooldown_line="$2"
+  {
+    echo "== $cooldown_line"
+    echo "== temperature: $(read_cpu_temp_c) C"
+    echo "== pgrep -fc monitor.sh"
+    pgrep -fc 'monitor\.sh' || true
+    echo "== pgrep -fa monitor.sh"
+    pgrep -fa 'monitor\.sh' || true
+    echo "== pgrep -fc sample_cpu_freq_mhz"
+    pgrep -fc 'sample_cpu_freq_mhz' || true
+    echo "== ps -eo pid,pcpu,etime,args --sort=-pcpu | head -15"
+    ps -eo pid,pcpu,etime,args --sort=-pcpu | head -15 | cut -c1-200 || true
+    echo "== per-core busy % over 5 s"
+    python3 - <<'PY' || true
+import time
+
+def snapshot():
+    cores = {}
+    with open("/proc/stat") as f:
+        for line in f:
+            name, *fields = line.split()
+            if name.startswith("cpu") and name != "cpu":
+                values = [int(v) for v in fields[:8]]
+                cores[name] = (sum(values), values[3] + values[4])
+    return cores
+
+before = snapshot()
+time.sleep(5)
+after = snapshot()
+for name in sorted(after, key=lambda n: int(n[3:])):
+    total = after[name][0] - before[name][0]
+    idle = after[name][1] - before[name][1]
+    busy = 100.0 * (total - idle) / total if total > 0 else 0.0
+    print(f"{name:>6} {busy:5.1f}%")
+PY
+  } > "$diag_file" 2>&1
+  echo "Cooldown diagnostics: $diag_file (monitor.sh processes: $(pgrep -fc 'monitor\.sh' || true))"
 }
 
 read_cpu_temp_c() {
@@ -1022,16 +1068,16 @@ for RUN in $(seq 1 "$BENCH_RUNS"); do
   echo "# Started run $RUN of $BENCH_RUNS                                                #"
   echo "######################################################################"
 
-  # Cool down after the warmup or the previous run, before this one starts.
-  echo ""
-  echo "=== Cooldown before run $RUN ==="
-  wait_for_cooldown
-
   # ---- Create output directory -----------------------------------------------
 
   TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
   RESULT_DIR="$RESULTS_BASE/${TIMESTAMP}"
   mkdir -p "$RESULT_DIR"
+
+  # Cool down after the warmup or the previous run, before this one starts.
+  echo ""
+  echo "=== Cooldown before run $RUN ==="
+  wait_for_cooldown "$RESULT_DIR/cooldown_diag.txt"
 
   # Write metadata for report generation
   python3 -c "
