@@ -841,7 +841,7 @@ fi
 # ---- Verify CPU pinning ------------------------------------------------------
 
 if [[ "$USE_PINNING" == true ]]; then
-  bash "$REPO_ROOT/k6/verify-pinning.sh" "$GATEWAY_PID" "$SUBGRAPH_PID" "$GATEWAY_CPUSET" "$SUBGRAPH_CPUSET"
+  bash "$REPO_ROOT/k6/verify-pinning.sh" "$GATEWAY_PID" "$SUBGRAPH_PID" "$GATEWAY_CPUSET" "$SUBGRAPH_CPUSET" "$SYSTEM_CPUSET"
 fi
 
 # ---- Helper: gateway RSS (KB) ------------------------------------------------

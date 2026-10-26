@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Verify CPU affinity of benchmark processes.
-# Usage: verify-pinning.sh <gateway-pid> <subgraph-pid> [gateway-cpuset] [subgraph-cpuset]
+# Usage: verify-pinning.sh <gateway-pid> <subgraph-pid> [gateway-cpuset] [subgraph-cpuset] [system-cpuset]
 
 if ! command -v taskset &>/dev/null; then
   echo "Pinning verification: skipped (no taskset)"
@@ -83,6 +83,7 @@ GATEWAY_PID="${1:-}"
 SUBGRAPH_PID="${2:-}"
 GATEWAY_CPUSET="${3:-}"
 SUBGRAPH_CPUSET="${4:-}"
+SYSTEM_CPUSET="${5:-}"
 
 if [[ -n "$GATEWAY_PID" ]]; then
   check_affinity "Gateway" "$GATEWAY_PID" "$GATEWAY_CPUSET"
@@ -92,14 +93,54 @@ if [[ -n "$SUBGRAPH_PID" ]]; then
   check_affinity "Subgraph" "$SUBGRAPH_PID" "$SUBGRAPH_CPUSET"
 fi
 
-# Check for stray processes on benchmark cores
+# Check for stray processes that use CPU on benchmark cores (every core outside
+# the system cpuset). Only processes busy for at least 5% of a core over a
+# 1 s sample count: idle daemons that last ran on a benchmark core don't
+# compete with the benchmark, and a warning that always fires gets ignored.
+# Kernel threads (PID 2 and its children) and everything benchmark.sh started
+# (gateway, subgraphs, this script) are skipped.
 echo "  Checking for stray processes on benchmark cores..."
-STRAY=$(ps -eo pid,psr,comm --sort=-psr 2>/dev/null \
-  | awk '$2 >= 1 && $2 <= 7 && $3 !~ /^(migration|watchdog|ksoftirq|kworker|rcu_)/ {print}' \
-  | head -5 || true)
+STRAY="$(python3 - "$(expand_cpus "$SYSTEM_CPUSET")" "$(list_tree "$PPID" | tr '\n' ' ')" "$$" <<'PY' || true
+import os, sys, time
+
+system_cpus = {int(c) for c in sys.argv[1].split(",") if c}
+own = {int(p) for p in sys.argv[2].split()}
+own.add(int(sys.argv[3]))
+ticks_per_second = os.sysconf("SC_CLK_TCK")
+
+def snapshot():
+    procs = {}
+    for entry in os.listdir("/proc"):
+        if not entry.isdigit():
+            continue
+        try:
+            with open(f"/proc/{entry}/stat") as f:
+                data = f.read()
+        except OSError:
+            continue
+        comm = data[data.index("(") + 1:data.rindex(")")]
+        fields = data[data.rindex(")") + 2:].split()
+        pid, ppid = int(entry), int(fields[1])
+        procs[pid] = (ppid, comm, int(fields[11]) + int(fields[12]), int(fields[36]))
+    return procs
+
+before = snapshot()
+time.sleep(1)
+after = snapshot()
+me = os.getpid()
+for pid, (ppid, comm, ticks, cpu) in sorted(after.items()):
+    if pid == 2 or ppid == 2 or pid in own or ppid in own or pid == me:
+        continue
+    if cpu in system_cpus or pid not in before:
+        continue
+    busy = 100.0 * (ticks - before[pid][2]) / ticks_per_second
+    if busy >= 5.0:
+        print(f"{pid:>7} {cpu:>3} {busy:5.1f}% {comm}")
+PY
+)"
 if [[ -n "$STRAY" ]]; then
-  echo "  ⚠️  Found processes on benchmark cores:"
-  echo "$STRAY" | sed 's/^/    /'
+  echo "  ⚠️  Found busy processes on benchmark cores (pid, core, CPU over 1 s, name):"
+  printf '%s\n' "$STRAY" | head -10 | sed 's/^/    /'
 else
-  echo "  ✅ No stray userspace processes on benchmark cores"
+  echo "  ✅ No busy stray processes on benchmark cores"
 fi
