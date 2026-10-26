@@ -3,7 +3,7 @@
 # wait-cooldown.sh --read
 #
 # Waits until the CPU package temperature is at or below target_celsius (default 45) or until
-# max_seconds (default 180) have passed, whichever comes first. Progress goes to stderr every
+# max_seconds (default 90) have passed, whichever comes first. Progress goes to stderr every
 # 10 seconds so a tailed CI log shows the machine is cooling, not stuck. Always exits 0 so it
 # can sit between benchmark runs; the single stdout line says which condition ended the wait:
 #   cooldown: reached <temp> °C after <n>s
@@ -55,7 +55,7 @@ if [ "${1:-}" = "--read" ]; then
 fi
 
 target=${1:-45}
-max=${2:-180}
+max=${2:-90}
 interval=${COOLDOWN_INTERVAL:-1}
 quiet=${COOLDOWN_QUIET:-0}
 

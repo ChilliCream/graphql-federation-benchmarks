@@ -18,7 +18,7 @@ set -Eeuo pipefail
 #   BENCH_VUS        Virtual users (passed through to k6.js)
 #   BENCH_RUNS       Number of measured iterations per benchmark (default: 9, median used)
 #   BENCH_COOLDOWN_TARGET_C  CPU temperature to cool down to before each measured run (default: 45)
-#   BENCH_COOLDOWN_MAX_S     Longest cooldown before each measured run in seconds (default: 180; 0 disables)
+#   BENCH_COOLDOWN_MAX_S     Longest cooldown before each measured run in seconds (default: 90; 0 disables)
 #   BENCH_GATEWAY_NAME     Override the gateway identity used in result metadata (default: gateway dir name)
 #   BENCH_GATEWAY_CHANNEL  Gateway package channel passed to install.sh (stable | preview; gateway-specific)
 #   BENCH_GATEWAY_DOTNET   .NET runtime/target passed to install.sh (10 | 11; fusion-specific)
@@ -79,7 +79,7 @@ else
 fi
 BENCH_RUNS="${BENCH_RUNS:-9}"
 BENCH_COOLDOWN_TARGET_C="${BENCH_COOLDOWN_TARGET_C:-45}"
-BENCH_COOLDOWN_MAX_S="${BENCH_COOLDOWN_MAX_S:-180}"
+BENCH_COOLDOWN_MAX_S="${BENCH_COOLDOWN_MAX_S:-90}"
 
 # ---- Machine info ------------------------------------------------------------
 
@@ -1028,6 +1028,37 @@ read_cpu_temp_c() {
   bash "$REPO_ROOT/k6/wait-cooldown.sh" --read
 }
 
+# Starts "$@" in the background on the system cores. It must not go through
+# maybe_taskset: a function run with & becomes a subshell, so $! would be the
+# subshell and killing it would leave the helper running for the rest of the
+# series. Here taskset execs the helper, so $! is the helper itself.
+start_system_helper() {
+  if [[ "$USE_PINNING" == true && -n "$SYSTEM_CPUSET" ]]; then
+    taskset -c "$SYSTEM_CPUSET" "$@" &
+  else
+    "$@" &
+  fi
+}
+
+stop_system_helper() {
+  local pid="$1"
+  [[ -z "$pid" ]] && return 0
+  kill "$pid" 2>/dev/null || true
+  wait "$pid" 2>/dev/null || true
+}
+
+# A helper that outlives its run keeps loading the machine (and polling k6)
+# through every later cooldown and run, so stop the series instead.
+assert_no_system_helpers() {
+  local leftover
+  leftover="$(pgrep -fa 'k6/monitor\.sh|sample_cpu_freq_mhz' || true)"
+  if [[ -n "$leftover" ]]; then
+    echo "Error: background helpers still running after run $RUN:"
+    echo "$leftover"
+    exit 1
+  fi
+}
+
 # Average all-core clock (MHz), sampled once a second into $1 until killed.
 sample_cpu_freq_mhz() {
   local output_file="$1"
@@ -1123,18 +1154,18 @@ json.dump({
 
   echo ""
   echo "=== Starting monitor ==="
-  maybe_taskset "$SYSTEM_CPUSET" bash "$REPO_ROOT/k6/monitor.sh" \
+  start_system_helper bash "$REPO_ROOT/k6/monitor.sh" \
     -p "$GATEWAY_METRIC_PID" \
     -k "$K6_API_ADDR" \
     -K "$K6_CPUSET" \
     -S "$SUBGRAPH_CPUSET" \
     -G "$GATEWAY_CPUSET" \
     -o "$RESULT_DIR/data.csv" \
-    -i 0.2 &
+    -i 0.2
   MONITOR_PID=$!
 
   CPU_FREQ_SAMPLES="$(mktemp)"
-  maybe_taskset "$SYSTEM_CPUSET" bash -c "$(declare -f sample_cpu_freq_mhz); sample_cpu_freq_mhz \"\$1\"" _ "$CPU_FREQ_SAMPLES" &
+  start_system_helper bash -c "$(declare -f sample_cpu_freq_mhz); sample_cpu_freq_mhz \"\$1\"" _ "$CPU_FREQ_SAMPLES"
   CPU_FREQ_SAMPLER_PID=$!
 
   # ---- Run benchmark ---------------------------------------------------------
@@ -1183,11 +1214,11 @@ json.dump({
 
   # ---- Stop monitor for this run ---------------------------------------------
 
-  kill "$MONITOR_PID" 2>/dev/null || true
+  stop_system_helper "$MONITOR_PID"
   MONITOR_PID=""
-  kill "$CPU_FREQ_SAMPLER_PID" 2>/dev/null || true
-  wait "$CPU_FREQ_SAMPLER_PID" 2>/dev/null || true
+  stop_system_helper "$CPU_FREQ_SAMPLER_PID"
   CPU_FREQ_SAMPLER_PID=""
+  assert_no_system_helpers
   AVG_CPU_MHZ="$(awk 'NF { sum += $1; n++ } END { if (n) printf "%.0f", sum / n }' "$CPU_FREQ_SAMPLES")"
   rm -f "$CPU_FREQ_SAMPLES"
 

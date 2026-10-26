@@ -79,30 +79,37 @@ get_target_pids() {
   echo "$pids" | tr '\n' ' '
 }
 
-get_k6_metrics() {
-    if [[ -z "$K6_API" ]]; then
-        printf "0,0.00,0.00,0.00\n"
-        return
-    fi
+# k6 is polled at most once a second and only for two cheap metrics. The full
+# /v1/metrics response makes k6 compute every trend's percentiles over all
+# samples so far, which costs more as the run goes on and runs on k6's own
+# cores. RPS comes from http_reqs count deltas; P95_ms and Req_success_rate
+# stay empty (the published numbers come from the k6 summary).
+K6_METRICS="0,0.00,,"
+K6_LAST_POLL=""
+K6_PREV_COUNT=""
 
-    local metrics_json
-    metrics_json=$(curl -fsS "http://$K6_API/v1/metrics" 2>/dev/null || echo "{}")
+poll_k6_metrics() {
+  [[ -z "$K6_API" ]] && return 0
 
-    local result
-    result=$(echo "$metrics_json" | jq -r '
-        ((.data // []) | map({key: .id, value: .}) | from_entries) as $metrics |
-        ($metrics.vus.attributes.sample.value // 0) as $vus |
-        ($metrics.http_reqs.attributes.sample.rate // 0) as $rps |
-        ($metrics.http_req_duration.attributes.sample."p(95)" // 0) as $p95 |
-        ($metrics.success_rate.attributes.sample.rate // 1) as $req_success_rate |
-        "\($vus),\($rps),\($p95),\($req_success_rate)"
-    ' || printf "0,0.00,0.00,0.00\n")
+  local now="$EPOCHREALTIME"
+  if [[ -n "$K6_LAST_POLL" ]] \
+    && awk -v n="$now" -v l="$K6_LAST_POLL" 'BEGIN { exit !(n - l < 1) }'; then
+    return 0
+  fi
 
-    if [[ -z "$result" ]]; then
-        printf "0,0.00,0.00,0.00\n"
-        return
-    fi
-    echo "$result"
+  local vus count rps="0.00"
+  vus="$(curl -fsS "http://$K6_API/v1/metrics/vus" 2>/dev/null \
+    | jq -r '.data.attributes.sample.value // 0' 2>/dev/null || true)"
+  count="$(curl -fsS "http://$K6_API/v1/metrics/http_reqs" 2>/dev/null \
+    | jq -r '.data.attributes.sample.count // empty' 2>/dev/null || true)"
+  if [[ -n "$count" && -n "$K6_PREV_COUNT" ]]; then
+    rps="$(awk -v c="$count" -v pc="$K6_PREV_COUNT" -v n="$now" -v l="$K6_LAST_POLL" \
+      'BEGIN { d = n - l; printf "%.2f", (d > 0 ? (c - pc) / d : 0) }')"
+  fi
+
+  K6_PREV_COUNT="$count"
+  K6_LAST_POLL="$now"
+  K6_METRICS="${vus:-0},$rps,,"
 }
 
 sum_cpu_rss() {
@@ -266,8 +273,8 @@ while true; do
     break
   fi
 
-  k6_metrics="$(get_k6_metrics)"
-  IFS=',' read -r VUS RPS P95_MS REQ_SUCCESS_RATE <<< "$k6_metrics"
+  poll_k6_metrics
+  IFS=',' read -r VUS RPS P95_MS REQ_SUCCESS_RATE <<< "$K6_METRICS"
 
   CPU_RSS="$(sum_cpu_rss "$PIDS")"
   CPU="$(echo "$CPU_RSS" | cut -d, -f1)"

@@ -23,7 +23,7 @@ verifies the pin and never rewrites package versions).
 
 Each gateway gets one warmup run and 9 measured runs; the published result is
 the median RPS. Before every measured run the idle machine cools down to 45 °C (or for
-at most 3 minutes), because the CPU boost clock drops as it heats up and would
+at most 90 seconds), because the CPU boost clock drops as it heats up and would
 otherwise make each run slower than the one before.
 
 The committed result tables under `benchmark-runs/` and the root
@@ -104,7 +104,7 @@ Environment variables:
 | `MEASURE_SECONDS` | `120` (constant) / `60` (burst) | Benchmark measurement duration |
 | `BENCH_RUNS` | `9` | Measured runs (plus one warmup run) |
 | `BENCH_COOLDOWN_TARGET_C` | `45` | CPU temperature (°C) to cool down to before each measured run |
-| `BENCH_COOLDOWN_MAX_S` | `180` | Longest cooldown before each measured run, in seconds (`0` disables the cooldown) |
+| `BENCH_COOLDOWN_MAX_S` | `90` | Longest cooldown before each measured run, in seconds (`0` disables the cooldown) |
 | `BENCH_VUS` | `50` constant / `500` burst | VU target passed to `k6/k6.js` |
 | `BENCH_DISPLAY_NAME` | _(auto)_ | Override report display name |
 | `BENCH_GATEWAY_NAME` | _(auto)_ | Override gateway identity in result metadata (used to split stable vs preview rows) |
