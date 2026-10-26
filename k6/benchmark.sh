@@ -17,6 +17,8 @@ set -Eeuo pipefail
 #   MEASURE_SECONDS  Benchmark measurement duration (default: 120)
 #   BENCH_VUS        Virtual users (passed through to k6.js)
 #   BENCH_RUNS       Number of measured iterations per benchmark (default: 9, median used)
+#   BENCH_COOLDOWN_TARGET_C  CPU temperature to cool down to before each run (default: 45)
+#   BENCH_COOLDOWN_MAX_S     Longest cooldown before each run in seconds (default: 180; 0 disables)
 #   BENCH_GATEWAY_NAME     Override the gateway identity used in result metadata (default: gateway dir name)
 #   BENCH_GATEWAY_CHANNEL  Gateway package channel passed to install.sh (stable | preview; gateway-specific)
 #   BENCH_GATEWAY_DOTNET   .NET runtime/target passed to install.sh (10 | 11; fusion-specific)
@@ -26,6 +28,9 @@ set -Eeuo pipefail
 # Methodology:
 #   10 runs total: 1 full-duration warmup (discarded) + 9 measured runs.
 #   The median of the 9 measured runs is the primary result.
+#   Before the warmup and before every measured run, with the gateway and
+#   subgraphs idle, the CPU cools down to BENCH_COOLDOWN_TARGET_C (or for at
+#   most BENCH_COOLDOWN_MAX_S) so each run starts at the same boost clock.
 # =============================================================================
 
 # ---- Args -------------------------------------------------------------------
@@ -73,6 +78,8 @@ else
   MEASURE_SECONDS="${MEASURE_SECONDS:-120}"
 fi
 BENCH_RUNS="${BENCH_RUNS:-9}"
+BENCH_COOLDOWN_TARGET_C="${BENCH_COOLDOWN_TARGET_C:-45}"
+BENCH_COOLDOWN_MAX_S="${BENCH_COOLDOWN_MAX_S:-180}"
 
 # ---- Machine info ------------------------------------------------------------
 
@@ -171,6 +178,7 @@ SUBGRAPH_PID=""
 GATEWAY_PID=""
 GATEWAY_METRIC_PID=""
 MONITOR_PID=""
+CPU_FREQ_SAMPLER_PID=""
 BENCHMARK_PORTS=(5220 5221 5222 5223 5224)
 
 resolve_listener_pids_by_port() {
@@ -299,7 +307,7 @@ wait_for_ports_bindable() {
 cleanup() {
   echo ""
   echo "Cleaning up..."
-  for pid in "$MONITOR_PID" "$GATEWAY_PID" "$SUBGRAPH_PID"; do
+  for pid in "$MONITOR_PID" "$CPU_FREQ_SAMPLER_PID" "$GATEWAY_PID" "$SUBGRAPH_PID"; do
     [[ -n "$pid" ]] && kill "$pid" 2>/dev/null || true
   done
   sleep 1
@@ -942,7 +950,53 @@ SUBGRAPHS_HOTCHOCOLATE_VERSION="$(python3 "$REPO_ROOT/k6/runtime-version.py" --p
 IDLE_RSS_KB=$(gateway_rss_kb)
 echo "Gateway idle RSS: $((IDLE_RSS_KB / 1024)) MB"
 
+# ---- Helpers: CPU cooldown and clock ------------------------------------------
+# With boost on, clocks drop as the CPU heats up, so back-to-back runs get
+# slower. wait_for_cooldown runs between k6 runs only: the gateway and
+# subgraphs stay up but idle, as they always do between runs.
+
+COOLDOWN_SECONDS=0
+COOLDOWN_RESULT="disabled"
+
+wait_for_cooldown() {
+  COOLDOWN_SECONDS=0
+  COOLDOWN_RESULT="disabled"
+  if [[ "$BENCH_COOLDOWN_MAX_S" -le 0 ]]; then
+    return 0
+  fi
+
+  local line
+  line="$(bash "$REPO_ROOT/k6/wait-cooldown.sh" "$BENCH_COOLDOWN_TARGET_C" "$BENCH_COOLDOWN_MAX_S" | tail -n1)"
+  echo "$line"
+  if [[ "$line" =~ after\ ([0-9]+)s ]]; then
+    COOLDOWN_SECONDS="${BASH_REMATCH[1]}"
+  fi
+  if [[ "$line" == "cooldown: reached"* ]]; then
+    COOLDOWN_RESULT="reached"
+  else
+    COOLDOWN_RESULT="timeout"
+  fi
+}
+
+read_cpu_temp_c() {
+  bash "$REPO_ROOT/k6/wait-cooldown.sh" --read
+}
+
+# Average all-core clock (MHz), sampled once a second into $1 until killed.
+sample_cpu_freq_mhz() {
+  local output_file="$1"
+  while true; do
+    awk '{ sum += $1; n++ } END { if (n) printf "%.0f\n", sum / n / 1000 }' \
+      /sys/devices/system/cpu/cpu*/cpufreq/scaling_cur_freq 2>/dev/null >> "$output_file" || true
+    sleep 1
+  done
+}
+
 # ---- Warmup run (full duration, discarded) ---------------------------------
+
+echo ""
+echo "=== Cooldown before warmup ==="
+wait_for_cooldown
 
 echo ""
 echo "######################################################################"
@@ -971,6 +1025,11 @@ for RUN in $(seq 1 "$BENCH_RUNS"); do
   echo "######################################################################"
   echo "# Started run $RUN of $BENCH_RUNS                                                #"
   echo "######################################################################"
+
+  # Cool down after the warmup or the previous run, before this one starts.
+  echo ""
+  echo "=== Cooldown before run $RUN ==="
+  wait_for_cooldown
 
   # ---- Create output directory -----------------------------------------------
 
@@ -1032,6 +1091,10 @@ json.dump({
     -i 0.2 &
   MONITOR_PID=$!
 
+  CPU_FREQ_SAMPLES="$(mktemp)"
+  maybe_taskset "$SYSTEM_CPUSET" bash -c "$(declare -f sample_cpu_freq_mhz); sample_cpu_freq_mhz \"\$1\"" _ "$CPU_FREQ_SAMPLES" &
+  CPU_FREQ_SAMPLER_PID=$!
+
   # ---- Run benchmark ---------------------------------------------------------
 
   echo ""
@@ -1049,12 +1112,16 @@ json.dump({
     K6_ENV_ARGS+=(-e "BENCH_VUS=$BENCH_VUS")
   fi
 
+  CPU_TEMP_START_C="$(read_cpu_temp_c)"
+
   maybe_taskset "$K6_CPUSET" k6 run \
     --address "$K6_API_ADDR" \
     --log-output "file=$RESULT_DIR/k6_console.log" \
     --log-format raw \
     "${K6_ENV_ARGS[@]}" \
     "$REPO_ROOT/k6/k6.js"
+
+  CPU_TEMP_END_C="$(read_cpu_temp_c)"
 
   # ---- Extract sampled error responses ---------------------------------------
   # k6.js logs capped per-VU error samples as "ERRSAMPLE|<json>" lines via the
@@ -1076,6 +1143,28 @@ json.dump({
 
   kill "$MONITOR_PID" 2>/dev/null || true
   MONITOR_PID=""
+  kill "$CPU_FREQ_SAMPLER_PID" 2>/dev/null || true
+  wait "$CPU_FREQ_SAMPLER_PID" 2>/dev/null || true
+  CPU_FREQ_SAMPLER_PID=""
+  AVG_CPU_MHZ="$(awk 'NF { sum += $1; n++ } END { if (n) printf "%.0f", sum / n }' "$CPU_FREQ_SAMPLES")"
+  rm -f "$CPU_FREQ_SAMPLES"
+
+  # Thermal state of this run, so clock drift across runs can be checked later.
+  python3 -c "
+import json, sys
+def num(s):
+    return float(s) if s else None
+path = sys.argv[1]
+d = json.load(open(path))
+d.update({
+    'cooldown_seconds': int(sys.argv[2]),
+    'cooldown_result': sys.argv[3],
+    'cpu_temp_start_c': num(sys.argv[4]),
+    'cpu_temp_end_c': num(sys.argv[5]),
+    'avg_cpu_mhz': num(sys.argv[6]),
+})
+json.dump(d, open(path, 'w'), indent=2)
+" "$RESULT_DIR/metadata.json" "$COOLDOWN_SECONDS" "$COOLDOWN_RESULT" "$CPU_TEMP_START_C" "$CPU_TEMP_END_C" "$AVG_CPU_MHZ"
 
   # ---- Memory stats for this run ----------------------------------------------
 
@@ -1107,6 +1196,7 @@ json.dump({
   echo "  gateway core usage: ${AVG_GATEWAY_CORE_CPU}%"
   echo "  k6 core usage: ${AVG_K6_CORE_CPU}%"
   echo "  subgraph core usage: ${AVG_SUBGRAPH_CORE_CPU}%"
+  echo "  CPU: ${CPU_TEMP_START_C:-?} °C -> ${CPU_TEMP_END_C:-?} °C, avg ${AVG_CPU_MHZ:-?} MHz (cooldown ${COOLDOWN_RESULT} after ${COOLDOWN_SECONDS}s)"
 
 done
 
