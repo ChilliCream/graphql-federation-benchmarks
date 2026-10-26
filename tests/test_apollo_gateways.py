@@ -12,7 +12,7 @@ import unittest
 REPO_ROOT = Path(__file__).resolve().parents[1]
 GATEWAYS = REPO_ROOT / "apollo-federation" / "gateways"
 ROUTER_VERSIONS = {
-    "apollo-router": "v2.18.0",
+    "apollo-router": "v2.19.0",
     "apollo-router-v3": "v3.0.0-preview.0",
 }
 
