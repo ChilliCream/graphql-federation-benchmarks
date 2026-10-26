@@ -307,7 +307,10 @@ wait_for_ports_bindable() {
 cleanup() {
   echo ""
   echo "Cleaning up..."
-  for pid in "$MONITOR_PID" "$CPU_FREQ_SAMPLER_PID" "$GATEWAY_PID" "$SUBGRAPH_PID"; do
+  for pid in "$MONITOR_PID" "$CPU_FREQ_SAMPLER_PID"; do
+    [[ -n "$pid" ]] && { kill -- "-$pid" 2>/dev/null || kill "$pid" 2>/dev/null || true; }
+  done
+  for pid in "$GATEWAY_PID" "$SUBGRAPH_PID"; do
     [[ -n "$pid" ]] && kill "$pid" 2>/dev/null || true
   done
   sleep 1
@@ -1028,23 +1031,34 @@ read_cpu_temp_c() {
   bash "$REPO_ROOT/k6/wait-cooldown.sh" --read
 }
 
-# Starts "$@" in the background on the system cores. It must not go through
-# maybe_taskset: a function run with & becomes a subshell, so $! would be the
-# subshell and killing it would leave the helper running for the rest of the
-# series. Here taskset execs the helper, so $! is the helper itself.
+# Starts "$@" in the background on the system cores, in its own process group.
+# It must not go through maybe_taskset: a function run with & becomes a
+# subshell, so $! would be the subshell and killing it would leave the helper
+# running for the rest of the series. Here setsid and taskset exec the helper,
+# so $! is the helper itself and also its process group id.
 start_system_helper() {
+  local launcher=()
+  command -v setsid >/dev/null 2>&1 && launcher+=(setsid)
   if [[ "$USE_PINNING" == true && -n "$SYSTEM_CPUSET" ]]; then
-    taskset -c "$SYSTEM_CPUSET" "$@" &
-  else
-    "$@" &
+    launcher+=(taskset -c "$SYSTEM_CPUSET")
   fi
+  "${launcher[@]}" "$@" &
 }
 
+# Stops the helper's whole process group: monitor.sh does its work in forked
+# $(...) subshells and curl/ps children, which a kill of the main PID misses
+# and which can outlive it by a moment.
 stop_system_helper() {
   local pid="$1"
+  local deadline
   [[ -z "$pid" ]] && return 0
-  kill "$pid" 2>/dev/null || true
+  kill -TERM -- "-$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null || true
   wait "$pid" 2>/dev/null || true
+  deadline=$((SECONDS + 5))
+  while pgrep -g "$pid" >/dev/null 2>&1 && (( SECONDS < deadline )); do
+    sleep 0.1
+  done
+  kill -KILL -- "-$pid" 2>/dev/null || true
 }
 
 # A helper that outlives its run keeps loading the machine (and polling k6)
