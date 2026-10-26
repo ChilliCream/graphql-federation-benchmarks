@@ -1220,6 +1220,8 @@ if [[ "$BENCH_RUNS" -gt 1 ]]; then
   K6_CORE_VALUES=()
   SUBGRAPH_CORE_VALUES=()
   GATEWAY_CORE_VALUES=()
+  PEAK_RSS_VALUES=()
+  END_RSS_VALUES=()
   for result_dir in "$RESULTS_BASE"/*/; do
     if [[ -f "$result_dir/k6_summary.json" ]]; then
       RPS=$(python3 -c "
@@ -1230,14 +1232,17 @@ print(d.get('metrics',{}).get('http_reqs',{}).get('values',{}).get('rate',0))
       RPS_VALUES+=("$RPS")
     fi
     if [[ -f "$result_dir/memory.json" ]]; then
-      read -r K6_CORE SUBGRAPH_CORE GATEWAY_CORE < <(python3 -c "
+      read -r K6_CORE SUBGRAPH_CORE GATEWAY_CORE PEAK_RSS END_RSS < <(python3 -c "
 import json, sys
 d = json.load(open(sys.argv[1]))
-print(d.get('avg_k6_core_cpu_pct', 0), d.get('avg_subgraph_core_cpu_pct', 0), d.get('avg_gateway_core_cpu_pct', 0))
+print(d.get('avg_k6_core_cpu_pct', 0), d.get('avg_subgraph_core_cpu_pct', 0), d.get('avg_gateway_core_cpu_pct', 0),
+      d.get('peak_rss_kb', 0), d.get('end_rss_kb', 0))
 " "$result_dir/memory.json")
       K6_CORE_VALUES+=("$K6_CORE")
       SUBGRAPH_CORE_VALUES+=("$SUBGRAPH_CORE")
       GATEWAY_CORE_VALUES+=("$GATEWAY_CORE")
+      PEAK_RSS_VALUES+=("$PEAK_RSS")
+      END_RSS_VALUES+=("$END_RSS")
     fi
   done
 
@@ -1266,6 +1271,8 @@ if cv > 3:
     K6_CORE_VALUES_CSV="$(IFS=,; echo "${K6_CORE_VALUES[*]}")"
     SUBGRAPH_CORE_VALUES_CSV="$(IFS=,; echo "${SUBGRAPH_CORE_VALUES[*]}")"
     GATEWAY_CORE_VALUES_CSV="$(IFS=,; echo "${GATEWAY_CORE_VALUES[*]}")"
+    PEAK_RSS_VALUES_CSV="$(IFS=,; echo "${PEAK_RSS_VALUES[*]}")"
+    END_RSS_VALUES_CSV="$(IFS=,; echo "${END_RSS_VALUES[*]}")"
 
     python3 -c "
 import sys, statistics
@@ -1283,6 +1290,15 @@ gw_med = statistics.median(gw_vals) if gw_vals else 0.0
 print(f'  gateway core usage: {gw_med:.2f}%')
 print(f'  k6 core usage: {k6_med:.2f}%')
 print(f'  subgraph core usage: {sub_med:.2f}%')
-" "$K6_CORE_VALUES_CSV" "$SUBGRAPH_CORE_VALUES_CSV" "$GATEWAY_CORE_VALUES_CSV"
+
+# Median across runs, like the core usage; idle is measured once before the warmup.
+idle_kb = int(sys.argv[4])
+peak_vals = parse_csv(sys.argv[5])
+end_vals = parse_csv(sys.argv[6])
+peak_med = statistics.median(peak_vals) if peak_vals else 0
+end_med = statistics.median(end_vals) if end_vals else 0
+print(f'  Memory: idle={idle_kb // 1024}MB  peak={int(peak_med) // 1024}MB  end={int(end_med) // 1024}MB')
+" "$K6_CORE_VALUES_CSV" "$SUBGRAPH_CORE_VALUES_CSV" "$GATEWAY_CORE_VALUES_CSV" \
+      "$IDLE_RSS_KB" "$PEAK_RSS_VALUES_CSV" "$END_RSS_VALUES_CSV"
   fi
 fi

@@ -373,6 +373,42 @@ class GenerateResultsTests(unittest.TestCase):
                 self.assertIn("| fusion-net-10 |", md)
                 self.assertIn("| cosmo |", md)
 
+    def test_peak_memory_column(self):
+        # Peak Memory is the median run's peak RSS; runs without memory.json show a dash.
+        workdir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, workdir, True)
+        artifacts = os.path.join(workdir, "artifacts")
+        os.makedirs(artifacts)
+        make_run(artifacts, "fusion-net-11", "fusion-net-11 (HotChocolate subgraphs)")
+        make_run(artifacts, "cosmo", "cosmo (HotChocolate subgraphs)")
+        memory_path = os.path.join(
+            artifacts, "results-fusion-net-11-constant", "20240101_000000", "memory.json"
+        )
+        with open(memory_path, "w") as fh:
+            json.dump({"peak_rss_kb": 421888}, fh)
+        outdir = os.path.join(workdir, "out")
+        env = dict(os.environ)
+        env["EXPECTED_GATEWAYS_JSON"] = json.dumps(
+            [expected_entry("fusion-net-11"), expected_entry("cosmo")]
+        )
+        env["RESULT_MODES"] = "constant"
+        proc = subprocess.run(
+            ["python3", os.path.join(REPO_ROOT, "k6", "generate-results.py"), artifacts, outdir],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=120,
+            cwd=REPO_ROOT,
+        )
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        with open(os.path.join(outdir, "RESULTS_CONSTANT.md")) as fh:
+            md = fh.read()
+        self.assertIn("| CV% | Peak Memory | Notes |", md)
+        fusion = next(line for line in md.splitlines() if line.startswith("| fusion-net-11 |"))
+        cosmo = next(line for line in md.splitlines() if line.startswith("| cosmo |"))
+        self.assertIn("| 412 MB |", fusion)
+        self.assertEqual(cosmo.split("|")[7].strip(), "—")
+
     def test_apollo_router_generations_have_separate_rows(self):
         gateways = ["apollo-router", "apollo-router-v3"]
         for mode in ("constant", "constant-latency", "burst"):
