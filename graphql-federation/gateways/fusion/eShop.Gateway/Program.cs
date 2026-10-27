@@ -3,6 +3,9 @@ using eShop.Gateway.BenchmarkDiagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Run Kestrel's request processing inline on the socket thread instead of the thread pool.
+builder.WebHost.UseSockets(o => o.UnsafePreferInlineScheduling = true);
+
 if (Environment.GetEnvironmentVariable("BENCH_DIAGNOSTIC_RUN") == "1")
 {
     builder.Services.AddHostedService<FusionPoolDiagnostics>();
