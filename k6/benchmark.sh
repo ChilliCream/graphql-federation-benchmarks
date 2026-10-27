@@ -16,7 +16,7 @@ set -Eeuo pipefail
 # Environment variables:
 #   MEASURE_SECONDS  Benchmark measurement duration (default: 120)
 #   BENCH_VUS        Virtual users (passed through to k6.js)
-#   BENCH_RUNS       Number of measured iterations per benchmark (default: 9, median used)
+#   BENCH_RUNS       Number of measured iterations per benchmark (default: 5, median used)
 #   BENCH_COOLDOWN_TARGET_C  CPU temperature to cool down to before each measured run (default: 45)
 #   BENCH_COOLDOWN_MAX_S     Longest cooldown before each measured run in seconds (default: 90; 0 disables)
 #   BENCH_GATEWAY_NAME     Override the gateway identity used in result metadata (default: gateway dir name)
@@ -26,8 +26,8 @@ set -Eeuo pipefail
 #   BENCH_GATEWAY_VERSION  Exact HotChocolate version passed to install.sh (empty = resolve latest per channel; fusion-specific)
 #
 # Methodology:
-#   10 runs total: 1 full-duration warmup (discarded) + 9 measured runs.
-#   The median of the 9 measured runs is the primary result.
+#   6 runs total: 1 full-duration warmup (discarded) + 5 measured runs.
+#   The median of the 5 measured runs is the primary result.
 #   Before every measured run (not the warmup), with the gateway and
 #   subgraphs idle, the CPU cools down to BENCH_COOLDOWN_TARGET_C (or for at
 #   most BENCH_COOLDOWN_MAX_S) so each run starts at the same boost clock.
@@ -77,7 +77,7 @@ if [[ "$LOAD_MODE_LABEL" == "burst" ]]; then
 else
   MEASURE_SECONDS="${MEASURE_SECONDS:-120}"
 fi
-BENCH_RUNS="${BENCH_RUNS:-9}"
+BENCH_RUNS="${BENCH_RUNS:-5}"
 BENCH_COOLDOWN_TARGET_C="${BENCH_COOLDOWN_TARGET_C:-45}"
 BENCH_COOLDOWN_MAX_S="${BENCH_COOLDOWN_MAX_S:-90}"
 

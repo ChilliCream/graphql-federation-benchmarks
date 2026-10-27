@@ -21,7 +21,7 @@ benchmark families (`apollo-federation/*` and `graphql-federation/*`). The
 subgraphs are pinned to HotChocolate `16.7.0` (each `subgraphs-net/build.sh`
 verifies the pin and never rewrites package versions).
 
-Each gateway gets one warmup run and 9 measured runs; the published result is
+Each gateway gets one warmup run and 5 measured runs; the published result is
 the median RPS. Before every measured run the idle machine cools down to 45 °C (or for
 at most 90 seconds), because the CPU boost clock drops as it heats up and would
 otherwise make each run slower than the one before.
@@ -91,7 +91,7 @@ Examples:
 3. Installs/builds gateway (`gateway/install.sh`) unless `USE_PREBUILT_GATEWAY=1`
 4. Starts subgraphs and gateway (optionally CPU-pinned)
 5. Executes one full-duration warmup run (discarded)
-6. Executes measured runs (`BENCH_RUNS`, default `9`), with a CPU cooldown (`k6/wait-cooldown.sh`) before each one
+6. Executes measured runs (`BENCH_RUNS`, default `5`), with a CPU cooldown (`k6/wait-cooldown.sh`) before each one
 7. Captures monitor + k6 summaries for each run
 8. Prints run statistics (median/mean/CV and CPU usage medians)
 
@@ -102,7 +102,7 @@ Environment variables:
 | Variable | Default | Description |
 |---|---|---|
 | `MEASURE_SECONDS` | `120` (constant) / `60` (burst) | Benchmark measurement duration |
-| `BENCH_RUNS` | `9` | Measured runs (plus one warmup run) |
+| `BENCH_RUNS` | `5` | Measured runs (plus one warmup run) |
 | `BENCH_COOLDOWN_TARGET_C` | `45` | CPU temperature (°C) to cool down to before each measured run |
 | `BENCH_COOLDOWN_MAX_S` | `90` | Longest cooldown before each measured run, in seconds (`0` disables the cooldown) |
 | `BENCH_VUS` | `50` constant / `500` burst | VU target passed to `k6/k6.js` |
