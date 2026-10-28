@@ -6,7 +6,8 @@ that were run, their config and the gateway catalog. Failed gateway executions
 with measurements are kept with "status": "failed"; those without are excluded.
 Per scenario, every variant in the latest catalog gets a chronological result
 series containing every comparable run in the six calendar months ending at
-the latest run. Comparable runs have matching config and hardware.cpuModel.
+the latest run. Comparable runs have matching load config and hardware.cpuModel,
+one warmup, and five or nine measured repetitions, recorded on each result.
 Gateway and subgraph platform/runtime details are recorded on every result.
 A variant that replaced another, which the latest run no longer contains,
 continues its history: the series holds the replaced variant's runs, each
@@ -26,7 +27,7 @@ from pathlib import Path
 
 HISTORY_MONTHS = 6
 WARMUP_RUNS = 1
-MEASURED_RUNS = 9
+MEASURED_RUNS = {5, 9}
 RAN_SCENARIO_STATUSES = {"complete", "failed"}
 
 # feddi-gateway's request-throughput implementation landed before run 400.
@@ -85,8 +86,9 @@ def months_before(value, months):
 
 
 def comparability_key(doc, scenario):
+    config = {k: v for k, v in scenario["config"].items() if k != "measuredRuns"}
     return json.dumps(
-        [scenario["config"], doc["hardware"]["cpuModel"]],
+        [config, doc["hardware"]["cpuModel"]],
         sort_keys=True,
     )
 
@@ -136,7 +138,7 @@ def build_history(runs):
                 scenario is None
                 or not scenario_was_run(scenario)
                 or scenario["config"].get("warmupRuns") != WARMUP_RUNS
-                or scenario["config"].get("measuredRuns") != MEASURED_RUNS
+                or scenario["config"].get("measuredRuns") not in MEASURED_RUNS
                 or comparability_key(doc, scenario) != key
             ):
                 continue
@@ -156,6 +158,7 @@ def build_history(runs):
                     entry = {
                         "version": version,
                         "run": result_run_ref(doc["run"]),
+                        "measuredRuns": scenario["config"]["measuredRuns"],
                         "platform": variant["platform"],
                         "subgraphs": doc["subgraphs"],
                     }

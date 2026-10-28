@@ -264,6 +264,7 @@ class BuildHistoryTests(unittest.TestCase):
         expected = {
             "version": "3.0.0-preview.0",
             "run": entry["results"][0]["run"],
+            "measuredRuns": 9,
             "platform": {"language": {"name": "Rust"}},
             "subgraphs": EXAMPLE["subgraphs"],
         }
@@ -371,7 +372,27 @@ class BuildHistoryTests(unittest.TestCase):
             ["constant", "constant-latency"],
         )
 
-    def test_non_default_run_counts_skipped(self):
+    def test_five_and_nine_repetitions_share_history(self):
+        for counts in ((9, 5), (5, 9)):
+            with self.subTest(counts=counts):
+                # arrange
+                docs = [make_doc(1), make_doc(2)]
+                for doc, count in zip(docs, counts):
+                    scenario(doc, "constant")["config"]["measuredRuns"] = count
+
+                # act
+                history = self.build(*docs)
+                constant = scenario(history, "constant")
+
+                # assert
+                self.assertEqual(constant["config"]["measuredRuns"], counts[-1])
+                self.assertEqual(
+                    [(r["run"]["number"], r["measuredRuns"])
+                     for r in constant["variants"][0]["results"]],
+                    [(1, counts[0]), (2, counts[1])],
+                )
+
+    def test_unsupported_run_counts_skipped(self):
         old = make_doc(1, versions={"fusion-net-10": "16.0.0"})
         scenario(old, "constant")["config"]["measuredRuns"] = 3
         warm = make_doc(2, versions={"fusion-net-10": "16.1.0"})
