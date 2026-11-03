@@ -25,26 +25,26 @@ class HiveGatewayTests(unittest.TestCase):
                 directory = GATEWAYS / name
                 package = json.loads((directory / "package.json").read_text())
                 lock = json.loads((directory / "package-lock.json").read_text())
-                self.assertEqual(package["dependencies"]["@graphql-hive/gateway"], "2.15.3")
+                self.assertEqual(package["dependencies"]["@graphql-hive/gateway"], "2.15.6")
                 self.assertEqual(package["dependencies"]["graphql"], "16.13.2")
                 self.assertEqual(lock["packages"][""]["dependencies"], package["dependencies"])
                 for dependency, version in package["dependencies"].items():
                     self.assertEqual(lock["packages"][f"node_modules/{dependency}"]["version"], version)
                 if name == "hive-gateway-router-runtime":
-                    self.assertEqual(package["dependencies"]["@graphql-hive/router-runtime"], "1.6.6")
+                    self.assertEqual(package["dependencies"]["@graphql-hive/router-runtime"], "1.6.9")
 
     def test_router_installer_uses_release_script_and_records_version(self):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)
             curl = directory / "curl"
-            curl.write_text("#!/bin/sh\nprintf '%s\\n' \"$*\" > curl_args\nprintf 'test \"$1\" = v0.3.6\\n'\n")
+            curl.write_text("#!/bin/sh\nprintf '%s\\n' \"$*\" > curl_args\nprintf 'test \"$1\" = v0.3.10\\n'\n")
             curl.chmod(0o755)
             environment = dict(os.environ, PATH=f"{directory}:{os.environ['PATH']}")
             result = subprocess.run(["bash", str(GATEWAYS / "hive-router" / "install.sh")],
                                     cwd=directory, env=environment, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertEqual((directory / "version.txt").read_text(), "v0.3.6\n")
-            self.assertIn("-fsSL https://raw.githubusercontent.com/graphql-hive/router/hive-router/v0.3.6/install.sh",
+            self.assertEqual((directory / "version.txt").read_text(), "v0.3.10\n")
+            self.assertIn("-fsSL https://raw.githubusercontent.com/graphql-hive/router/hive-router/v0.3.10/install.sh",
                           (directory / "curl_args").read_text())
 
     def test_router_installer_does_not_record_failed_download(self):
