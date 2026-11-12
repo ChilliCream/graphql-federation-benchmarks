@@ -8,6 +8,9 @@ export ASPNETCORE_ENVIRONMENT=Production
 # Run socket completions inline on the I/O thread instead of queueing them to the thread
 # pool. Pairs with UnsafePreferInlineScheduling in Program.cs; read by the runtime at startup.
 export DOTNET_SYSTEM_NET_SOCKETS_INLINE_COMPLETIONS=1
+# Run two socket engine threads per processor. Fusion continues plan execution on the
+# socket thread only when this is at least twice the processor count.
+export DOTNET_SYSTEM_NET_SOCKETS_THREAD_COUNT=$(( 2 * $(nproc) ))
 
 # Native AOT selection: install.sh publishes the ahead-of-time binary to a
 # controlled `-o` publish dir (bin/Release/net11.0/publish), so the location
