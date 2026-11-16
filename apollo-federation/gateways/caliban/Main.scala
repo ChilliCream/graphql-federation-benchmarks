@@ -1,6 +1,6 @@
 //> using scala 3.9.0
-//> using dep com.github.ghostdogpr::caliban-gateway:3.2.0
-//> using dep com.github.ghostdogpr::caliban-quick:3.2.0
+//> using dep com.github.ghostdogpr::caliban-gateway:3.2.1
+//> using dep com.github.ghostdogpr::caliban-quick:3.2.1
 
 import caliban.QuickAdapter
 import caliban.gateway.{ Gateway, RemoteGraphQLConfig, Subgraph }
