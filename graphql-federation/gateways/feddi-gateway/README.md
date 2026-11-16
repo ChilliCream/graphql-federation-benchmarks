@@ -8,4 +8,4 @@ JVM-native gateway for the [GraphQL Federation spec](https://graphql.github.io/g
   (`FEDDI_GATEWAY_VERSION`, calver `YYYY-MM-DD-HHMM`) is reported in the results. Released builds are at
   [feddi.dev/downloads](https://feddi.dev/downloads).
 - `start.sh` starts the gateway and uploads the subgraph schemas, which it composes at runtime.
-- Subgraphs use variable batching (`batching: variables` in `subgraph-config/<name>/config.yaml`).
+- Subgraphs use alias batching (`batching: alias` in `subgraph-config/<name>/config.yaml`).

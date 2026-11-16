@@ -43,6 +43,10 @@ elif [[ -x "$SCRIPT_DIR/.jdk/Contents/Home/bin/java" ]]; then
   export FEDDI_GATEWAY_JAVA_HOME="$SCRIPT_DIR/.jdk/Contents/Home"
 fi
 
+# Don't record server request metrics: nothing exports them in the benchmark, and the
+# other gateways don't collect any either. JAVA_OPTS is appended to the launcher's defaults.
+export JAVA_OPTS="${JAVA_OPTS:-} -Dmanagement.observations.enable.http.server.requests=false"
+
 # Launch the gateway. CWD is the gateway dir, so feddi Gateway reads feddi-gateway.yml
 # from here and writes its rolling log under ./logs. The launcher exec()s java,
 # so $GATEWAY_PID is the JVM itself (correct for the harness's metrics/cleanup).

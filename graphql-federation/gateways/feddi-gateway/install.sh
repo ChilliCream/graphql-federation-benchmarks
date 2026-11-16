@@ -23,8 +23,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 FEDDI_GATEWAY_REPO="https://github.com/feddi-dev/feddi-gateway.git"
 # feddi release (calver, YYYY-MM-DD-HHMM) and the feddi-gateway commit it was built from.
-FEDDI_GATEWAY_VERSION="2026-10-25-0247"
-FEDDI_GATEWAY_REF="56ea3bf588419955359c85a0c9439363ba17402b"  # pinned for reproducibility
+FEDDI_GATEWAY_VERSION="2026-11-03-0517"
+FEDDI_GATEWAY_REF="3546f966dde5afbd3b6453c245da1ec5f25063aa"  # pinned for reproducibility
 
 JDK_DIR="$SCRIPT_DIR/.jdk"
 SOURCE_DIR="$SCRIPT_DIR/source"

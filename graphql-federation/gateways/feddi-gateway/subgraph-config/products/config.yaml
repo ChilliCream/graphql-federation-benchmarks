@@ -1,2 +1,2 @@
 url: http://localhost:5223/graphql
-batching: variables
+batching: alias
