@@ -5,3 +5,4 @@ headers:
           named: Authorization
 traffic_shaping:
   entity_reuse: true
+  http_client_mode: per_worker
