@@ -3,3 +3,5 @@ headers:
     request:
       - propagate:
           named: Authorization
+traffic_shaping:
+  entity_reuse: true
