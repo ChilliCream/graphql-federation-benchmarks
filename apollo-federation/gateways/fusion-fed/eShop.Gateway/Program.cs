@@ -3,6 +3,8 @@ using eShop.Gateway.BenchmarkDiagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Logging.ClearProviders();
+
 // Run Kestrel's request processing inline on the socket thread instead of the thread pool.
 builder.WebHost.UseSockets(o => o.UnsafePreferInlineScheduling = true);
 
