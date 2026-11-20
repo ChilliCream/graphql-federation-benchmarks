@@ -66,7 +66,20 @@ class ApolloGatewayTests(unittest.TestCase):
             directory = Path(temporary)
             bin_directory = directory / "bin"
             bin_directory.mkdir()
-            # Stand-ins for the clone and the release build, logging how they were called.
+            # Stand-ins for the protoc download, the clone and the release build,
+            # logging how they were called.
+            curl = bin_directory / "curl"
+            curl.write_text(
+                '#!/bin/sh\nprintf "%s\\n" "$*" > "$LOG_DIR/curl-args.txt"\n'
+                'while [ "$1" != "-o" ]; do shift; done\nprintf zip > "$2"\n'
+            )
+            curl.chmod(0o755)
+            unzip = bin_directory / "unzip"
+            unzip.write_text(
+                '#!/bin/sh\nwhile [ "$1" != "-d" ]; do shift; done\n'
+                'mkdir -p "$2/bin" && printf protoc > "$2/bin/protoc"\n'
+            )
+            unzip.chmod(0o755)
             git = bin_directory / "git"
             git.write_text(
                 '#!/bin/sh\nprintf "%s\\n" "$*" >> "$LOG_DIR/git-args.txt"\n'
@@ -81,6 +94,7 @@ class ApolloGatewayTests(unittest.TestCase):
             cargo = bin_directory / "cargo"
             cargo.write_text(
                 '#!/bin/sh\nprintf "%s\\n" "$*" > "$LOG_DIR/cargo-args.txt"\n'
+                'cat "$PROTOC" > "$LOG_DIR/protoc-seen.txt"\n'
                 'mkdir -p target/release && printf built > target/release/router\n'
             )
             cargo.chmod(0o755)
@@ -97,6 +111,12 @@ class ApolloGatewayTests(unittest.TestCase):
                 (directory / "git-args.txt").read_text(),
             )
             self.assertEqual((directory / "cargo-args.txt").read_text(), "build --release\n")
+            self.assertRegex(
+                (directory / "curl-args.txt").read_text(),
+                r"https://github\.com/protocolbuffers/protobuf/releases/download/v36\.2/protoc-36\.2-[\w-]+\.zip",
+            )
+            # The build sees the downloaded protoc through PROTOC.
+            self.assertEqual((directory / "protoc-seen.txt").read_text(), "protoc")
             self.assertEqual((directory / "router").read_text(), "built")
             self.assertEqual((directory / "version.txt").read_text(), "v3.0.0-preview.0-nightly.60deb34b\n")
 
