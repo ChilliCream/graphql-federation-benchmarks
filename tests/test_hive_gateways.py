@@ -60,15 +60,62 @@ class HiveGatewayTests(unittest.TestCase):
             self.assertFalse((directory / "version.txt").exists())
 
     def test_router_start_sets_supported_environment(self):
+        for name in ("hive-router", "hive-router-nightly"):
+            with self.subTest(gateway=name), tempfile.TemporaryDirectory() as temporary:
+                directory = Path(temporary)
+                router = directory / "hive_router"
+                router.write_text('#!/bin/sh\nprintf "%s\\n" "$LOG_LEVEL" "$PORT" "$SUPERGRAPH_FILE_PATH" "$HIVE__SUPERGRAPH__PATH"\n')
+                router.chmod(0o755)
+                result = subprocess.run(["bash", str(GATEWAYS / name / "start.sh")],
+                                        cwd=directory, capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual((directory / "gateway_log.txt").read_text(), "error\n5220\n./supergraph.graphql\n\n")
+
+    def test_nightly_installer_builds_main_head_and_records_crate_version_and_commit(self):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)
-            router = directory / "hive_router"
-            router.write_text('#!/bin/sh\nprintf "%s\\n" "$LOG_LEVEL" "$PORT" "$SUPERGRAPH_FILE_PATH" "$HIVE__SUPERGRAPH__PATH"\n')
-            router.chmod(0o755)
-            result = subprocess.run(["bash", str(GATEWAYS / "hive-router" / "start.sh")],
-                                    cwd=directory, capture_output=True, text=True)
+            bin_directory = directory / "bin"
+            bin_directory.mkdir()
+            # Stand-ins for the clone and the release build, logging how they were called.
+            git = bin_directory / "git"
+            git.write_text(
+                '#!/bin/sh\nprintf "%s\\n" "$*" >> "$LOG_DIR/git-args.txt"\n'
+                'source="$2"\n'
+                'case "$3" in\n'
+                '  checkout) mkdir -p "$source/bin/router"\n'
+                '            printf \'[package]\\nname = "hive-router"\\nversion = "0.3.17"\\n\' > "$source/bin/router/Cargo.toml" ;;\n'
+                '  rev-parse) echo ab79411c ;;\n'
+                'esac\n'
+            )
+            git.chmod(0o755)
+            cargo = bin_directory / "cargo"
+            cargo.write_text(
+                '#!/bin/sh\nprintf "%s\\n" "$*" > "$LOG_DIR/cargo-args.txt"\n'
+                'mkdir -p target/release && printf built > target/release/hive_router\n'
+            )
+            cargo.chmod(0o755)
+            environment = dict(os.environ, PATH=f"{bin_directory}:{os.environ['PATH']}", LOG_DIR=str(directory))
+            result = subprocess.run(["bash", str(GATEWAYS / "hive-router-nightly" / "install.sh")],
+                                    cwd=directory, env=environment, capture_output=True, text=True, timeout=10)
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertEqual((directory / "gateway_log.txt").read_text(), "error\n5220\n./supergraph.graphql\n\n")
+            self.assertIn("fetch -q --depth 1 https://github.com/graphql-hive/router.git main",
+                          (directory / "git-args.txt").read_text())
+            self.assertEqual((directory / "cargo-args.txt").read_text(),
+                             "build --release -p hive-router --bin hive_router\n")
+            self.assertEqual((directory / "hive_router").read_text(), "built")
+            self.assertEqual((directory / "version.txt").read_text(), "v0.3.17-nightly.ab79411c\n")
+
+    def test_nightly_uses_router_configuration(self):
+        for filename in ("supergraph.graphql", "settings.json", "start.sh", "router.config.yaml", ".gitignore"):
+            with self.subTest(filename=filename):
+                self.assertEqual((GATEWAYS / "hive-router-nightly" / filename).read_bytes(),
+                                 (GATEWAYS / "hive-router" / filename).read_bytes())
+
+    def test_workflow_exposes_nightly_and_restores_its_binary(self):
+        workflow = (ROOT / ".github" / "workflows" / "benchmark.yml").read_text()
+        options = workflow.split("      gateway:", 1)[1].split("      fusion_version:", 1)[0]
+        self.assertIn("          - hive-router-nightly\n", options)
+        self.assertEqual(workflow.count("chmod +x apollo-federation/gateways/hive-router-nightly/hive_router"), 3)
 
 
 @unittest.skipUnless(os.environ.get("HIVE_GATEWAY_SMOKE") == "1",

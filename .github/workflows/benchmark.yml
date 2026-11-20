@@ -17,12 +17,14 @@ on:
           - apollo-gateway
           - apollo-router
           - apollo-router-v3
+          - apollo-router-nightly
           - caliban
           - cosmo
           - grafbase
           - hive-gateway
           - hive-gateway-router-runtime
           - hive-router
+          - hive-router-nightly
           - fusion-net-11
           - fusion-aot-11
           - fusion-fed-net-11
@@ -178,6 +180,8 @@ jobs:
   build-gateways:
     needs: prepare-matrix
     runs-on: ubuntu-24.04
+    # A failed gateway build only drops that gateway (see select-built-gateways).
+    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
@@ -212,19 +216,41 @@ jobs:
           name: ${{ matrix.gateway.artifact }}
           path: prebuilt-gateway-${{ matrix.gateway.artifact }}.tar.gz
 
+  select-built-gateways:
+    needs:
+      - prepare-matrix
+      - build-gateways
+    if: ${{ always() && !cancelled() }}
+    runs-on: ubuntu-24.04
+    outputs:
+      gateways: ${{ steps.select.outputs.gateways }}
+      gateways_constant: ${{ steps.select.outputs.gateways_constant }}
+      gateways_burst: ${{ steps.select.outputs.gateways_burst }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Drop gateways whose build failed
+        id: select
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GATEWAYS: ${{ needs.prepare-matrix.outputs.gateways }}
+          GATEWAYS_CONSTANT: ${{ needs.prepare-matrix.outputs.gateways_constant }}
+          GATEWAYS_BURST: ${{ needs.prepare-matrix.outputs.gateways_burst }}
+        run: .github/scripts/select-built-gateways.sh
+
   benchmark-constant:
     needs:
       - prepare-matrix
       - build-subgraphs
-      - build-gateways
+      - select-built-gateways
       - benchmark-constant-latency
-    if: ${{ always() && !cancelled() && needs.prepare-matrix.outputs.run_constant == 'true' }}
+    if: ${{ always() && !cancelled() && needs.prepare-matrix.outputs.run_constant == 'true' && needs.select-built-gateways.outputs.gateways_constant != '[]' }}
     strategy:
       fail-fast: false
       matrix:
         # gateways_constant excludes combinations not run in constant — those are
         # marked "not run" in the constant results table instead (see prepare-matrix).
-        gateway: ${{ fromJson(needs.prepare-matrix.outputs.gateways_constant) }}
+        gateway: ${{ fromJson(needs.select-built-gateways.outputs.gateways_constant) }}
     runs-on:
       group: benchmark-runners
     name: ${{ matrix.gateway.name }} (constant)
@@ -255,6 +281,9 @@ jobs:
           if [[ -f apollo-federation/gateways/apollo-router-v3/router ]]; then
             chmod +x apollo-federation/gateways/apollo-router-v3/router
           fi
+          if [[ -f apollo-federation/gateways/apollo-router-nightly/router ]]; then
+            chmod +x apollo-federation/gateways/apollo-router-nightly/router
+          fi
           if [[ -f apollo-federation/gateways/cosmo/cosmo ]]; then
             chmod +x apollo-federation/gateways/cosmo/cosmo
           fi
@@ -263,6 +292,9 @@ jobs:
           fi
           if [[ -f apollo-federation/gateways/hive-router/hive_router ]]; then
             chmod +x apollo-federation/gateways/hive-router/hive_router
+          fi
+          if [[ -f apollo-federation/gateways/hive-router-nightly/hive_router ]]; then
+            chmod +x apollo-federation/gateways/hive-router-nightly/hive_router
           fi
 
       - name: Download prebuilt subgraphs
@@ -399,15 +431,15 @@ jobs:
     needs:
       - prepare-matrix
       - build-subgraphs
-      - build-gateways
+      - select-built-gateways
       - benchmark-constant
-    if: ${{ always() && !cancelled() && needs.prepare-matrix.outputs.run_burst == 'true' }}
+    if: ${{ always() && !cancelled() && needs.prepare-matrix.outputs.run_burst == 'true' && needs.select-built-gateways.outputs.gateways_burst != '[]' }}
     strategy:
       fail-fast: false
       matrix:
         # gateways_burst leaves out gateways excluded from burst (see is_excluded in
         # k6/build-matrix.py); they are marked "not run" in the burst results table.
-        gateway: ${{ fromJson(needs.prepare-matrix.outputs.gateways_burst) }}
+        gateway: ${{ fromJson(needs.select-built-gateways.outputs.gateways_burst) }}
     runs-on:
       group: benchmark-runners
     name: ${{ matrix.gateway.name }} (burst)
@@ -438,6 +470,9 @@ jobs:
           if [[ -f apollo-federation/gateways/apollo-router-v3/router ]]; then
             chmod +x apollo-federation/gateways/apollo-router-v3/router
           fi
+          if [[ -f apollo-federation/gateways/apollo-router-nightly/router ]]; then
+            chmod +x apollo-federation/gateways/apollo-router-nightly/router
+          fi
           if [[ -f apollo-federation/gateways/cosmo/cosmo ]]; then
             chmod +x apollo-federation/gateways/cosmo/cosmo
           fi
@@ -446,6 +481,9 @@ jobs:
           fi
           if [[ -f apollo-federation/gateways/hive-router/hive_router ]]; then
             chmod +x apollo-federation/gateways/hive-router/hive_router
+          fi
+          if [[ -f apollo-federation/gateways/hive-router-nightly/hive_router ]]; then
+            chmod +x apollo-federation/gateways/hive-router-nightly/hive_router
           fi
 
       - name: Download prebuilt subgraphs
@@ -585,13 +623,13 @@ jobs:
     needs:
       - prepare-matrix
       - build-subgraphs
-      - build-gateways
-    if: ${{ always() && !cancelled() && needs.prepare-matrix.outputs.run_latency == 'true' }}
+      - select-built-gateways
+    if: ${{ always() && !cancelled() && needs.prepare-matrix.outputs.run_latency == 'true' && needs.select-built-gateways.outputs.gateways != '[]' }}
     strategy:
       fail-fast: false
       matrix:
         # All benchmarks run against the .NET subgraphs.
-        gateway: ${{ fromJson(needs.prepare-matrix.outputs.gateways) }}
+        gateway: ${{ fromJson(needs.select-built-gateways.outputs.gateways) }}
     runs-on:
       group: benchmark-runners
     name: ${{ matrix.gateway.name }} (constant-latency)
@@ -622,6 +660,9 @@ jobs:
           if [[ -f apollo-federation/gateways/apollo-router-v3/router ]]; then
             chmod +x apollo-federation/gateways/apollo-router-v3/router
           fi
+          if [[ -f apollo-federation/gateways/apollo-router-nightly/router ]]; then
+            chmod +x apollo-federation/gateways/apollo-router-nightly/router
+          fi
           if [[ -f apollo-federation/gateways/cosmo/cosmo ]]; then
             chmod +x apollo-federation/gateways/cosmo/cosmo
           fi
@@ -630,6 +671,9 @@ jobs:
           fi
           if [[ -f apollo-federation/gateways/hive-router/hive_router ]]; then
             chmod +x apollo-federation/gateways/hive-router/hive_router
+          fi
+          if [[ -f apollo-federation/gateways/hive-router-nightly/hive_router ]]; then
+            chmod +x apollo-federation/gateways/hive-router-nightly/hive_router
           fi
 
       - name: Download prebuilt subgraphs

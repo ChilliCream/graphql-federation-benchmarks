@@ -38,12 +38,14 @@ not relabeled.
 - [Apollo Gateway](./apollo-federation/gateways/apollo-gateway) (Node.js)
 - [Apollo Router 2](./apollo-federation/gateways/apollo-router) (Rust, latest 2.x stable; benchmark identity `apollo-router`)
 - [Apollo Router 3 preview](./apollo-federation/gateways/apollo-router-v3) (Rust, latest 3.x preview; separate benchmark identity `apollo-router-v3`)
+- [Apollo Router Nightly](./apollo-federation/gateways/apollo-router-nightly) (Rust, built from the head of the `dev-v3.x` branch on every run; benchmark identity `apollo-router-nightly`)
 - [Caliban](./apollo-federation/gateways/caliban) (Scala)
 - [Cosmo](./apollo-federation/gateways/cosmo) (Go)
 - [Grafbase](./apollo-federation/gateways/grafbase) (Rust)
 - [Hive Gateway](./apollo-federation/gateways/hive-gateway) (Node.js)
 - [Hive Gateway Router Runtime](./apollo-federation/gateways/hive-gateway-router-runtime) (Node.js)
 - [Hive Router](./apollo-federation/gateways/hive-router) (Rust)
+- [Hive Router Nightly](./apollo-federation/gateways/hive-router-nightly) (Rust, built from the head of the `main` branch on every run; benchmark identity `hive-router-nightly`)
 
 ### [GraphQL Federation](https://graphql.github.io/graphql-federation-spec/)
 - [Fusion](./graphql-federation/gateways/fusion) (.NET) — benchmarked as four stable variants: `fusion-net-11` (.NET 11 JIT with runtime-async), `fusion-aot-11` (.NET 11 Native AOT), plus the Apollo Federation counterparts `fusion-fed-net-11`, `fusion-fed-aot-11` (built from [fusion-fed](./apollo-federation/gateways/fusion-fed)). When a HotChocolate preview newer than the latest stable exists, the same four builds also run as `fusion-nightly-net-11`, `fusion-nightly-aot-11`, `fusion-nightly-fed-net-11` and `fusion-nightly-fed-aot-11`.

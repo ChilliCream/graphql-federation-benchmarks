@@ -1,0 +1,14 @@
+supergraph:
+    path: /graphql
+    listen: 0.0.0.0:5220
+    # Preserve Router 2's behavior when a client disconnects.
+    early_cancel: false
+headers:
+    all:
+        request:
+            operations:
+                - propagate:
+                    named: Authorization
+traffic_shaping:
+    all:
+        deduplicate_query: true

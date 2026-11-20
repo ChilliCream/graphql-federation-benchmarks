@@ -621,6 +621,8 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(
             {v["id"]: v["label"] for v in MATRIX.VARIANTS if "label" in v},
             {
+                "apollo-router-nightly": "Apollo Router Nightly",
+                "hive-router-nightly": "Hive Router Nightly",
                 "fusion-nightly-net-11": "Fusion Nightly",
                 "fusion-nightly-aot-11": "Fusion Nightly",
                 "fusion-nightly-fed-net-11": "Fusion Nightly",

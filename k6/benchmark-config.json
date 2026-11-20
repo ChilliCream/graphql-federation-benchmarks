@@ -37,6 +37,13 @@
           "path": "apollo-federation/gateways/apollo-router-v3",
           "language": "Rust",
           "channel": "preview"
+        },
+        {
+          "id": "apollo-router-nightly",
+          "label": "Apollo Router Nightly",
+          "path": "apollo-federation/gateways/apollo-router-nightly",
+          "language": "Rust",
+          "channel": "preview"
         }
       ]
     },
@@ -118,6 +125,13 @@
           "id": "hive-router",
           "path": "apollo-federation/gateways/hive-router",
           "language": "Rust"
+        },
+        {
+          "id": "hive-router-nightly",
+          "label": "Hive Router Nightly",
+          "path": "apollo-federation/gateways/hive-router-nightly",
+          "language": "Rust",
+          "channel": "preview"
         }
       ]
     },

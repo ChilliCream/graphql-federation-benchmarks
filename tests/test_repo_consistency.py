@@ -5,8 +5,11 @@ local runner scripts, result generation and documentation.
 """
 
 import glob
+import json
 import os
 import re
+import subprocess
+import tempfile
 import unittest
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -16,6 +19,7 @@ README = os.path.join(REPO_ROOT, "README.md")
 BENCHMARK_SH = os.path.join(REPO_ROOT, "k6", "benchmark.sh")
 GENERATE_RESULTS = os.path.join(REPO_ROOT, "k6", "generate-results.py")
 BUILD_MATRIX = os.path.join(REPO_ROOT, "k6", "build-matrix.py")
+SELECT_BUILT_GATEWAYS = os.path.join(REPO_ROOT, ".github", "scripts", "select-built-gateways.sh")
 
 def read(path):
     with open(path, encoding="utf-8") as fh:
@@ -31,9 +35,24 @@ class WorkflowTests(unittest.TestCase):
 
     def test_latency_uses_main_matrix(self):
         self.assertIn(
-            "gateway: ${{ fromJson(needs.prepare-matrix.outputs.gateways) }}",
+            "gateway: ${{ fromJson(needs.select-built-gateways.outputs.gateways) }}",
             self.workflow,
         )
+
+    def test_failed_gateway_build_skips_only_that_gateway(self):
+        builds = self.workflow.split("\n  build-gateways:\n", 1)[1].split("\n  select-built-gateways:\n", 1)[0]
+        self.assertIn("    continue-on-error: true\n", builds)
+        for job, matrix in (
+            ("benchmark-constant", "gateways_constant"),
+            ("benchmark-burst", "gateways_burst"),
+            ("benchmark-constant-latency", "gateways"),
+        ):
+            with self.subTest(job=job):
+                section = re.split(r"\n  [a-z]", self.workflow.split(f"\n  {job}:\n", 1)[1], maxsplit=1)[0]
+                self.assertIn("      - select-built-gateways\n", section)
+                self.assertNotIn("      - build-gateways\n", section)
+                self.assertIn(f"fromJson(needs.select-built-gateways.outputs.{matrix})", section)
+                self.assertIn(f"needs.select-built-gateways.outputs.{matrix} != '[]'", section)
 
     def test_matrix_built_by_script(self):
         self.assertIn("run: python3 k6/build-matrix.py", self.workflow)
@@ -154,6 +173,43 @@ class WorkflowTests(unittest.TestCase):
             )[0]
             self.assertIn("BENCH_GATEWAY_AOT", env_block)
             self.assertIn("matrix.gateway.aot", env_block)
+
+
+class SelectBuiltGatewaysTests(unittest.TestCase):
+    def run_script(self, artifacts, gateways, constant, burst):
+        with tempfile.TemporaryDirectory() as temporary:
+            bin_directory = os.path.join(temporary, "bin")
+            os.mkdir(bin_directory)
+            gh = os.path.join(bin_directory, "gh")
+            with open(gh, "w", encoding="utf-8") as fh:
+                fh.write("#!/bin/sh\nprintf '%s\\n' " + " ".join(artifacts) + "\n")
+            os.chmod(gh, 0o755)
+            output = os.path.join(temporary, "output")
+            result = subprocess.run(
+                ["bash", SELECT_BUILT_GATEWAYS],
+                env=dict(
+                    os.environ,
+                    PATH=f"{bin_directory}:{os.environ['PATH']}",
+                    GITHUB_OUTPUT=output, GITHUB_REPOSITORY="owner/repo", GITHUB_RUN_ID="1",
+                    GATEWAYS=json.dumps(gateways), GATEWAYS_CONSTANT=json.dumps(constant),
+                    GATEWAYS_BURST=json.dumps(burst),
+                ),
+                capture_output=True, text=True, timeout=10,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            outputs = dict(line.split("=", 1) for line in read(output).splitlines())
+            return {key: json.loads(value) for key, value in outputs.items()}, result.stdout
+
+    def test_drops_gateways_without_prebuilt_artifact_from_every_matrix(self):
+        good = {"name": "cosmo", "gateway_artifact": "prebuilt-gateway-cosmo"}
+        broken = {"name": "apollo-router-nightly", "gateway_artifact": "prebuilt-gateway-apollo-router-nightly"}
+        outputs, stdout = self.run_script(
+            ["prebuilt-gateway-cosmo", "prebuilt-apollo-federation-subgraphs"],
+            [good, broken], [good, broken], [broken],
+        )
+        self.assertEqual(outputs, {"gateways": [good], "gateways_constant": [good], "gateways_burst": []})
+        self.assertIn("::warning::apollo-router-nightly has no prebuilt gateway", stdout)
+        self.assertNotIn("cosmo", stdout)
 
 
 class BenchmarkScriptTests(unittest.TestCase):

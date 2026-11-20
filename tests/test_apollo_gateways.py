@@ -15,6 +15,7 @@ ROUTER_VERSIONS = {
     "apollo-router": "v2.19.1",
     "apollo-router-v3": "v3.0.0-preview.0",
 }
+ROUTER_GATEWAYS = (*ROUTER_VERSIONS, "apollo-router-nightly")
 
 
 class ApolloGatewayTests(unittest.TestCase):
@@ -60,8 +61,47 @@ class ApolloGatewayTests(unittest.TestCase):
                 )
                 self.assertEqual((directory / "router").read_text(), "installed")
 
+    def test_nightly_installer_builds_dev_v3_head_and_records_crate_version_and_commit(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            bin_directory = directory / "bin"
+            bin_directory.mkdir()
+            # Stand-ins for the clone and the release build, logging how they were called.
+            git = bin_directory / "git"
+            git.write_text(
+                '#!/bin/sh\nprintf "%s\\n" "$*" >> "$LOG_DIR/git-args.txt"\n'
+                'source="$2"\n'
+                'case "$3" in\n'
+                '  checkout) mkdir -p "$source/apollo-router"\n'
+                '            printf \'[package]\\nname = "apollo-router"\\nversion = "3.0.0-preview.0"\\n\' > "$source/apollo-router/Cargo.toml" ;;\n'
+                '  rev-parse) echo 60deb34b ;;\n'
+                'esac\n'
+            )
+            git.chmod(0o755)
+            cargo = bin_directory / "cargo"
+            cargo.write_text(
+                '#!/bin/sh\nprintf "%s\\n" "$*" > "$LOG_DIR/cargo-args.txt"\n'
+                'mkdir -p target/release && printf built > target/release/router\n'
+            )
+            cargo.chmod(0o755)
+            environment = dict(
+                os.environ, PATH=f"{bin_directory}:{os.environ['PATH']}", LOG_DIR=str(directory)
+            )
+            result = subprocess.run(
+                ["bash", str(GATEWAYS / "apollo-router-nightly" / "install.sh")],
+                cwd=directory, env=environment, capture_output=True, text=True, timeout=10,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn(
+                "fetch -q --depth 1 https://github.com/apollographql/router.git dev-v3.x",
+                (directory / "git-args.txt").read_text(),
+            )
+            self.assertEqual((directory / "cargo-args.txt").read_text(), "build --release\n")
+            self.assertEqual((directory / "router").read_text(), "built")
+            self.assertEqual((directory / "version.txt").read_text(), "v3.0.0-preview.0-nightly.60deb34b\n")
+
     def test_router_startup_uses_local_artifacts_and_isolates_environment(self):
-        for name in ROUTER_VERSIONS:
+        for name in ROUTER_GATEWAYS:
             with self.subTest(gateway=name), tempfile.TemporaryDirectory() as temporary:
                 directory = Path(temporary)
                 router = directory / "router"
@@ -83,6 +123,13 @@ class ApolloGatewayTests(unittest.TestCase):
                 )
                 self.assertEqual((directory / "router-env.txt").read_text(), "true\nunset\n")
                 self.assertTrue((directory / "gateway_log.txt").exists())
+
+    def test_nightly_uses_router_3_preview_configuration(self):
+        preview = GATEWAYS / "apollo-router-v3"
+        nightly = GATEWAYS / "apollo-router-nightly"
+        for filename in ("supergraph.graphql", "settings.json", "start.sh", "config.yaml", ".gitignore"):
+            with self.subTest(filename=filename):
+                self.assertEqual((nightly / filename).read_bytes(), (preview / filename).read_bytes())
 
     def test_preview_preserves_schema_endpoints_and_settings(self):
         stable = GATEWAYS / "apollo-router"
@@ -111,6 +158,7 @@ class ApolloGatewayTests(unittest.TestCase):
         options = workflow.split("      gateway:", 1)[1].split("      fusion_version:", 1)[0]
         self.assertIn("          - apollo-router\n", options)
         self.assertIn("          - apollo-router-v3\n", options)
+        self.assertIn("          - apollo-router-nightly\n", options)
         jobs = (
             ("benchmark-constant", "constant", "gateways_constant"),
             ("benchmark-burst", "burst", "gateways_burst"),
@@ -122,6 +170,7 @@ class ApolloGatewayTests(unittest.TestCase):
                 self.assertIn(f"outputs.{matrix})", section)
                 self.assertIn("name: ${{ matrix.gateway.gateway_artifact }}", section)
                 self.assertIn("chmod +x apollo-federation/gateways/apollo-router-v3/router", section)
+                self.assertIn("chmod +x apollo-federation/gateways/apollo-router-nightly/router", section)
                 self.assertIn("BENCH_GATEWAY_NAME: ${{ matrix.gateway.base_name || '' }}", section)
                 self.assertIn(f"name: results-${{{{ matrix.gateway.name }}}}-{mode}", section)
                 self.assertIn("path: ${{ matrix.gateway.path }}/results/", section)
