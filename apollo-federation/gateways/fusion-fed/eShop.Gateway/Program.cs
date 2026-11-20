@@ -28,8 +28,10 @@ builder.Services
     .ConfigurePrimaryHttpMessageHandler(
         () => new SocketsHttpHandler
         {
-            MaxConnectionsPerServer = 256
+            MaxConnectionsPerServer = 256,
+            PooledConnectionIdleTimeout = TimeSpan.FromMinutes(16)
         })
+    .SetHandlerLifetime(Timeout.InfiniteTimeSpan)
     .AddHeaderPropagation();
 
 #if FUSION_16_7_OR_GREATER
