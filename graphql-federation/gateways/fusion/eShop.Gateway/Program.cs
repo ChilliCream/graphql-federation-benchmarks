@@ -37,11 +37,13 @@ builder.Services
 #if FUSION_16_7_OR_GREATER
 builder
     .AddGraphQLGateway(disableDefaultSecurity: true)
-    .AddFileSystemConfiguration("./gateway.far");
+    .AddFileSystemConfiguration("./gateway.far")
+    .ModifyRequestOptions(o => o.IncludeExceptionDetails = true);
 #else
 builder
     .AddGraphQLGateway()
-    .AddFileSystemConfiguration("./gateway.far");
+    .AddFileSystemConfiguration("./gateway.far")
+    .ModifyRequestOptions(o => o.IncludeExceptionDetails = true);
 #endif
 
 var app = builder.Build();

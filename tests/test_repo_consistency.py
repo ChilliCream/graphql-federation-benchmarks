@@ -364,6 +364,18 @@ class FusionGatewayTests(unittest.TestCase):
                 self.assertIn("AddGraphQLGateway()", legacy)
                 self.assertNotIn("disableDefaultSecurity", legacy)
 
+    def test_fusion_gateways_include_exception_details_on_every_version(self):
+        for rel in self.GATEWAYS:
+            with self.subTest(gateway=rel):
+                content = read(os.path.join(REPO_ROOT, rel))
+                modern, legacy = content.split("#if FUSION_16_7_OR_GREATER", 1)[1].split("#else", 1)
+                legacy = legacy.split("#endif", 1)[0]
+                for branch in (modern, legacy):
+                    self.assertIn(
+                        ".ModifyRequestOptions(o => o.IncludeExceptionDetails = true)",
+                        branch,
+                    )
+
     def test_fusion_gateways_keep_auth_and_composition(self):
         # The cost-only change must not take header propagation
         # (benchmark Authorization header) or file composition with it.
