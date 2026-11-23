@@ -29,7 +29,7 @@ builder.Services
         () => new SocketsHttpHandler
         {
             MaxConnectionsPerServer = 256,
-            PooledConnectionIdleTimeout = TimeSpan.FromMinutes(16)
+            PooledConnectionIdleTimeout = TimeSpan.FromSeconds(100)
         })
     .SetHandlerLifetime(Timeout.InfiniteTimeSpan)
     .AddHeaderPropagation();
