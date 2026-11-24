@@ -22,9 +22,9 @@ set -Eeuo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 FEDDI_GATEWAY_REPO="https://github.com/feddi-dev/feddi-gateway.git"
-# feddi release (calver, YYYY-MM-DD-HHMM) and the feddi-gateway commit it was built from.
-FEDDI_GATEWAY_VERSION="2026-11-03-0517"
-FEDDI_GATEWAY_REF="3546f966dde5afbd3b6453c245da1ec5f25063aa"  # pinned for reproducibility
+# feddi release (calver, YYYY-MM-DD-HHMM) and the commit of its release/<version> tag.
+FEDDI_GATEWAY_VERSION="2026-11-22-1912"
+FEDDI_GATEWAY_REF="ba7e5984203b9a7c48cda98b0037eb958d06e0f2"  # pinned for reproducibility
 
 JDK_DIR="$SCRIPT_DIR/.jdk"
 SOURCE_DIR="$SCRIPT_DIR/source"
