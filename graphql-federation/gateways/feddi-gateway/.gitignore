@@ -1,6 +1,7 @@
 # Build inputs/outputs produced by install.sh (not source-controlled)
 .jdk/
 .jdk.tar.gz
+source/
 dist/
 subgraphs.zip
 
