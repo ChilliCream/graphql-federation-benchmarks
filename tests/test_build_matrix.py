@@ -340,8 +340,9 @@ class BuildMatrixTests(unittest.TestCase):
                     by_name[nightly]["display_name"],
                     f"{nightly} 16.6.8 (HotChocolate subgraphs)",
                 )
-        # Non-fusion gateways ignore the pin.
-        self.assertNotIn("version", by_name["cosmo"])
+        # Non-fusion gateways ignore the pin; Nitro Router always runs the latest preview.
+        for gateway in ("cosmo", "nitro-router", "nitro-router-fed"):
+            self.assertNotIn("version", by_name[gateway])
         self.assertEqual(
             by_name["cosmo"]["display_name"], "cosmo (HotChocolate subgraphs)"
         )

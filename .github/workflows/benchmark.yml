@@ -33,6 +33,8 @@ on:
           - fusion-nightly-aot-11
           - fusion-nightly-fed-net-11
           - fusion-nightly-fed-aot-11
+          - nitro-router
+          - nitro-router-fed
           - feddi-gateway
       fusion_version:
         description: 'Fusion-family gateway version pin (e.g. 16.6.8). Non-fusion gateways ignore this input.'
@@ -296,6 +298,12 @@ jobs:
           if [[ -f apollo-federation/gateways/hive-router-nightly/hive_router ]]; then
             chmod +x apollo-federation/gateways/hive-router-nightly/hive_router
           fi
+          if [[ -f graphql-federation/gateways/nitro-router/nitro-router ]]; then
+            chmod +x graphql-federation/gateways/nitro-router/nitro-router
+          fi
+          if [[ -f apollo-federation/gateways/nitro-router-fed/nitro-router ]]; then
+            chmod +x apollo-federation/gateways/nitro-router-fed/nitro-router
+          fi
 
       - name: Download prebuilt subgraphs
         continue-on-error: true
@@ -484,6 +492,12 @@ jobs:
           fi
           if [[ -f apollo-federation/gateways/hive-router-nightly/hive_router ]]; then
             chmod +x apollo-federation/gateways/hive-router-nightly/hive_router
+          fi
+          if [[ -f graphql-federation/gateways/nitro-router/nitro-router ]]; then
+            chmod +x graphql-federation/gateways/nitro-router/nitro-router
+          fi
+          if [[ -f apollo-federation/gateways/nitro-router-fed/nitro-router ]]; then
+            chmod +x apollo-federation/gateways/nitro-router-fed/nitro-router
           fi
 
       - name: Download prebuilt subgraphs
@@ -674,6 +688,12 @@ jobs:
           fi
           if [[ -f apollo-federation/gateways/hive-router-nightly/hive_router ]]; then
             chmod +x apollo-federation/gateways/hive-router-nightly/hive_router
+          fi
+          if [[ -f graphql-federation/gateways/nitro-router/nitro-router ]]; then
+            chmod +x graphql-federation/gateways/nitro-router/nitro-router
+          fi
+          if [[ -f apollo-federation/gateways/nitro-router-fed/nitro-router ]]; then
+            chmod +x apollo-federation/gateways/nitro-router-fed/nitro-router
           fi
 
       - name: Download prebuilt subgraphs

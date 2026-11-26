@@ -292,6 +292,28 @@
       ]
     },
     {
+      "id": "nitro-router",
+      "name": "Nitro Router",
+      "vendor": "ChilliCream",
+      "repositoryUrl": "https://github.com/ChilliCream/graphql-platform",
+      "variants": [
+        {
+          "id": "nitro-router",
+          "path": "graphql-federation/gateways/nitro-router",
+          "language": "C#",
+          "runtime": ".NET",
+          "channel": "preview"
+        },
+        {
+          "id": "nitro-router-fed",
+          "path": "apollo-federation/gateways/nitro-router-fed",
+          "language": "C#",
+          "runtime": ".NET",
+          "channel": "preview"
+        }
+      ]
+    },
+    {
       "id": "feddi-gateway",
       "name": "feddi-gateway",
       "vendor": "feddi",
