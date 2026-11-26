@@ -1,7 +1,7 @@
 {
   "latestRun": {
-    "number": 498,
-    "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45265548372"
+    "number": 500,
+    "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582"
   },
   "gateways": [
     {
@@ -55,7 +55,7 @@
         },
         {
           "id": "apollo-router-nightly",
-          "version": "3.0.0-preview.0-nightly.fbceee06",
+          "version": "3.0.0-preview.0-nightly.36cc3633",
           "label": "Apollo Router Nightly",
           "preview": true,
           "composition": "apollo-federation",
@@ -189,7 +189,7 @@
         },
         {
           "id": "hive-router-nightly",
-          "version": "0.3.19-nightly.e7e70652",
+          "version": "0.3.20-nightly.2b115870",
           "label": "Hive Router Nightly",
           "preview": true,
           "composition": "apollo-federation",
@@ -303,7 +303,7 @@
         },
         {
           "id": "fusion-nightly-net-11",
-          "version": "16.8.0-p.20",
+          "version": "16.8.0-p.21",
           "label": "Fusion Nightly",
           "preview": true,
           "composition": "graphql-federation",
@@ -326,7 +326,7 @@
         },
         {
           "id": "fusion-nightly-aot-11",
-          "version": "16.8.0-p.20",
+          "version": "16.8.0-p.21",
           "label": "Fusion Nightly",
           "preview": true,
           "composition": "graphql-federation",
@@ -354,7 +354,7 @@
         },
         {
           "id": "fusion-nightly-fed-net-11",
-          "version": "16.8.0-p.20",
+          "version": "16.8.0-p.21",
           "label": "Fusion Nightly",
           "preview": true,
           "composition": "apollo-federation",
@@ -377,7 +377,7 @@
         },
         {
           "id": "fusion-nightly-fed-aot-11",
-          "version": "16.8.0-p.20",
+          "version": "16.8.0-p.21",
           "label": "Fusion Nightly",
           "preview": true,
           "composition": "apollo-federation",
@@ -413,7 +413,7 @@
       "variants": [
         {
           "id": "feddi-gateway",
-          "version": "2026-11-03-0517",
+          "version": "2026-11-22-1912",
           "preview": true,
           "composition": "graphql-federation",
           "platform": {
@@ -5244,6 +5244,74 @@
                 "avgUtilizationPercent": 99.9,
                 "maxUtilizationPercent": 100.0
               }
+            },
+            {
+              "version": "2.14.4",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "TypeScript"
+                },
+                "runtime": {
+                  "name": "Node.js",
+                  "version": "24.21.0"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 275,
+                "bestRps": 275,
+                "worstRps": 274,
+                "cvPercent": 0.2,
+                "runsRps": [
+                  274,
+                  275,
+                  275,
+                  274,
+                  275
+                ]
+              },
+              "latencyMs": {
+                "avg": 180.186,
+                "min": 7.413,
+                "med": 179.605,
+                "p90": 210.599,
+                "p95": 216.748,
+                "p99_9": 277.769,
+                "max": 455.134
+              },
+              "requests": {
+                "total": 165854,
+                "successful": 165854,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 2203740
+              },
+              "cpu": {
+                "avgUtilizationPercent": 99.9,
+                "maxUtilizationPercent": 100.0
+              }
             }
           ]
         },
@@ -9770,6 +9838,70 @@
                 "avgUtilizationPercent": 100.0,
                 "maxUtilizationPercent": 100.0
               }
+            },
+            {
+              "version": "2.19.1",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "Rust"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 534,
+                "bestRps": 534,
+                "worstRps": 533,
+                "cvPercent": 0.1,
+                "runsRps": [
+                  533,
+                  534,
+                  534,
+                  533,
+                  534
+                ]
+              },
+              "latencyMs": {
+                "avg": 92.804,
+                "min": 4.373,
+                "med": 90.805,
+                "p90": 125.151,
+                "p95": 135.398,
+                "p99_9": 177.863,
+                "max": 302.114
+              },
+              "requests": {
+                "total": 321662,
+                "successful": 321662,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 177316
+              },
+              "cpu": {
+                "avgUtilizationPercent": 100.0,
+                "maxUtilizationPercent": 100.0
+              }
             }
           ]
         },
@@ -12052,6 +12184,70 @@
                 "avgUtilizationPercent": 100.0,
                 "maxUtilizationPercent": 100.0
               }
+            },
+            {
+              "version": "3.0.0-preview.0",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "Rust"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 402,
+                "bestRps": 402,
+                "worstRps": 401,
+                "cvPercent": 0.1,
+                "runsRps": [
+                  402,
+                  402,
+                  402,
+                  401,
+                  402
+                ]
+              },
+              "latencyMs": {
+                "avg": 123.364,
+                "min": 5.32,
+                "med": 120.828,
+                "p90": 161.791,
+                "p95": 174.807,
+                "p99_9": 227.127,
+                "max": 340.436
+              },
+              "requests": {
+                "total": 242229,
+                "successful": 242229,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 203420
+              },
+              "cpu": {
+                "avgUtilizationPercent": 100.0,
+                "maxUtilizationPercent": 100.0
+              }
             }
           ]
         },
@@ -12184,6 +12380,70 @@
               },
               "cpu": {
                 "avgUtilizationPercent": 99.9,
+                "maxUtilizationPercent": 100.0
+              }
+            },
+            {
+              "version": "3.0.0-preview.0-nightly.36cc3633",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "Rust"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 515,
+                "bestRps": 516,
+                "worstRps": 514,
+                "cvPercent": 0.2,
+                "runsRps": [
+                  516,
+                  515,
+                  514,
+                  515,
+                  516
+                ]
+              },
+              "latencyMs": {
+                "avg": 96.2,
+                "min": 4.604,
+                "med": 94.137,
+                "p90": 127.67,
+                "p95": 138.092,
+                "p99_9": 182.634,
+                "max": 319.691
+              },
+              "requests": {
+                "total": 310544,
+                "successful": 310544,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 196776
+              },
+              "cpu": {
+                "avgUtilizationPercent": 100.0,
                 "maxUtilizationPercent": 100.0
               }
             }
@@ -14602,6 +14862,74 @@
               },
               "memory": {
                 "peakRssKiB": 7261316
+              },
+              "cpu": {
+                "avgUtilizationPercent": 99.9,
+                "maxUtilizationPercent": 100.0
+              }
+            },
+            {
+              "version": "3.2.1",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "Scala"
+                },
+                "runtime": {
+                  "name": "JVM",
+                  "version": "25.0.5"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 1507,
+                "bestRps": 1530,
+                "worstRps": 1504,
+                "cvPercent": 0.7,
+                "runsRps": [
+                  1504,
+                  1507,
+                  1530,
+                  1507,
+                  1509
+                ]
+              },
+              "latencyMs": {
+                "avg": 32.887,
+                "min": 1.969,
+                "med": 31.962,
+                "p90": 46.606,
+                "p95": 51.463,
+                "p99_9": 78.215,
+                "max": 271.787
+              },
+              "requests": {
+                "total": 908582,
+                "successful": 908582,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 6798704
               },
               "cpu": {
                 "avgUtilizationPercent": 99.9,
@@ -19337,6 +19665,73 @@
                 "avgUtilizationPercent": 99.7,
                 "maxUtilizationPercent": 100.0
               }
+            },
+            {
+              "version": "0.373.0",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "Go"
+                },
+                "runtime": {
+                  "name": "Go"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 1495,
+                "bestRps": 1499,
+                "worstRps": 1495,
+                "cvPercent": 0.1,
+                "runsRps": [
+                  1499,
+                  1499,
+                  1495,
+                  1495,
+                  1495
+                ]
+              },
+              "latencyMs": {
+                "avg": 33.148,
+                "min": 2.003,
+                "med": 32.288,
+                "p90": 47.763,
+                "p95": 52.588,
+                "p99_9": 75.626,
+                "max": 278.578
+              },
+              "requests": {
+                "total": 899738,
+                "successful": 899738,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 170704
+              },
+              "cpu": {
+                "avgUtilizationPercent": 99.6,
+                "maxUtilizationPercent": 100.0
+              }
             }
           ]
         },
@@ -23862,6 +24257,70 @@
               "cpu": {
                 "avgUtilizationPercent": 96.8,
                 "maxUtilizationPercent": 100.0
+              }
+            },
+            {
+              "version": "0.53.5",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "Rust"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 1899,
+                "bestRps": 1902,
+                "worstRps": 1889,
+                "cvPercent": 0.3,
+                "runsRps": [
+                  1899,
+                  1902,
+                  1902,
+                  1889,
+                  1892
+                ]
+              },
+              "latencyMs": {
+                "avg": 26.028,
+                "min": 1.934,
+                "med": 25.481,
+                "p90": 33.859,
+                "p95": 36.552,
+                "p99_9": 50.836,
+                "max": 284.421
+              },
+              "requests": {
+                "total": 1140396,
+                "successful": 1140396,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 112120
+              },
+              "cpu": {
+                "avgUtilizationPercent": 96.0,
+                "maxUtilizationPercent": 99.4
               }
             }
           ]
@@ -28622,6 +29081,74 @@
               },
               "memory": {
                 "peakRssKiB": 3346956
+              },
+              "cpu": {
+                "avgUtilizationPercent": 99.8,
+                "maxUtilizationPercent": 100.0
+              }
+            },
+            {
+              "version": "2.15.10",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "TypeScript"
+                },
+                "runtime": {
+                  "name": "Node.js",
+                  "version": "24.21.0"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 302,
+                "bestRps": 303,
+                "worstRps": 300,
+                "cvPercent": 0.4,
+                "runsRps": [
+                  300,
+                  302,
+                  303,
+                  302,
+                  300
+                ]
+              },
+              "latencyMs": {
+                "avg": 163.747,
+                "min": 5.24,
+                "med": 146.449,
+                "p90": 186.431,
+                "p95": 209.845,
+                "p99_9": 688.312,
+                "max": 757.801
+              },
+              "requests": {
+                "total": 181936,
+                "successful": 181936,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 3297532
               },
               "cpu": {
                 "avgUtilizationPercent": 99.8,
@@ -33391,6 +33918,74 @@
                 "avgUtilizationPercent": 99.9,
                 "maxUtilizationPercent": 100.0
               }
+            },
+            {
+              "version": "2.15.10",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "TypeScript"
+                },
+                "runtime": {
+                  "name": "Node.js",
+                  "version": "24.21.0"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 611,
+                "bestRps": 612,
+                "worstRps": 607,
+                "cvPercent": 0.3,
+                "runsRps": [
+                  610,
+                  612,
+                  611,
+                  611,
+                  607
+                ]
+              },
+              "latencyMs": {
+                "avg": 81.221,
+                "min": 3.492,
+                "med": 78.381,
+                "p90": 98.406,
+                "p95": 108.772,
+                "p99_9": 208.91,
+                "max": 316.333
+              },
+              "requests": {
+                "total": 367363,
+                "successful": 367363,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 2672644
+              },
+              "cpu": {
+                "avgUtilizationPercent": 99.9,
+                "maxUtilizationPercent": 100.0
+              }
             }
           ]
         },
@@ -37917,6 +38512,70 @@
                 "avgUtilizationPercent": 93.8,
                 "maxUtilizationPercent": 97.7
               }
+            },
+            {
+              "version": "0.3.17",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "Rust"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 4492,
+                "bestRps": 4508,
+                "worstRps": 4481,
+                "cvPercent": 0.2,
+                "runsRps": [
+                  4492,
+                  4483,
+                  4481,
+                  4508,
+                  4495
+                ]
+              },
+              "latencyMs": {
+                "avg": 10.913,
+                "min": 0.955,
+                "med": 10.402,
+                "p90": 15.022,
+                "p95": 18.217,
+                "p99_9": 28.742,
+                "max": 275.03
+              },
+              "requests": {
+                "total": 2697750,
+                "successful": 2697750,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 95632
+              },
+              "cpu": {
+                "avgUtilizationPercent": 95.8,
+                "maxUtilizationPercent": 98.9
+              }
             }
           ]
         },
@@ -38050,6 +38709,70 @@
               "cpu": {
                 "avgUtilizationPercent": 94.6,
                 "maxUtilizationPercent": 97.7
+              }
+            },
+            {
+              "version": "0.3.20-nightly.2b115870",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "Rust"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 4549,
+                "bestRps": 4579,
+                "worstRps": 4505,
+                "cvPercent": 0.7,
+                "runsRps": [
+                  4579,
+                  4578,
+                  4529,
+                  4505,
+                  4549
+                ]
+              },
+              "latencyMs": {
+                "avg": 10.775,
+                "min": 0.958,
+                "med": 10.261,
+                "p90": 14.868,
+                "p95": 17.976,
+                "p99_9": 28.428,
+                "max": 277.525
+              },
+              "requests": {
+                "total": 2731271,
+                "successful": 2731271,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 94096
+              },
+              "cpu": {
+                "avgUtilizationPercent": 95.6,
+                "maxUtilizationPercent": 98.8
               }
             }
           ]
@@ -40243,6 +40966,81 @@
               "cpu": {
                 "avgUtilizationPercent": 85.2,
                 "maxUtilizationPercent": 92.0
+              }
+            },
+            {
+              "version": "16.7.7",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "C#"
+                },
+                "runtime": {
+                  "name": ".NET",
+                  "version": "11.0.0-rc.3.26522.148"
+                },
+                "features": [
+                  {
+                    "id": "runtime-async",
+                    "name": "Runtime Async",
+                    "description": "C# async methods compiled to runtime-async."
+                  }
+                ]
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 5415,
+                "bestRps": 5441,
+                "worstRps": 5410,
+                "cvPercent": 0.2,
+                "runsRps": [
+                  5441,
+                  5412,
+                  5417,
+                  5410,
+                  5415
+                ]
+              },
+              "latencyMs": {
+                "avg": 9.02,
+                "min": 0.798,
+                "med": 8.081,
+                "p90": 14.53,
+                "p95": 17.768,
+                "p99_9": 30.48,
+                "max": 269.919
+              },
+              "requests": {
+                "total": 3254222,
+                "successful": 3254222,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 378544
+              },
+              "cpu": {
+                "avgUtilizationPercent": 86.4,
+                "maxUtilizationPercent": 91.5
               }
             }
           ]
@@ -45408,6 +46206,86 @@
                 "avgUtilizationPercent": 88.7,
                 "maxUtilizationPercent": 94.2
               }
+            },
+            {
+              "version": "16.7.7",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "C#"
+                },
+                "runtime": {
+                  "name": ".NET",
+                  "version": "11.0.0-rc.3.26522.148"
+                },
+                "features": [
+                  {
+                    "id": "runtime-async",
+                    "name": "Runtime Async",
+                    "description": "C# async methods compiled to runtime-async."
+                  },
+                  {
+                    "id": "aot",
+                    "name": "AOT",
+                    "description": "Native AOT publish."
+                  }
+                ]
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 5350,
+                "bestRps": 5381,
+                "worstRps": 5324,
+                "cvPercent": 0.4,
+                "runsRps": [
+                  5350,
+                  5324,
+                  5381,
+                  5353,
+                  5328
+                ]
+              },
+              "latencyMs": {
+                "avg": 9.132,
+                "min": 0.823,
+                "med": 8.17,
+                "p90": 14.83,
+                "p95": 18.206,
+                "p99_9": 31.166,
+                "max": 276.701
+              },
+              "requests": {
+                "total": 3210947,
+                "successful": 3210947,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 132968
+              },
+              "cpu": {
+                "avgUtilizationPercent": 89.6,
+                "maxUtilizationPercent": 95.1
+              }
             }
           ]
         },
@@ -47600,6 +48478,81 @@
               "cpu": {
                 "avgUtilizationPercent": 83.1,
                 "maxUtilizationPercent": 88.0
+              }
+            },
+            {
+              "version": "16.7.7",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "C#"
+                },
+                "runtime": {
+                  "name": ".NET",
+                  "version": "11.0.0-rc.3.26522.148"
+                },
+                "features": [
+                  {
+                    "id": "runtime-async",
+                    "name": "Runtime Async",
+                    "description": "C# async methods compiled to runtime-async."
+                  }
+                ]
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 5480,
+                "bestRps": 5495,
+                "worstRps": 5465,
+                "cvPercent": 0.2,
+                "runsRps": [
+                  5465,
+                  5495,
+                  5480,
+                  5471,
+                  5493
+                ]
+              },
+              "latencyMs": {
+                "avg": 8.912,
+                "min": 0.79,
+                "med": 7.984,
+                "p90": 14.295,
+                "p95": 17.438,
+                "p99_9": 29.983,
+                "max": 246.383
+              },
+              "requests": {
+                "total": 3291240,
+                "successful": 3291240,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 385192
+              },
+              "cpu": {
+                "avgUtilizationPercent": 83.0,
+                "maxUtilizationPercent": 89.0
               }
             }
           ]
@@ -49938,6 +50891,86 @@
               "cpu": {
                 "avgUtilizationPercent": 88.3,
                 "maxUtilizationPercent": 93.5
+              }
+            },
+            {
+              "version": "16.7.7",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "C#"
+                },
+                "runtime": {
+                  "name": ".NET",
+                  "version": "11.0.0-rc.3.26522.148"
+                },
+                "features": [
+                  {
+                    "id": "runtime-async",
+                    "name": "Runtime Async",
+                    "description": "C# async methods compiled to runtime-async."
+                  },
+                  {
+                    "id": "aot",
+                    "name": "AOT",
+                    "description": "Native AOT publish."
+                  }
+                ]
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 5241,
+                "bestRps": 5281,
+                "worstRps": 5229,
+                "cvPercent": 0.5,
+                "runsRps": [
+                  5241,
+                  5229,
+                  5274,
+                  5281,
+                  5229
+                ]
+              },
+              "latencyMs": {
+                "avg": 9.326,
+                "min": 0.839,
+                "med": 8.38,
+                "p90": 14.973,
+                "p95": 18.29,
+                "p99_9": 30.932,
+                "max": 269.623
+              },
+              "requests": {
+                "total": 3153267,
+                "successful": 3153267,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 127928
+              },
+              "cpu": {
+                "avgUtilizationPercent": 89.2,
+                "maxUtilizationPercent": 93.7
               }
             }
           ]
@@ -54897,6 +55930,81 @@
                 "avgUtilizationPercent": 84.7,
                 "maxUtilizationPercent": 90.2
               }
+            },
+            {
+              "version": "16.8.0-p.21",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "C#"
+                },
+                "runtime": {
+                  "name": ".NET",
+                  "version": "11.0.0-rc.3.26522.148"
+                },
+                "features": [
+                  {
+                    "id": "runtime-async",
+                    "name": "Runtime Async",
+                    "description": "C# async methods compiled to runtime-async."
+                  }
+                ]
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 5443,
+                "bestRps": 5471,
+                "worstRps": 5428,
+                "cvPercent": 0.3,
+                "runsRps": [
+                  5467,
+                  5428,
+                  5443,
+                  5471,
+                  5441
+                ]
+              },
+              "latencyMs": {
+                "avg": 8.972,
+                "min": 0.786,
+                "med": 7.987,
+                "p90": 14.599,
+                "p95": 18.0,
+                "p99_9": 30.906,
+                "max": 292.239
+              },
+              "requests": {
+                "total": 3272712,
+                "successful": 3272712,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 356528
+              },
+              "cpu": {
+                "avgUtilizationPercent": 84.7,
+                "maxUtilizationPercent": 90.8
+              }
             }
           ]
         },
@@ -57151,6 +58259,86 @@
                 "avgUtilizationPercent": 90.9,
                 "maxUtilizationPercent": 95.8
               }
+            },
+            {
+              "version": "16.8.0-p.21",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "C#"
+                },
+                "runtime": {
+                  "name": ".NET",
+                  "version": "11.0.0-rc.3.26522.148"
+                },
+                "features": [
+                  {
+                    "id": "runtime-async",
+                    "name": "Runtime Async",
+                    "description": "C# async methods compiled to runtime-async."
+                  },
+                  {
+                    "id": "aot",
+                    "name": "AOT",
+                    "description": "Native AOT publish."
+                  }
+                ]
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 5379,
+                "bestRps": 5395,
+                "worstRps": 5362,
+                "cvPercent": 0.2,
+                "runsRps": [
+                  5395,
+                  5381,
+                  5368,
+                  5362,
+                  5379
+                ]
+              },
+              "latencyMs": {
+                "avg": 9.083,
+                "min": 0.812,
+                "med": 8.184,
+                "p90": 14.541,
+                "p95": 17.628,
+                "p99_9": 30.064,
+                "max": 249.506
+              },
+              "requests": {
+                "total": 3228935,
+                "successful": 3228935,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 102652
+              },
+              "cpu": {
+                "avgUtilizationPercent": 88.7,
+                "maxUtilizationPercent": 93.7
+              }
             }
           ]
         },
@@ -59264,6 +60452,81 @@
               "cpu": {
                 "avgUtilizationPercent": 82.4,
                 "maxUtilizationPercent": 88.4
+              }
+            },
+            {
+              "version": "16.8.0-p.21",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "C#"
+                },
+                "runtime": {
+                  "name": ".NET",
+                  "version": "11.0.0-rc.3.26522.148"
+                },
+                "features": [
+                  {
+                    "id": "runtime-async",
+                    "name": "Runtime Async",
+                    "description": "C# async methods compiled to runtime-async."
+                  }
+                ]
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 5339,
+                "bestRps": 5393,
+                "worstRps": 5326,
+                "cvPercent": 0.6,
+                "runsRps": [
+                  5393,
+                  5337,
+                  5339,
+                  5382,
+                  5326
+                ]
+              },
+              "latencyMs": {
+                "avg": 9.146,
+                "min": 0.794,
+                "med": 8.154,
+                "p90": 14.794,
+                "p95": 18.125,
+                "p99_9": 31.426,
+                "max": 273.852
+              },
+              "requests": {
+                "total": 3215942,
+                "successful": 3215942,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 357952
+              },
+              "cpu": {
+                "avgUtilizationPercent": 81.5,
+                "maxUtilizationPercent": 88.2
               }
             }
           ]
@@ -61518,6 +62781,86 @@
               "cpu": {
                 "avgUtilizationPercent": 90.3,
                 "maxUtilizationPercent": 97.0
+              }
+            },
+            {
+              "version": "16.8.0-p.21",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "C#"
+                },
+                "runtime": {
+                  "name": ".NET",
+                  "version": "11.0.0-rc.3.26522.148"
+                },
+                "features": [
+                  {
+                    "id": "runtime-async",
+                    "name": "Runtime Async",
+                    "description": "C# async methods compiled to runtime-async."
+                  },
+                  {
+                    "id": "aot",
+                    "name": "AOT",
+                    "description": "Native AOT publish."
+                  }
+                ]
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 5337,
+                "bestRps": 5361,
+                "worstRps": 5335,
+                "cvPercent": 0.2,
+                "runsRps": [
+                  5335,
+                  5361,
+                  5350,
+                  5337,
+                  5335
+                ]
+              },
+              "latencyMs": {
+                "avg": 9.157,
+                "min": 0.844,
+                "med": 8.246,
+                "p90": 14.628,
+                "p95": 17.755,
+                "p99_9": 30.12,
+                "max": 264.28
+              },
+              "requests": {
+                "total": 3208955,
+                "successful": 3208955,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 103960
+              },
+              "cpu": {
+                "avgUtilizationPercent": 87.5,
+                "maxUtilizationPercent": 92.9
               }
             }
           ]
@@ -63939,6 +65282,74 @@
               "cpu": {
                 "avgUtilizationPercent": 95.3,
                 "maxUtilizationPercent": 100.0
+              }
+            },
+            {
+              "version": "2026-11-22-1912",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "Java"
+                },
+                "runtime": {
+                  "name": "JVM",
+                  "version": "25.0.5"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 5142,
+                "bestRps": 5151,
+                "worstRps": 5136,
+                "cvPercent": 0.1,
+                "runsRps": [
+                  5151,
+                  5136,
+                  5142,
+                  5145,
+                  5139
+                ]
+              },
+              "latencyMs": {
+                "avg": 9.507,
+                "min": 0.813,
+                "med": 8.532,
+                "p90": 15.291,
+                "p95": 18.612,
+                "p99_9": 31.798,
+                "max": 306.131
+              },
+              "requests": {
+                "total": 3088298,
+                "successful": 3088298,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 2388588
+              },
+              "cpu": {
+                "avgUtilizationPercent": 91.2,
+                "maxUtilizationPercent": 95.8
               }
             }
           ]
@@ -68759,6 +70170,74 @@
                 "avgUtilizationPercent": 99.9,
                 "maxUtilizationPercent": 100.0
               }
+            },
+            {
+              "version": "2.14.4",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "TypeScript"
+                },
+                "runtime": {
+                  "name": "Node.js",
+                  "version": "24.21.0"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 266,
+                "bestRps": 267,
+                "worstRps": 265,
+                "cvPercent": 0.4,
+                "runsRps": [
+                  265,
+                  265,
+                  266,
+                  267,
+                  267
+                ]
+              },
+              "latencyMs": {
+                "avg": 183.235,
+                "min": 22.588,
+                "med": 186.994,
+                "p90": 198.557,
+                "p95": 203.602,
+                "p99_9": 269.44,
+                "max": 384.241
+              },
+              "requests": {
+                "total": 162820,
+                "successful": 162820,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 2215968
+              },
+              "cpu": {
+                "avgUtilizationPercent": 99.9,
+                "maxUtilizationPercent": 100.0
+              }
             }
           ]
         },
@@ -73285,6 +74764,70 @@
                 "avgUtilizationPercent": 100.0,
                 "maxUtilizationPercent": 100.0
               }
+            },
+            {
+              "version": "2.19.1",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "Rust"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 515,
+                "bestRps": 525,
+                "worstRps": 514,
+                "cvPercent": 0.9,
+                "runsRps": [
+                  518,
+                  525,
+                  514,
+                  515,
+                  515
+                ]
+              },
+              "latencyMs": {
+                "avg": 95.069,
+                "min": 19.661,
+                "med": 93.273,
+                "p90": 119.899,
+                "p95": 128.517,
+                "p99_9": 166.557,
+                "max": 307.724
+              },
+              "requests": {
+                "total": 316018,
+                "successful": 316018,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 185844
+              },
+              "cpu": {
+                "avgUtilizationPercent": 99.9,
+                "maxUtilizationPercent": 100.0
+              }
             }
           ]
         },
@@ -75567,6 +77110,70 @@
                 "avgUtilizationPercent": 100.0,
                 "maxUtilizationPercent": 100.0
               }
+            },
+            {
+              "version": "3.0.0-preview.0",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "Rust"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 420,
+                "bestRps": 421,
+                "worstRps": 419,
+                "cvPercent": 0.2,
+                "runsRps": [
+                  420,
+                  421,
+                  420,
+                  420,
+                  419
+                ]
+              },
+              "latencyMs": {
+                "avg": 116.483,
+                "min": 20.922,
+                "med": 114.95,
+                "p90": 143.913,
+                "p95": 153.447,
+                "p99_9": 197.802,
+                "max": 343.083
+              },
+              "requests": {
+                "total": 256661,
+                "successful": 256661,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 209536
+              },
+              "cpu": {
+                "avgUtilizationPercent": 100.0,
+                "maxUtilizationPercent": 100.0
+              }
             }
           ]
         },
@@ -75696,6 +77303,70 @@
               },
               "memory": {
                 "peakRssKiB": 203348
+              },
+              "cpu": {
+                "avgUtilizationPercent": 100.0,
+                "maxUtilizationPercent": 100.0
+              }
+            },
+            {
+              "version": "3.0.0-preview.0-nightly.36cc3633",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "Rust"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 517,
+                "bestRps": 517,
+                "worstRps": 516,
+                "cvPercent": 0.1,
+                "runsRps": [
+                  517,
+                  517,
+                  517,
+                  516,
+                  517
+                ]
+              },
+              "latencyMs": {
+                "avg": 94.687,
+                "min": 19.974,
+                "med": 93.299,
+                "p90": 118.043,
+                "p95": 125.898,
+                "p99_9": 164.082,
+                "max": 323.142
+              },
+              "requests": {
+                "total": 315475,
+                "successful": 315475,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 201384
               },
               "cpu": {
                 "avgUtilizationPercent": 100.0,
@@ -78120,6 +79791,74 @@
               },
               "cpu": {
                 "avgUtilizationPercent": 99.3,
+                "maxUtilizationPercent": 100.0
+              }
+            },
+            {
+              "version": "3.2.1",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "Scala"
+                },
+                "runtime": {
+                  "name": "JVM",
+                  "version": "25.0.5"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 1464,
+                "bestRps": 1469,
+                "worstRps": 1455,
+                "cvPercent": 0.4,
+                "runsRps": [
+                  1469,
+                  1459,
+                  1455,
+                  1464,
+                  1465
+                ]
+              },
+              "latencyMs": {
+                "avg": 33.401,
+                "min": 18.001,
+                "med": 32.913,
+                "p90": 39.064,
+                "p95": 41.213,
+                "p99_9": 58.416,
+                "max": 303.654
+              },
+              "requests": {
+                "total": 891578,
+                "successful": 891578,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 6267660
+              },
+              "cpu": {
+                "avgUtilizationPercent": 98.9,
                 "maxUtilizationPercent": 100.0
               }
             }
@@ -82852,6 +84591,73 @@
                 "avgUtilizationPercent": 98.6,
                 "maxUtilizationPercent": 100.0
               }
+            },
+            {
+              "version": "0.373.0",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "Go"
+                },
+                "runtime": {
+                  "name": "Go"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 1439,
+                "bestRps": 1441,
+                "worstRps": 1438,
+                "cvPercent": 0.1,
+                "runsRps": [
+                  1439,
+                  1439,
+                  1439,
+                  1441,
+                  1438
+                ]
+              },
+              "latencyMs": {
+                "avg": 33.983,
+                "min": 17.986,
+                "med": 33.434,
+                "p90": 40.467,
+                "p95": 42.747,
+                "p99_9": 53.948,
+                "max": 301.066
+              },
+              "requests": {
+                "total": 877402,
+                "successful": 877402,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 154196
+              },
+              "cpu": {
+                "avgUtilizationPercent": 98.3,
+                "maxUtilizationPercent": 100.0
+              }
             }
           ]
         },
@@ -87377,6 +89183,70 @@
               "cpu": {
                 "avgUtilizationPercent": 75.6,
                 "maxUtilizationPercent": 80.9
+              }
+            },
+            {
+              "version": "0.53.5",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "Rust"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 1459,
+                "bestRps": 1465,
+                "worstRps": 1449,
+                "cvPercent": 0.4,
+                "runsRps": [
+                  1459,
+                  1459,
+                  1465,
+                  1449,
+                  1454
+                ]
+              },
+              "latencyMs": {
+                "avg": 33.486,
+                "min": 16.568,
+                "med": 33.23,
+                "p90": 39.123,
+                "p95": 40.786,
+                "p99_9": 48.98,
+                "max": 295.806
+              },
+              "requests": {
+                "total": 888200,
+                "successful": 888200,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 102680
+              },
+              "cpu": {
+                "avgUtilizationPercent": 74.3,
+                "maxUtilizationPercent": 79.0
               }
             }
           ]
@@ -92142,6 +94012,74 @@
                 "avgUtilizationPercent": 99.8,
                 "maxUtilizationPercent": 100.0
               }
+            },
+            {
+              "version": "2.15.10",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "TypeScript"
+                },
+                "runtime": {
+                  "name": "Node.js",
+                  "version": "24.21.0"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 288,
+                "bestRps": 289,
+                "worstRps": 286,
+                "cvPercent": 0.4,
+                "runsRps": [
+                  286,
+                  289,
+                  289,
+                  288,
+                  288
+                ]
+              },
+              "latencyMs": {
+                "avg": 170.06,
+                "min": 17.205,
+                "med": 156.382,
+                "p90": 192.918,
+                "p95": 209.701,
+                "p99_9": 698.847,
+                "max": 781.951
+              },
+              "requests": {
+                "total": 175560,
+                "successful": 175560,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 3309460
+              },
+              "cpu": {
+                "avgUtilizationPercent": 99.8,
+                "maxUtilizationPercent": 100.0
+              }
             }
           ]
         },
@@ -96834,6 +98772,74 @@
                 "avgUtilizationPercent": 99.9,
                 "maxUtilizationPercent": 100.0
               }
+            },
+            {
+              "version": "2.15.10",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "TypeScript"
+                },
+                "runtime": {
+                  "name": "Node.js",
+                  "version": "24.21.0"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 594,
+                "bestRps": 597,
+                "worstRps": 594,
+                "cvPercent": 0.2,
+                "runsRps": [
+                  595,
+                  594,
+                  594,
+                  594,
+                  597
+                ]
+              },
+              "latencyMs": {
+                "avg": 82.346,
+                "min": 19.853,
+                "med": 79.422,
+                "p90": 101.024,
+                "p95": 109.777,
+                "p99_9": 202.02,
+                "max": 341.672
+              },
+              "requests": {
+                "total": 363116,
+                "successful": 363116,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 2674760
+              },
+              "cpu": {
+                "avgUtilizationPercent": 99.9,
+                "maxUtilizationPercent": 100.0
+              }
             }
           ]
         },
@@ -101360,6 +103366,70 @@
                 "avgUtilizationPercent": 61.8,
                 "maxUtilizationPercent": 65.2
               }
+            },
+            {
+              "version": "0.3.17",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "Rust"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 3358,
+                "bestRps": 3378,
+                "worstRps": 3349,
+                "cvPercent": 0.3,
+                "runsRps": [
+                  3378,
+                  3358,
+                  3364,
+                  3352,
+                  3349
+                ]
+              },
+              "latencyMs": {
+                "avg": 14.575,
+                "min": 8.319,
+                "med": 14.242,
+                "p90": 17.612,
+                "p95": 18.837,
+                "p99_9": 26.266,
+                "max": 280.473
+              },
+              "requests": {
+                "total": 2032261,
+                "successful": 2032261,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 93840
+              },
+              "cpu": {
+                "avgUtilizationPercent": 64.9,
+                "maxUtilizationPercent": 69.6
+              }
             }
           ]
         },
@@ -101493,6 +103563,70 @@
               "cpu": {
                 "avgUtilizationPercent": 61.0,
                 "maxUtilizationPercent": 64.9
+              }
+            },
+            {
+              "version": "0.3.20-nightly.2b115870",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "Rust"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 3385,
+                "bestRps": 3399,
+                "worstRps": 3376,
+                "cvPercent": 0.2,
+                "runsRps": [
+                  3399,
+                  3376,
+                  3388,
+                  3383,
+                  3385
+                ]
+              },
+              "latencyMs": {
+                "avg": 14.443,
+                "min": 8.256,
+                "med": 14.05,
+                "p90": 17.618,
+                "p95": 18.909,
+                "p99_9": 26.737,
+                "max": 294.533
+              },
+              "requests": {
+                "total": 2048041,
+                "successful": 2048041,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 91016
+              },
+              "cpu": {
+                "avgUtilizationPercent": 64.4,
+                "maxUtilizationPercent": 68.6
               }
             }
           ]
@@ -103686,6 +105820,81 @@
               "cpu": {
                 "avgUtilizationPercent": 57.1,
                 "maxUtilizationPercent": 60.2
+              }
+            },
+            {
+              "version": "16.7.7",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "C#"
+                },
+                "runtime": {
+                  "name": ".NET",
+                  "version": "11.0.0-rc.3.26522.148"
+                },
+                "features": [
+                  {
+                    "id": "runtime-async",
+                    "name": "Runtime Async",
+                    "description": "C# async methods compiled to runtime-async."
+                  }
+                ]
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 3607,
+                "bestRps": 3625,
+                "worstRps": 3600,
+                "cvPercent": 0.3,
+                "runsRps": [
+                  3605,
+                  3600,
+                  3607,
+                  3612,
+                  3625
+                ]
+              },
+              "latencyMs": {
+                "avg": 13.553,
+                "min": 8.05,
+                "med": 13.139,
+                "p90": 16.659,
+                "p95": 17.897,
+                "p99_9": 25.203,
+                "max": 295.49
+              },
+              "requests": {
+                "total": 2182865,
+                "successful": 2182865,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 371316
+              },
+              "cpu": {
+                "avgUtilizationPercent": 56.2,
+                "maxUtilizationPercent": 58.9
               }
             }
           ]
@@ -108851,6 +111060,86 @@
                 "avgUtilizationPercent": 63.8,
                 "maxUtilizationPercent": 67.3
               }
+            },
+            {
+              "version": "16.7.7",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "C#"
+                },
+                "runtime": {
+                  "name": ".NET",
+                  "version": "11.0.0-rc.3.26522.148"
+                },
+                "features": [
+                  {
+                    "id": "runtime-async",
+                    "name": "Runtime Async",
+                    "description": "C# async methods compiled to runtime-async."
+                  },
+                  {
+                    "id": "aot",
+                    "name": "AOT",
+                    "description": "Native AOT publish."
+                  }
+                ]
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 3580,
+                "bestRps": 3606,
+                "worstRps": 3558,
+                "cvPercent": 0.5,
+                "runsRps": [
+                  3606,
+                  3567,
+                  3580,
+                  3558,
+                  3587
+                ]
+              },
+              "latencyMs": {
+                "avg": 13.653,
+                "min": 8.096,
+                "med": 13.202,
+                "p90": 16.82,
+                "p95": 18.143,
+                "p99_9": 25.88,
+                "max": 284.196
+              },
+              "requests": {
+                "total": 2164600,
+                "successful": 2164600,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 120060
+              },
+              "cpu": {
+                "avgUtilizationPercent": 60.4,
+                "maxUtilizationPercent": 63.9
+              }
             }
           ]
         },
@@ -111043,6 +113332,81 @@
               "cpu": {
                 "avgUtilizationPercent": 54.2,
                 "maxUtilizationPercent": 57.5
+              }
+            },
+            {
+              "version": "16.7.7",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "C#"
+                },
+                "runtime": {
+                  "name": ".NET",
+                  "version": "11.0.0-rc.3.26522.148"
+                },
+                "features": [
+                  {
+                    "id": "runtime-async",
+                    "name": "Runtime Async",
+                    "description": "C# async methods compiled to runtime-async."
+                  }
+                ]
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 3578,
+                "bestRps": 3601,
+                "worstRps": 3556,
+                "cvPercent": 0.4,
+                "runsRps": [
+                  3601,
+                  3582,
+                  3578,
+                  3578,
+                  3556
+                ]
+              },
+              "latencyMs": {
+                "avg": 13.662,
+                "min": 8.266,
+                "med": 13.262,
+                "p90": 16.771,
+                "p95": 18.034,
+                "p99_9": 25.504,
+                "max": 280.961
+              },
+              "requests": {
+                "total": 2164146,
+                "successful": 2164146,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 381884
+              },
+              "cpu": {
+                "avgUtilizationPercent": 53.5,
+                "maxUtilizationPercent": 56.1
               }
             }
           ]
@@ -113381,6 +115745,86 @@
               "cpu": {
                 "avgUtilizationPercent": 60.8,
                 "maxUtilizationPercent": 64.2
+              }
+            },
+            {
+              "version": "16.7.7",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "C#"
+                },
+                "runtime": {
+                  "name": ".NET",
+                  "version": "11.0.0-rc.3.26522.148"
+                },
+                "features": [
+                  {
+                    "id": "runtime-async",
+                    "name": "Runtime Async",
+                    "description": "C# async methods compiled to runtime-async."
+                  },
+                  {
+                    "id": "aot",
+                    "name": "AOT",
+                    "description": "Native AOT publish."
+                  }
+                ]
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 3579,
+                "bestRps": 3587,
+                "worstRps": 3570,
+                "cvPercent": 0.2,
+                "runsRps": [
+                  3587,
+                  3576,
+                  3570,
+                  3581,
+                  3579
+                ]
+              },
+              "latencyMs": {
+                "avg": 13.656,
+                "min": 8.144,
+                "med": 13.214,
+                "p90": 16.8,
+                "p95": 18.117,
+                "p99_9": 25.709,
+                "max": 263.508
+              },
+              "requests": {
+                "total": 2164149,
+                "successful": 2164149,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 120176
+              },
+              "cpu": {
+                "avgUtilizationPercent": 61.8,
+                "maxUtilizationPercent": 65.0
               }
             }
           ]
@@ -118340,6 +120784,81 @@
                 "avgUtilizationPercent": 55.1,
                 "maxUtilizationPercent": 58.5
               }
+            },
+            {
+              "version": "16.8.0-p.21",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "C#"
+                },
+                "runtime": {
+                  "name": ".NET",
+                  "version": "11.0.0-rc.3.26522.148"
+                },
+                "features": [
+                  {
+                    "id": "runtime-async",
+                    "name": "Runtime Async",
+                    "description": "C# async methods compiled to runtime-async."
+                  }
+                ]
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 3576,
+                "bestRps": 3605,
+                "worstRps": 3565,
+                "cvPercent": 0.4,
+                "runsRps": [
+                  3605,
+                  3581,
+                  3565,
+                  3569,
+                  3576
+                ]
+              },
+              "latencyMs": {
+                "avg": 13.662,
+                "min": 8.047,
+                "med": 13.212,
+                "p90": 16.924,
+                "p95": 18.256,
+                "p99_9": 26.109,
+                "max": 245.671
+              },
+              "requests": {
+                "total": 2164512,
+                "successful": 2164512,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 361956
+              },
+              "cpu": {
+                "avgUtilizationPercent": 54.3,
+                "maxUtilizationPercent": 57.1
+              }
             }
           ]
         },
@@ -120594,6 +123113,86 @@
                 "avgUtilizationPercent": 59.8,
                 "maxUtilizationPercent": 62.6
               }
+            },
+            {
+              "version": "16.8.0-p.21",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "C#"
+                },
+                "runtime": {
+                  "name": ".NET",
+                  "version": "11.0.0-rc.3.26522.148"
+                },
+                "features": [
+                  {
+                    "id": "runtime-async",
+                    "name": "Runtime Async",
+                    "description": "C# async methods compiled to runtime-async."
+                  },
+                  {
+                    "id": "aot",
+                    "name": "AOT",
+                    "description": "Native AOT publish."
+                  }
+                ]
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 3579,
+                "bestRps": 3587,
+                "worstRps": 3564,
+                "cvPercent": 0.3,
+                "runsRps": [
+                  3587,
+                  3564,
+                  3579,
+                  3587,
+                  3566
+                ]
+              },
+              "latencyMs": {
+                "avg": 13.662,
+                "min": 8.203,
+                "med": 13.245,
+                "p90": 16.776,
+                "p95": 18.029,
+                "p99_9": 25.451,
+                "max": 281.757
+              },
+              "requests": {
+                "total": 2162955,
+                "successful": 2162955,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 109228
+              },
+              "cpu": {
+                "avgUtilizationPercent": 60.7,
+                "maxUtilizationPercent": 66.2
+              }
             }
           ]
         },
@@ -122707,6 +125306,81 @@
               "cpu": {
                 "avgUtilizationPercent": 55.7,
                 "maxUtilizationPercent": 59.2
+              }
+            },
+            {
+              "version": "16.8.0-p.21",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "C#"
+                },
+                "runtime": {
+                  "name": ".NET",
+                  "version": "11.0.0-rc.3.26522.148"
+                },
+                "features": [
+                  {
+                    "id": "runtime-async",
+                    "name": "Runtime Async",
+                    "description": "C# async methods compiled to runtime-async."
+                  }
+                ]
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 3571,
+                "bestRps": 3572,
+                "worstRps": 3558,
+                "cvPercent": 0.2,
+                "runsRps": [
+                  3571,
+                  3571,
+                  3572,
+                  3558,
+                  3568
+                ]
+              },
+              "latencyMs": {
+                "avg": 13.686,
+                "min": 8.145,
+                "med": 13.259,
+                "p90": 16.904,
+                "p95": 18.215,
+                "p99_9": 25.902,
+                "max": 279.597
+              },
+              "requests": {
+                "total": 2157577,
+                "successful": 2157577,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 356656
+              },
+              "cpu": {
+                "avgUtilizationPercent": 54.1,
+                "maxUtilizationPercent": 57.4
               }
             }
           ]
@@ -124961,6 +127635,86 @@
               "cpu": {
                 "avgUtilizationPercent": 60.8,
                 "maxUtilizationPercent": 64.1
+              }
+            },
+            {
+              "version": "16.8.0-p.21",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "C#"
+                },
+                "runtime": {
+                  "name": ".NET",
+                  "version": "11.0.0-rc.3.26522.148"
+                },
+                "features": [
+                  {
+                    "id": "runtime-async",
+                    "name": "Runtime Async",
+                    "description": "C# async methods compiled to runtime-async."
+                  },
+                  {
+                    "id": "aot",
+                    "name": "AOT",
+                    "description": "Native AOT publish."
+                  }
+                ]
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 3554,
+                "bestRps": 3570,
+                "worstRps": 3538,
+                "cvPercent": 0.3,
+                "runsRps": [
+                  3547,
+                  3559,
+                  3538,
+                  3554,
+                  3570
+                ]
+              },
+              "latencyMs": {
+                "avg": 13.755,
+                "min": 8.158,
+                "med": 13.361,
+                "p90": 16.891,
+                "p95": 18.132,
+                "p99_9": 25.463,
+                "max": 285.012
+              },
+              "requests": {
+                "total": 2148851,
+                "successful": 2148851,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 109316
+              },
+              "cpu": {
+                "avgUtilizationPercent": 56.2,
+                "maxUtilizationPercent": 59.5
               }
             }
           ]
@@ -127382,6 +130136,74 @@
               "cpu": {
                 "avgUtilizationPercent": 60.9,
                 "maxUtilizationPercent": 66.7
+              }
+            },
+            {
+              "version": "2026-11-22-1912",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "Java"
+                },
+                "runtime": {
+                  "name": "JVM",
+                  "version": "25.0.5"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 3557,
+                "bestRps": 3568,
+                "worstRps": 3547,
+                "cvPercent": 0.2,
+                "runsRps": [
+                  3565,
+                  3557,
+                  3568,
+                  3554,
+                  3547
+                ]
+              },
+              "latencyMs": {
+                "avg": 13.739,
+                "min": 7.51,
+                "med": 13.268,
+                "p90": 16.979,
+                "p95": 18.331,
+                "p99_9": 26.333,
+                "max": 292.696
+              },
+              "requests": {
+                "total": 2151720,
+                "successful": 2151720,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 2364364
+              },
+              "cpu": {
+                "avgUtilizationPercent": 64.7,
+                "maxUtilizationPercent": 72.0
               }
             }
           ]
@@ -132202,6 +135024,74 @@
                 "avgUtilizationPercent": 99.8,
                 "maxUtilizationPercent": 100.0
               }
+            },
+            {
+              "version": "2.14.4",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "TypeScript"
+                },
+                "runtime": {
+                  "name": "Node.js",
+                  "version": "24.21.0"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 237,
+                "bestRps": 237,
+                "worstRps": 236,
+                "cvPercent": 0.2,
+                "runsRps": [
+                  237,
+                  236,
+                  236,
+                  237,
+                  237
+                ]
+              },
+              "latencyMs": {
+                "avg": 894.163,
+                "min": 7.461,
+                "med": 813.983,
+                "p90": 1815.459,
+                "p95": 1958.804,
+                "p99_9": 2615.093,
+                "max": 3008.874
+              },
+              "requests": {
+                "total": 76211,
+                "successful": 76211,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 2499688
+              },
+              "cpu": {
+                "avgUtilizationPercent": 99.8,
+                "maxUtilizationPercent": 100.0
+              }
             }
           ]
         },
@@ -136728,6 +139618,70 @@
                 "avgUtilizationPercent": 100.0,
                 "maxUtilizationPercent": 100.0
               }
+            },
+            {
+              "version": "2.19.1",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "Rust"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 455,
+                "bestRps": 468,
+                "worstRps": 447,
+                "cvPercent": 1.7,
+                "runsRps": [
+                  456,
+                  468,
+                  455,
+                  447,
+                  451
+                ]
+              },
+              "latencyMs": {
+                "avg": 408.275,
+                "min": 4.242,
+                "med": 429.688,
+                "p90": 699.266,
+                "p95": 746.552,
+                "p99_9": 1808.37,
+                "max": 21500.841
+              },
+              "requests": {
+                "total": 143002,
+                "successful": 135139,
+                "failed": 7863
+              },
+              "memory": {
+                "peakRssKiB": 466748
+              },
+              "cpu": {
+                "avgUtilizationPercent": 100.0,
+                "maxUtilizationPercent": 100.0
+              }
             }
           ]
         },
@@ -139010,6 +141964,70 @@
                 "avgUtilizationPercent": 99.8,
                 "maxUtilizationPercent": 100.0
               }
+            },
+            {
+              "version": "3.0.0-preview.0",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "Rust"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 369,
+                "bestRps": 416,
+                "worstRps": 363,
+                "cvPercent": 6.1,
+                "runsRps": [
+                  389,
+                  364,
+                  369,
+                  416,
+                  363
+                ]
+              },
+              "latencyMs": {
+                "avg": 451.54,
+                "min": 5.318,
+                "med": 474.515,
+                "p90": 737.627,
+                "p95": 792.555,
+                "p99_9": 14784.192,
+                "max": 18376.445
+              },
+              "requests": {
+                "total": 120913,
+                "successful": 110861,
+                "failed": 10052
+              },
+              "memory": {
+                "peakRssKiB": 494692
+              },
+              "cpu": {
+                "avgUtilizationPercent": 99.7,
+                "maxUtilizationPercent": 100.0
+              }
             }
           ]
         },
@@ -139139,6 +142157,70 @@
               },
               "memory": {
                 "peakRssKiB": 512164
+              },
+              "cpu": {
+                "avgUtilizationPercent": 99.8,
+                "maxUtilizationPercent": 100.0
+              }
+            },
+            {
+              "version": "3.0.0-preview.0-nightly.36cc3633",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "Rust"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 418,
+                "bestRps": 427,
+                "worstRps": 417,
+                "cvPercent": 1.0,
+                "runsRps": [
+                  418,
+                  418,
+                  418,
+                  417,
+                  427
+                ]
+              },
+              "latencyMs": {
+                "avg": 460.631,
+                "min": 4.533,
+                "med": 456.693,
+                "p90": 832.531,
+                "p95": 891.856,
+                "p99_9": 7078.431,
+                "max": 19174.973
+              },
+              "requests": {
+                "total": 132397,
+                "successful": 126735,
+                "failed": 5662
+              },
+              "memory": {
+                "peakRssKiB": 515180
               },
               "cpu": {
                 "avgUtilizationPercent": 99.8,
@@ -141563,6 +144645,74 @@
               },
               "cpu": {
                 "avgUtilizationPercent": 99.5,
+                "maxUtilizationPercent": 100.0
+              }
+            },
+            {
+              "version": "3.2.1",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "Scala"
+                },
+                "runtime": {
+                  "name": "JVM",
+                  "version": "25.0.5"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 1544,
+                "bestRps": 1544,
+                "worstRps": 1541,
+                "cvPercent": 0.1,
+                "runsRps": [
+                  1544,
+                  1541,
+                  1543,
+                  1544,
+                  1544
+                ]
+              },
+              "latencyMs": {
+                "avg": 148.138,
+                "min": 1.891,
+                "med": 124.163,
+                "p90": 305.339,
+                "p95": 377.761,
+                "p99_9": 705.995,
+                "max": 1154.336
+              },
+              "requests": {
+                "total": 475573,
+                "successful": 475573,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 11292176
+              },
+              "cpu": {
+                "avgUtilizationPercent": 99.7,
                 "maxUtilizationPercent": 100.0
               }
             }
@@ -146295,6 +149445,73 @@
                 "avgUtilizationPercent": 99.6,
                 "maxUtilizationPercent": 100.0
               }
+            },
+            {
+              "version": "0.373.0",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "Go"
+                },
+                "runtime": {
+                  "name": "Go"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 1307,
+                "bestRps": 1309,
+                "worstRps": 1306,
+                "cvPercent": 0.1,
+                "runsRps": [
+                  1309,
+                  1306,
+                  1307,
+                  1307,
+                  1309
+                ]
+              },
+              "latencyMs": {
+                "avg": 174.783,
+                "min": 2.008,
+                "med": 172.669,
+                "p90": 332.739,
+                "p95": 357.197,
+                "p99_9": 427.024,
+                "max": 465.621
+              },
+              "requests": {
+                "total": 403427,
+                "successful": 403427,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 583608
+              },
+              "cpu": {
+                "avgUtilizationPercent": 99.7,
+                "maxUtilizationPercent": 100.0
+              }
             }
           ]
         },
@@ -150819,6 +154036,70 @@
               },
               "cpu": {
                 "avgUtilizationPercent": 99.4,
+                "maxUtilizationPercent": 100.0
+              }
+            },
+            {
+              "version": "0.53.5",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "Rust"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 1853,
+                "bestRps": 1927,
+                "worstRps": 1744,
+                "cvPercent": 4.0,
+                "runsRps": [
+                  1927,
+                  1779,
+                  1853,
+                  1744,
+                  1883
+                ]
+              },
+              "latencyMs": {
+                "avg": 117.764,
+                "min": 1.807,
+                "med": 106.769,
+                "p90": 200.423,
+                "p95": 216.424,
+                "p99_9": 3473.039,
+                "max": 17041.828
+              },
+              "requests": {
+                "total": 566918,
+                "successful": 401573,
+                "failed": 165345
+              },
+              "memory": {
+                "peakRssKiB": 203592
+              },
+              "cpu": {
+                "avgUtilizationPercent": 99.6,
                 "maxUtilizationPercent": 100.0
               }
             }
@@ -155585,6 +158866,74 @@
                 "avgUtilizationPercent": 99.4,
                 "maxUtilizationPercent": 100.0
               }
+            },
+            {
+              "version": "2.15.10",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "TypeScript"
+                },
+                "runtime": {
+                  "name": "Node.js",
+                  "version": "24.21.0"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 268,
+                "bestRps": 270,
+                "worstRps": 266,
+                "cvPercent": 0.6,
+                "runsRps": [
+                  266,
+                  268,
+                  266,
+                  268,
+                  270
+                ]
+              },
+              "latencyMs": {
+                "avg": 806.782,
+                "min": 5.103,
+                "med": 723.111,
+                "p90": 1615.148,
+                "p95": 1914.795,
+                "p99_9": 3154.547,
+                "max": 3914.727
+              },
+              "requests": {
+                "total": 84799,
+                "successful": 84799,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 3834268
+              },
+              "cpu": {
+                "avgUtilizationPercent": 99.5,
+                "maxUtilizationPercent": 100.0
+              }
             }
           ]
         },
@@ -160349,6 +163698,74 @@
                 "avgUtilizationPercent": 99.6,
                 "maxUtilizationPercent": 100.0
               }
+            },
+            {
+              "version": "2.15.10",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "TypeScript"
+                },
+                "runtime": {
+                  "name": "Node.js",
+                  "version": "24.21.0"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 566,
+                "bestRps": 569,
+                "worstRps": 558,
+                "cvPercent": 0.7,
+                "runsRps": [
+                  558,
+                  567,
+                  569,
+                  566,
+                  564
+                ]
+              },
+              "latencyMs": {
+                "avg": 394.802,
+                "min": 3.375,
+                "med": 364.472,
+                "p90": 780.353,
+                "p95": 846.946,
+                "p99_9": 1290.518,
+                "max": 1522.062
+              },
+              "requests": {
+                "total": 176241,
+                "successful": 176241,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 3104712
+              },
+              "cpu": {
+                "avgUtilizationPercent": 99.7,
+                "maxUtilizationPercent": 100.0
+              }
             }
           ]
         },
@@ -164875,6 +168292,70 @@
                 "avgUtilizationPercent": 95.3,
                 "maxUtilizationPercent": 100.0
               }
+            },
+            {
+              "version": "0.3.17",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "Rust"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 4149,
+                "bestRps": 4167,
+                "worstRps": 4112,
+                "cvPercent": 0.5,
+                "runsRps": [
+                  4145,
+                  4167,
+                  4164,
+                  4112,
+                  4149
+                ]
+              },
+              "latencyMs": {
+                "avg": 55.098,
+                "min": 0.872,
+                "med": 47.03,
+                "p90": 117.334,
+                "p95": 146.414,
+                "p99_9": 205.834,
+                "max": 306.196
+              },
+              "requests": {
+                "total": 1261654,
+                "successful": 1261654,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 198352
+              },
+              "cpu": {
+                "avgUtilizationPercent": 91.2,
+                "maxUtilizationPercent": 98.2
+              }
             }
           ]
         },
@@ -165008,6 +168489,70 @@
               "cpu": {
                 "avgUtilizationPercent": 90.6,
                 "maxUtilizationPercent": 97.0
+              }
+            },
+            {
+              "version": "0.3.20-nightly.2b115870",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "Rust"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 3949,
+                "bestRps": 3970,
+                "worstRps": 3902,
+                "cvPercent": 0.7,
+                "runsRps": [
+                  3902,
+                  3953,
+                  3949,
+                  3970,
+                  3924
+                ]
+              },
+              "latencyMs": {
+                "avg": 58.211,
+                "min": 0.881,
+                "med": 49.382,
+                "p90": 120.363,
+                "p95": 147.524,
+                "p99_9": 208.907,
+                "max": 294.229
+              },
+              "requests": {
+                "total": 1198703,
+                "successful": 1198703,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 192460
+              },
+              "cpu": {
+                "avgUtilizationPercent": 95.6,
+                "maxUtilizationPercent": 100.0
               }
             }
           ]
@@ -167201,6 +170746,81 @@
               "cpu": {
                 "avgUtilizationPercent": 77.9,
                 "maxUtilizationPercent": 86.9
+              }
+            },
+            {
+              "version": "16.7.7",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "C#"
+                },
+                "runtime": {
+                  "name": ".NET",
+                  "version": "11.0.0-rc.3.26522.148"
+                },
+                "features": [
+                  {
+                    "id": "runtime-async",
+                    "name": "Runtime Async",
+                    "description": "C# async methods compiled to runtime-async."
+                  }
+                ]
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 4749,
+                "bestRps": 4810,
+                "worstRps": 4729,
+                "cvPercent": 0.7,
+                "runsRps": [
+                  4764,
+                  4749,
+                  4729,
+                  4739,
+                  4810
+                ]
+              },
+              "latencyMs": {
+                "avg": 47.352,
+                "min": 0.737,
+                "med": 39.851,
+                "p90": 99.62,
+                "p95": 124.804,
+                "p99_9": 181.87,
+                "max": 314.38
+              },
+              "requests": {
+                "total": 1444159,
+                "successful": 1444159,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 398476
+              },
+              "cpu": {
+                "avgUtilizationPercent": 77.7,
+                "maxUtilizationPercent": 87.1
               }
             }
           ]
@@ -172366,6 +175986,86 @@
                 "avgUtilizationPercent": 80.5,
                 "maxUtilizationPercent": 89.2
               }
+            },
+            {
+              "version": "16.7.7",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "C#"
+                },
+                "runtime": {
+                  "name": ".NET",
+                  "version": "11.0.0-rc.3.26522.148"
+                },
+                "features": [
+                  {
+                    "id": "runtime-async",
+                    "name": "Runtime Async",
+                    "description": "C# async methods compiled to runtime-async."
+                  },
+                  {
+                    "id": "aot",
+                    "name": "AOT",
+                    "description": "Native AOT publish."
+                  }
+                ]
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 4773,
+                "bestRps": 4778,
+                "worstRps": 4763,
+                "cvPercent": 0.1,
+                "runsRps": [
+                  4773,
+                  4775,
+                  4763,
+                  4778,
+                  4768
+                ]
+              },
+              "latencyMs": {
+                "avg": 47.616,
+                "min": 0.772,
+                "med": 40.148,
+                "p90": 101.965,
+                "p95": 126.195,
+                "p99_9": 179.07,
+                "max": 320.373
+              },
+              "requests": {
+                "total": 1449510,
+                "successful": 1449510,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 162816
+              },
+              "cpu": {
+                "avgUtilizationPercent": 85.9,
+                "maxUtilizationPercent": 97.4
+              }
             }
           ]
         },
@@ -174558,6 +178258,81 @@
               "cpu": {
                 "avgUtilizationPercent": 72.3,
                 "maxUtilizationPercent": 83.0
+              }
+            },
+            {
+              "version": "16.7.7",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "C#"
+                },
+                "runtime": {
+                  "name": ".NET",
+                  "version": "11.0.0-rc.3.26522.148"
+                },
+                "features": [
+                  {
+                    "id": "runtime-async",
+                    "name": "Runtime Async",
+                    "description": "C# async methods compiled to runtime-async."
+                  }
+                ]
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 4838,
+                "bestRps": 4847,
+                "worstRps": 4814,
+                "cvPercent": 0.3,
+                "runsRps": [
+                  4847,
+                  4834,
+                  4814,
+                  4838,
+                  4839
+                ]
+              },
+              "latencyMs": {
+                "avg": 46.333,
+                "min": 0.742,
+                "med": 39.128,
+                "p90": 97.116,
+                "p95": 120.711,
+                "p99_9": 173.434,
+                "max": 336.836
+              },
+              "requests": {
+                "total": 1467957,
+                "successful": 1467957,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 425208
+              },
+              "cpu": {
+                "avgUtilizationPercent": 76.2,
+                "maxUtilizationPercent": 86.3
               }
             }
           ]
@@ -176896,6 +180671,86 @@
               "cpu": {
                 "avgUtilizationPercent": 83.4,
                 "maxUtilizationPercent": 93.4
+              }
+            },
+            {
+              "version": "16.7.7",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "C#"
+                },
+                "runtime": {
+                  "name": ".NET",
+                  "version": "11.0.0-rc.3.26522.148"
+                },
+                "features": [
+                  {
+                    "id": "runtime-async",
+                    "name": "Runtime Async",
+                    "description": "C# async methods compiled to runtime-async."
+                  },
+                  {
+                    "id": "aot",
+                    "name": "AOT",
+                    "description": "Native AOT publish."
+                  }
+                ]
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 4764,
+                "bestRps": 4766,
+                "worstRps": 4757,
+                "cvPercent": 0.1,
+                "runsRps": [
+                  4757,
+                  4765,
+                  4764,
+                  4766,
+                  4757
+                ]
+              },
+              "latencyMs": {
+                "avg": 47.665,
+                "min": 0.763,
+                "med": 40.014,
+                "p90": 101.827,
+                "p95": 126.657,
+                "p99_9": 180.963,
+                "max": 315.587
+              },
+              "requests": {
+                "total": 1446709,
+                "successful": 1446709,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 160912
+              },
+              "cpu": {
+                "avgUtilizationPercent": 85.2,
+                "maxUtilizationPercent": 94.9
               }
             }
           ]
@@ -181855,6 +185710,81 @@
                 "avgUtilizationPercent": 76.2,
                 "maxUtilizationPercent": 83.8
               }
+            },
+            {
+              "version": "16.8.0-p.21",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "C#"
+                },
+                "runtime": {
+                  "name": ".NET",
+                  "version": "11.0.0-rc.3.26522.148"
+                },
+                "features": [
+                  {
+                    "id": "runtime-async",
+                    "name": "Runtime Async",
+                    "description": "C# async methods compiled to runtime-async."
+                  }
+                ]
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 4934,
+                "bestRps": 4944,
+                "worstRps": 4929,
+                "cvPercent": 0.1,
+                "runsRps": [
+                  4942,
+                  4934,
+                  4944,
+                  4934,
+                  4929
+                ]
+              },
+              "latencyMs": {
+                "avg": 45.301,
+                "min": 0.73,
+                "med": 38.309,
+                "p90": 94.548,
+                "p95": 116.457,
+                "p99_9": 174.252,
+                "max": 307.574
+              },
+              "requests": {
+                "total": 1498727,
+                "successful": 1498727,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 396468
+              },
+              "cpu": {
+                "avgUtilizationPercent": 75.3,
+                "maxUtilizationPercent": 87.4
+              }
             }
           ]
         },
@@ -184109,6 +188039,86 @@
                 "avgUtilizationPercent": 84.3,
                 "maxUtilizationPercent": 93.5
               }
+            },
+            {
+              "version": "16.8.0-p.21",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "C#"
+                },
+                "runtime": {
+                  "name": ".NET",
+                  "version": "11.0.0-rc.3.26522.148"
+                },
+                "features": [
+                  {
+                    "id": "runtime-async",
+                    "name": "Runtime Async",
+                    "description": "C# async methods compiled to runtime-async."
+                  },
+                  {
+                    "id": "aot",
+                    "name": "AOT",
+                    "description": "Native AOT publish."
+                  }
+                ]
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 4790,
+                "bestRps": 4806,
+                "worstRps": 4685,
+                "cvPercent": 1.0,
+                "runsRps": [
+                  4790,
+                  4789,
+                  4806,
+                  4790,
+                  4685
+                ]
+              },
+              "latencyMs": {
+                "avg": 47.209,
+                "min": 0.771,
+                "med": 39.821,
+                "p90": 100.122,
+                "p95": 124.243,
+                "p99_9": 176.781,
+                "max": 319.548
+              },
+              "requests": {
+                "total": 1449605,
+                "successful": 1449605,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 138984
+              },
+              "cpu": {
+                "avgUtilizationPercent": 82.1,
+                "maxUtilizationPercent": 92.2
+              }
             }
           ]
         },
@@ -186222,6 +190232,81 @@
               "cpu": {
                 "avgUtilizationPercent": 75.2,
                 "maxUtilizationPercent": 83.6
+              }
+            },
+            {
+              "version": "16.8.0-p.21",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "C#"
+                },
+                "runtime": {
+                  "name": ".NET",
+                  "version": "11.0.0-rc.3.26522.148"
+                },
+                "features": [
+                  {
+                    "id": "runtime-async",
+                    "name": "Runtime Async",
+                    "description": "C# async methods compiled to runtime-async."
+                  }
+                ]
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 4762,
+                "bestRps": 4779,
+                "worstRps": 4752,
+                "cvPercent": 0.3,
+                "runsRps": [
+                  4779,
+                  4762,
+                  4778,
+                  4752,
+                  4754
+                ]
+              },
+              "latencyMs": {
+                "avg": 46.782,
+                "min": 0.737,
+                "med": 39.956,
+                "p90": 96.836,
+                "p95": 120.531,
+                "p99_9": 179.628,
+                "max": 295.018
+              },
+              "requests": {
+                "total": 1446560,
+                "successful": 1446560,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 382660
+              },
+              "cpu": {
+                "avgUtilizationPercent": 69.8,
+                "maxUtilizationPercent": 80.1
               }
             }
           ]
@@ -188476,6 +192561,86 @@
               "cpu": {
                 "avgUtilizationPercent": 81.4,
                 "maxUtilizationPercent": 90.9
+              }
+            },
+            {
+              "version": "16.8.0-p.21",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "C#"
+                },
+                "runtime": {
+                  "name": ".NET",
+                  "version": "11.0.0-rc.3.26522.148"
+                },
+                "features": [
+                  {
+                    "id": "runtime-async",
+                    "name": "Runtime Async",
+                    "description": "C# async methods compiled to runtime-async."
+                  },
+                  {
+                    "id": "aot",
+                    "name": "AOT",
+                    "description": "Native AOT publish."
+                  }
+                ]
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 4635,
+                "bestRps": 4779,
+                "worstRps": 4619,
+                "cvPercent": 1.4,
+                "runsRps": [
+                  4779,
+                  4631,
+                  4619,
+                  4641,
+                  4635
+                ]
+              },
+              "latencyMs": {
+                "avg": 48.335,
+                "min": 0.799,
+                "med": 39.89,
+                "p90": 103.029,
+                "p95": 129.41,
+                "p99_9": 193.803,
+                "max": 273.696
+              },
+              "requests": {
+                "total": 1416188,
+                "successful": 1416188,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 145816
+              },
+              "cpu": {
+                "avgUtilizationPercent": 80.2,
+                "maxUtilizationPercent": 90.8
               }
             }
           ]
@@ -190826,6 +194991,74 @@
               "cpu": {
                 "avgUtilizationPercent": 87.8,
                 "maxUtilizationPercent": 95.7
+              }
+            },
+            {
+              "version": "2026-11-22-1912",
+              "run": {
+                "number": 500,
+                "url": "https://github.com/ChilliCream/graphql-federation-benchmarks/actions/runs/45700700582",
+                "startedAt": "2026-11-25T21:03:00Z",
+                "completedAt": "2026-11-26T14:10:56Z"
+              },
+              "measuredRuns": 5,
+              "platform": {
+                "language": {
+                  "name": "Java"
+                },
+                "runtime": {
+                  "name": "JVM",
+                  "version": "25.0.5"
+                }
+              },
+              "subgraphs": {
+                "framework": {
+                  "name": "Hot Chocolate",
+                  "version": "16.7.0"
+                },
+                "platform": {
+                  "language": {
+                    "name": "C#"
+                  },
+                  "runtime": {
+                    "name": ".NET",
+                    "version": "10.0.15"
+                  }
+                }
+              },
+              "throughput": {
+                "medianRps": 4526,
+                "bestRps": 4553,
+                "worstRps": 4491,
+                "cvPercent": 0.5,
+                "runsRps": [
+                  4526,
+                  4527,
+                  4501,
+                  4491,
+                  4553
+                ]
+              },
+              "latencyMs": {
+                "avg": 49.323,
+                "min": 0.75,
+                "med": 41.526,
+                "p90": 104.01,
+                "p95": 128.525,
+                "p99_9": 195.715,
+                "max": 293.487
+              },
+              "requests": {
+                "total": 1372636,
+                "successful": 1372636,
+                "failed": 0
+              },
+              "memory": {
+                "peakRssKiB": 2371956
+              },
+              "cpu": {
+                "avgUtilizationPercent": 81.2,
+                "maxUtilizationPercent": 88.4
               }
             }
           ]
