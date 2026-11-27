@@ -37,7 +37,6 @@ not relabeled.
 ### Apollo Federation
 - [Apollo Gateway](./apollo-federation/gateways/apollo-gateway) (Node.js)
 - [Apollo Router 2](./apollo-federation/gateways/apollo-router) (Rust, latest 2.x stable; benchmark identity `apollo-router`)
-- [Apollo Router 3 preview](./apollo-federation/gateways/apollo-router-v3) (Rust, latest 3.x preview; separate benchmark identity `apollo-router-v3`)
 - [Apollo Router Nightly](./apollo-federation/gateways/apollo-router-nightly) (Rust, built from the head of the `dev-v3.x` branch on every run; benchmark identity `apollo-router-nightly`)
 - [Caliban](./apollo-federation/gateways/caliban) (Scala)
 - [Cosmo](./apollo-federation/gateways/cosmo) (Go)
@@ -52,7 +51,7 @@ not relabeled.
 - [Nitro Router](./graphql-federation/gateways/nitro-router) (.NET Native AOT) — the prebuilt `nitro-router` binary from the GitHub release of the latest HotChocolate preview (never pinned; `fusion_version` does not apply); benchmarked as `nitro-router`, and as `nitro-router-fed` on the Apollo Federation subgraphs ([nitro-router-fed](./apollo-federation/gateways/nitro-router-fed)).
 - [feddi-gateway](./graphql-federation/gateways/feddi-gateway) (JVM) by [feddi](https://feddi.dev) — built from the open-source repository ([feddi-dev/feddi-gateway](https://github.com/feddi-dev/feddi-gateway), Apache 2.0) at a pinned commit. See its [README](./graphql-federation/gateways/feddi-gateway/README.md) for setup.
 
-Version pins and upstream changes for the latest refresh are listed in [Gateway version updates](./GATEWAY_UPDATES.md). Apollo Router 2 and Router 3 preview have independent installs, artifacts, and result rows; both run when `all` is selected, or select `apollo-router` / `apollo-router-v3` individually.
+Version pins and upstream changes for the latest refresh are listed in [Gateway version updates](./GATEWAY_UPDATES.md). Apollo Router 2 and Apollo Router Nightly have independent installs, artifacts, and result rows; both run when `all` is selected, or select `apollo-router` / `apollo-router-nightly` individually.
 
 ## Running benchmarks locally
 

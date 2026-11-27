@@ -33,12 +33,6 @@
           "language": "Rust"
         },
         {
-          "id": "apollo-router-v3",
-          "path": "apollo-federation/gateways/apollo-router-v3",
-          "language": "Rust",
-          "channel": "preview"
-        },
-        {
           "id": "apollo-router-nightly",
           "label": "Apollo Router Nightly",
           "path": "apollo-federation/gateways/apollo-router-nightly",

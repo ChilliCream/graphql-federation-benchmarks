@@ -412,7 +412,7 @@ class GenerateResultsTests(unittest.TestCase):
         self.assertEqual(cosmo.split("|")[8].strip(), "—")
 
     def test_apollo_router_generations_have_separate_rows(self):
-        gateways = ["apollo-router", "apollo-router-v3"]
+        gateways = ["apollo-router", "apollo-router-nightly"]
         for mode in ("constant", "constant-latency", "burst"):
             with self.subTest(mode=mode):
                 md = self.run_generator(gateways, mode=mode)
@@ -421,16 +421,16 @@ class GenerateResultsTests(unittest.TestCase):
                     self.assertEqual(len(rows), 1)
                     self.assertNotIn("benchmark run failed", rows[0])
                 self.assertIn("apollo-router (HotChocolate subgraphs)", md)
-                self.assertIn("apollo-router-v3 (HotChocolate subgraphs)", md)
+                self.assertIn("apollo-router-nightly (HotChocolate subgraphs)", md)
 
-    def test_missing_apollo_preview_does_not_reuse_stable_result(self):
+    def test_missing_apollo_nightly_does_not_reuse_stable_result(self):
         md = self.run_generator(
-            ["apollo-router", "apollo-router-v3"], with_runs=["apollo-router"]
+            ["apollo-router", "apollo-router-nightly"], with_runs=["apollo-router"]
         )
         stable = next(line for line in md.splitlines() if line.startswith("| apollo-router |"))
-        preview = next(line for line in md.splitlines() if line.startswith("| apollo-router-v3 |"))
+        nightly = next(line for line in md.splitlines() if line.startswith("| apollo-router-nightly |"))
         self.assertNotIn("benchmark run failed", stable)
-        self.assertIn("benchmark run failed", preview)
+        self.assertIn("benchmark run failed", nightly)
 
     def test_missing_gateway_marked_failed(self):
         md = self.run_generator(["fusion-net-10", "grafbase"], with_runs=["fusion-net-10"])

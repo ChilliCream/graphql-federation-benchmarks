@@ -16,7 +16,6 @@ on:
           - all
           - apollo-gateway
           - apollo-router
-          - apollo-router-v3
           - apollo-router-nightly
           - caliban
           - cosmo
@@ -280,9 +279,6 @@ jobs:
           if [[ -f apollo-federation/gateways/apollo-router/router ]]; then
             chmod +x apollo-federation/gateways/apollo-router/router
           fi
-          if [[ -f apollo-federation/gateways/apollo-router-v3/router ]]; then
-            chmod +x apollo-federation/gateways/apollo-router-v3/router
-          fi
           if [[ -f apollo-federation/gateways/apollo-router-nightly/router ]]; then
             chmod +x apollo-federation/gateways/apollo-router-nightly/router
           fi
@@ -474,9 +470,6 @@ jobs:
           tar -xzf "$GATEWAY_ARCHIVE" -C .
           if [[ -f apollo-federation/gateways/apollo-router/router ]]; then
             chmod +x apollo-federation/gateways/apollo-router/router
-          fi
-          if [[ -f apollo-federation/gateways/apollo-router-v3/router ]]; then
-            chmod +x apollo-federation/gateways/apollo-router-v3/router
           fi
           if [[ -f apollo-federation/gateways/apollo-router-nightly/router ]]; then
             chmod +x apollo-federation/gateways/apollo-router-nightly/router
@@ -670,9 +663,6 @@ jobs:
           tar -xzf "$GATEWAY_ARCHIVE" -C .
           if [[ -f apollo-federation/gateways/apollo-router/router ]]; then
             chmod +x apollo-federation/gateways/apollo-router/router
-          fi
-          if [[ -f apollo-federation/gateways/apollo-router-v3/router ]]; then
-            chmod +x apollo-federation/gateways/apollo-router-v3/router
           fi
           if [[ -f apollo-federation/gateways/apollo-router-nightly/router ]]; then
             chmod +x apollo-federation/gateways/apollo-router-nightly/router
