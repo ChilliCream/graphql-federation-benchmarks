@@ -1,0 +1,15 @@
+http:
+  port: 5220
+
+limits:
+  cost:
+    enabled: false
+
+subgraphs:
+  all:
+    http:
+      propagateHeaders:
+        - Authorization
+
+telemetry:
+  enabled: false
