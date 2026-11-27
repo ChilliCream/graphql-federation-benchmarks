@@ -214,7 +214,7 @@ class BuildMatrixTests(unittest.TestCase):
                 )
                 for key in ("gateways", "gateways_constant", "gateways_burst"):
                     by_name = {entry["name"]: entry for entry in matrices[key]}
-                    for name, channel in (("apollo-router", "stable"), ("apollo-router-v3", "preview")):
+                    for name, channel in (("apollo-router", "stable"), ("apollo-router-nightly", "preview")):
                         entry = by_name[name]
                         self.assertEqual(entry["base_name"], name)
                         self.assertEqual(entry["path"], f"apollo-federation/gateways/{name}")
@@ -222,29 +222,29 @@ class BuildMatrixTests(unittest.TestCase):
                         self.assertEqual(entry["channel"], channel)
                         self.assertEqual(entry["display_name"], f"{name} (HotChocolate subgraphs)")
                 builds = {entry["artifact"]: entry for entry in matrices["gateway_builds"]}
-                for name in ("apollo-router", "apollo-router-v3"):
+                for name in ("apollo-router", "apollo-router-nightly"):
                     self.assertEqual(
                         builds[f"prebuilt-gateway-{name}"]["path"],
                         f"apollo-federation/gateways/{name}",
                     )
                 for key in ("not_run_constant", "not_run_burst"):
-                    self.assertFalse({e["name"] for e in matrices[key]} & {"apollo-router", "apollo-router-v3"})
+                    self.assertFalse({e["name"] for e in matrices[key]} & {"apollo-router", "apollo-router-nightly"})
 
-    def test_select_apollo_router_v3_without_querying_fusion_channel(self):
+    def test_select_apollo_router_nightly_without_querying_fusion_channel(self):
         def unexpected_preview_check():
-            self.fail("Apollo Router preview must not depend on the Fusion channel")
+            self.fail("Apollo Router Nightly must not depend on the Fusion channel")
 
         matrices = MATRIX.build_matrices(
-            "apollo-router-v3", preview_check=unexpected_preview_check, fusion_version="16.6.8"
+            "apollo-router-nightly", preview_check=unexpected_preview_check, fusion_version="16.6.8"
         )
         for key in ("gateways", "gateways_constant", "gateways_burst"):
-            self.assertEqual([entry["name"] for entry in matrices[key]], ["apollo-router-v3"])
+            self.assertEqual([entry["name"] for entry in matrices[key]], ["apollo-router-nightly"])
             self.assertNotIn("version", matrices[key][0])
         self.assertEqual(
             matrices["gateway_builds"],
             [{
-                "path": "apollo-federation/gateways/apollo-router-v3",
-                "artifact": "prebuilt-gateway-apollo-router-v3",
+                "path": "apollo-federation/gateways/apollo-router-nightly",
+                "artifact": "prebuilt-gateway-apollo-router-nightly",
                 "channel": "preview",
                 "dotnet": "10",
                 "aot": "0",

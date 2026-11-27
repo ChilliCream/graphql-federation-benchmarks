@@ -512,8 +512,8 @@ class DocsTests(unittest.TestCase):
 
     def test_apollo_router_generations_documented(self):
         self.assertIn("./apollo-federation/gateways/apollo-router)", self.readme)
-        self.assertIn("./apollo-federation/gateways/apollo-router-v3)", self.readme)
-        self.assertIn("`apollo-router-v3`", self.readme)
+        self.assertIn("./apollo-federation/gateways/apollo-router-nightly)", self.readme)
+        self.assertIn("`apollo-router-nightly`", self.readme)
         self.assertIn("./GATEWAY_UPDATES.md", self.readme)
 
     def test_documents_runner_group_and_dotnet_only(self):

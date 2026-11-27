@@ -13,7 +13,6 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 GATEWAYS = REPO_ROOT / "apollo-federation" / "gateways"
 ROUTER_VERSIONS = {
     "apollo-router": "v2.19.1",
-    "apollo-router-v3": "v3.0.0-preview.0",
 }
 ROUTER_GATEWAYS = (*ROUTER_VERSIONS, "apollo-router-nightly")
 
@@ -144,40 +143,32 @@ class ApolloGatewayTests(unittest.TestCase):
                 self.assertEqual((directory / "router-env.txt").read_text(), "true\nunset\n")
                 self.assertTrue((directory / "gateway_log.txt").exists())
 
-    def test_nightly_uses_router_3_preview_configuration(self):
-        preview = GATEWAYS / "apollo-router-v3"
-        nightly = GATEWAYS / "apollo-router-nightly"
-        for filename in ("supergraph.graphql", "settings.json", "start.sh", "config.yaml", ".gitignore"):
-            with self.subTest(filename=filename):
-                self.assertEqual((nightly / filename).read_bytes(), (preview / filename).read_bytes())
-
-    def test_preview_preserves_schema_endpoints_and_settings(self):
+    def test_nightly_preserves_schema_endpoints_and_settings(self):
         stable = GATEWAYS / "apollo-router"
-        preview = GATEWAYS / "apollo-router-v3"
+        nightly = GATEWAYS / "apollo-router-nightly"
         for filename in ("supergraph.graphql", "settings.json", "start.sh"):
             with self.subTest(filename=filename):
-                self.assertEqual((preview / filename).read_bytes(), (stable / filename).read_bytes())
+                self.assertEqual((nightly / filename).read_bytes(), (stable / filename).read_bytes())
         stable_config = (stable / "config.yaml").read_text()
-        preview_config = (preview / "config.yaml").read_text()
+        nightly_config = (nightly / "config.yaml").read_text()
         # Router 3 changes this default. Keep Router 2's cancellation semantics.
-        self.assertIn("    early_cancel: false\n", preview_config)
-        preview_config = "\n".join(
-            line for line in preview_config.splitlines()
+        self.assertIn("    early_cancel: false\n", nightly_config)
+        nightly_config = "\n".join(
+            line for line in nightly_config.splitlines()
             if "early_cancel:" not in line and not line.lstrip().startswith("#")
         ) + "\n"
-        self.assertEqual(preview_config, stable_config)
+        self.assertEqual(nightly_config, stable_config)
         self.assertIn("deduplicate_query: true", stable_config)
         self.assertIn(
             "        request:\n            operations:\n                - propagate:\n                    named: Authorization",
             stable_config,
         )
-        self.assertEqual((preview / ".gitignore").read_text().strip(), "router")
+        self.assertEqual((nightly / ".gitignore").read_text().strip(), "router")
 
-    def test_workflow_exposes_preview_and_preserves_distinct_artifacts_in_all_modes(self):
+    def test_workflow_exposes_nightly_and_preserves_distinct_artifacts_in_all_modes(self):
         workflow = (REPO_ROOT / ".github" / "workflows" / "benchmark.yml").read_text()
         options = workflow.split("      gateway:", 1)[1].split("      fusion_version:", 1)[0]
         self.assertIn("          - apollo-router\n", options)
-        self.assertIn("          - apollo-router-v3\n", options)
         self.assertIn("          - apollo-router-nightly\n", options)
         jobs = (
             ("benchmark-constant", "constant", "gateways_constant"),
@@ -189,7 +180,6 @@ class ApolloGatewayTests(unittest.TestCase):
                 section = re.split(r"\n  [a-z]", workflow.split(f"\n  {job}:\n", 1)[1], maxsplit=1)[0]
                 self.assertIn(f"outputs.{matrix})", section)
                 self.assertIn("name: ${{ matrix.gateway.gateway_artifact }}", section)
-                self.assertIn("chmod +x apollo-federation/gateways/apollo-router-v3/router", section)
                 self.assertIn("chmod +x apollo-federation/gateways/apollo-router-nightly/router", section)
                 self.assertIn("BENCH_GATEWAY_NAME: ${{ matrix.gateway.base_name || '' }}", section)
                 self.assertIn(f"name: results-${{{{ matrix.gateway.name }}}}-{mode}", section)
