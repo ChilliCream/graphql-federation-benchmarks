@@ -1,0 +1,9 @@
+http:
+  port: 5220
+
+limits:
+  cost:
+    enabled: false
+
+telemetry:
+  enabled: false
